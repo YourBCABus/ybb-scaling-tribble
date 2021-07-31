@@ -1,3 +1,9 @@
 {
-  "extends": ["next", "next/core-web-vitals"]
+    "extends": ["next", "next/core-web-vitals"],
+    "rules": {
+        "indent": ["error", 4],
+        "comma-dangle": ["error", "always-multiline"],
+        "semi": ["error", "always"],
+        "eol-last": ["error", "always"]
+    }
 }

@@ -20,7 +20,9 @@ export default function Schools({ schools }: Props<typeof getServerSideProps>) {
             <ul>
                 {schools.map(school => {
                     return <li key={school.id}>
-                        {school.name} ({school.readable ? "Readable" : "Not Readable"})
+                        <a href={school.readable ? `/school/${school.id}` : `javascript:void(0)`}>
+                            {school.name} ({school.readable ? "Readable" : "Not Readable"})
+                        </a>
                     </li>;
                 })}
             </ul>

@@ -13,12 +13,22 @@ export interface GetSchool_school_location {
   long: number;
 }
 
+export interface GetSchool_school_buses {
+  __typename: "Bus";
+  id: string;
+  name: string | null;
+  boardingArea: string | null;
+  invalidateTime: any | null;
+  available: boolean;
+}
+
 export interface GetSchool_school {
   __typename: "School";
   id: string;
   name: string | null;
   location: GetSchool_school_location | null;
   available: boolean;
+  buses: GetSchool_school_buses[];
 }
 
 export interface GetSchool {

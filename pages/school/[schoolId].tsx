@@ -5,11 +5,20 @@ import { ApolloError } from "@apollo/client";
 
 import { Props } from "../../lib/utils";
 import { GetServerSidePropsContext } from "next";
+import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from "node:querystring";
+
+
+import Head from 'next/head';
+import NavBar, { PagesInNavbar } from "../../lib/navbar";
+
+import styles from "../../styles/School.module.scss";
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar } from '@fortawesome/free-solid-svg-icons';
 import { useState, useEffect, MouseEventHandler } from "react";
+
+import getBoardingArea from "../../lib/boardingAreas";
 
 export const GET_SCHOOL = gql`
 query GetSchool($id: ID!) {
@@ -32,16 +41,24 @@ query GetSchool($id: ID!) {
 }
 `;
 
-function Bus({ bus: { name, id }, starCallback, isStarred }: { bus: GetSchool_school_buses, starCallback: MouseEventHandler<SVGSVGElement>, isStarred: boolean } ): JSX.Element {
-    return <div>
-        <span className="bus-name">{name}</span>
-        <div className="bus-boarding-area-background-div">?</div>
-        <FontAwesomeIcon icon={faStar} className="bus-star-indicator" style={{color: isStarred ? "blue" : "gray"}} onClick={starCallback} size="2x"/>
+function Bus({ bus: { name, available, boardingArea, invalidateTime }, starCallback, isStarred }: { bus: GetSchool_school_buses, starCallback: MouseEventHandler<SVGSVGElement>, isStarred: boolean } ): JSX.Element {
+    return <div className={styles.bus_view}>
+        <div className={styles.bus_name_and_status}>
+            <span className={styles.bus_name}>{name}</span>
+            <br/>
+            <span className={styles.bus_status}>{available ? (getBoardingArea(boardingArea, invalidateTime) === "?" ? "Not on location" : "On location") : "Not running"}</span>
+        </div>
+        <FontAwesomeIcon icon={faStar} className={styles.bus_star_indicator} style={{color: isStarred ? "#00b0ff" : "rgba(0,0,0,.2)"}} onClick={starCallback} size={"lg"}/>
+        <div className={styles.bus_boarding_area_background_div} style={getBoardingArea(boardingArea, invalidateTime) === "?" ? {} : {color: "#e8edec", backgroundColor: "#00796b"}}>{getBoardingArea(boardingArea, invalidateTime)}</div>
+        
     </div>;
 }
 
-export default function School({ school: schoolOrUndef }: Props<typeof getServerSideProps>) {
+export default function School({ school: schoolOrUndef }: Props<typeof getServerSideProps>): JSX.Element {
     let school = schoolOrUndef!;
+
+    let buses = returnSortedBuses(school.buses);
+
     let [starredBusses, setStarredBusses] = useState<Set<string>>(new Set());
     useEffect(() => {
         setStarredBusses(new Set(JSON.parse(localStorage.getItem("starred")!) as string[]));
@@ -50,18 +67,50 @@ export default function School({ school: schoolOrUndef }: Props<typeof getServer
         localStorage.setItem("starred", JSON.stringify([...starredBusses]));
     }, [starredBusses]);
 
+
+
+    const router = useRouter();
+    useEffect(() => {
+        const interval = setInterval(() => {
+            router.replace(router.asPath, undefined, {scroll: false});
+        }, 15000);
+        return () => clearInterval(interval);
+    }, [router]);
+
     return (
         <div>
-            <h1>{school.name}</h1>
-            {school.location === null ? <p>Unknown location.</p> : <p>Latitude: {school.location?.lat}, Longitude: {school.location?.long}</p>}
-            <p>Internal School ID: {school.id}</p>
-            <p>School is {school.available ? "" : "not "}available.</p>
+            <Head>
+                <link rel="stylesheet" href="https://use.typekit.net/qjo5whp.css"/>
+            </Head>
+            <header className={styles.header}>
+                <NavBar selectedPage={PagesInNavbar.HOME} />
+                <h1 className={styles.school_name}>{school.name}</h1>
+                <br/>
+            </header>
             {
-                school
-                    .buses
-                    .map((a) => a)
-                    .sort((a, b) => (a.available ? 1 : 0) - (b.available ? 1 : 0))
-                    .map(
+                buses.filter(bus => starredBusses.has(bus.id)).length > 0 && <div className={`${styles.bus_container_container} ${styles.bus_container_starred_container}`}>
+                    <div className={styles.bus_container}>
+                        {buses.filter(bus => starredBusses.has(bus.id)).map(
+                            bus => 
+                                <Bus bus={bus} starCallback={
+                                    () => {
+                                        const starred = new Set(starredBusses);
+                                        if (starred.has(bus.id)) {
+                                            starred.delete(bus.id);
+                                        } else {
+                                            starred.add(bus.id);
+                                        }
+                                        setStarredBusses(starred);
+                                    }
+                                } isStarred={starredBusses.has(bus.id)} key={bus.id} />
+                        )}
+                    </div>
+                </div>
+            }
+            
+            <div className={styles.bus_container_container}>
+                <div className={styles.bus_container}>
+                    {buses.map(
                         bus => 
                             <Bus bus={bus} starCallback={
                                 () => {
@@ -74,10 +123,20 @@ export default function School({ school: schoolOrUndef }: Props<typeof getServer
                                     setStarredBusses(starred);
                                 }
                             } isStarred={starredBusses.has(bus.id)} key={bus.id} />
-                    )
-            }
+                    )}
+                </div>
+            </div>
         </div>
     );
+}
+
+
+function returnSortedBuses(buses: GetSchool_school_buses[]): GetSchool_school_buses[] {
+    let availableBuses:   GetSchool_school_buses[] = buses.filter((bus) =>  bus.available);
+    availableBuses.sort((a, b) => a.name?.localeCompare(b.name!) ?? 1);
+    let unavailableBuses: GetSchool_school_buses[] = buses.filter((bus) => !bus.available);
+    unavailableBuses.sort((a, b) => a.name?.localeCompare(b.name!) ?? 1);
+    return [...availableBuses, ...unavailableBuses];
 }
 
 export const getServerSideProps = async function<Q extends ParsedUrlQuery> (context: GetServerSidePropsContext<Q>) {

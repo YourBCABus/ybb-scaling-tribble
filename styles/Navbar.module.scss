@@ -1,0 +1,30 @@
+.navbar {
+    display: inline-flex;
+    align-items: middle;
+    justify-content: center;
+    align-content: center;
+    flex-direction: row;
+}
+.logo {
+    display: inline-flex;
+    align-items: middle;
+    justify-content: center;
+    align-content: center;
+    flex-direction: row;
+    
+
+    padding: 15px 15px 0px 15px;
+
+    font-family: neue-haas-grotesk-display;
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+.logo span {
+    margin: auto;
+}
+
+
+.about {
+    margin: auto;
+    padding: 15px 15px 0px 15px;
+}

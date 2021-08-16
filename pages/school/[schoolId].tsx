@@ -19,6 +19,7 @@ import { faStar } from '@fortawesome/free-solid-svg-icons';
 import { useState, useEffect, MouseEventHandler, MouseEvent } from "react";
 
 import getBoardingArea from "../../lib/boardingAreas";
+import Link from "next/link";
 
 export const GET_SCHOOL = gql`
 query GetSchool($id: ID!) {
@@ -41,8 +42,8 @@ query GetSchool($id: ID!) {
 }
 `;
 
-function Bus({ bus: { name, available, boardingArea, invalidateTime }, starCallback, isStarred }: { bus: GetSchool_school_buses, starCallback: MouseEventHandler<SVGSVGElement>, isStarred: boolean } ): JSX.Element {
-    return <div className={styles.bus_view}>
+function Bus({ bus: { name, id, available, boardingArea, invalidateTime }, starCallback, isStarred }: { bus: GetSchool_school_buses, starCallback: MouseEventHandler<SVGSVGElement>, isStarred: boolean } ): JSX.Element {
+    return <Link href={`/bus/${id}`} passHref={true}><div className={styles.bus_view}>
         <div className={styles.bus_name_and_status}>
             <span className={styles.bus_name}>{name}</span>
             <br/>
@@ -51,7 +52,7 @@ function Bus({ bus: { name, available, boardingArea, invalidateTime }, starCallb
         <FontAwesomeIcon icon={faStar} className={styles.bus_star_indicator} style={{color: isStarred ? "#00b0ff" : "rgba(0,0,0,.2)"}} onClick={starCallback} size={"lg"}/>
         <div className={styles.bus_boarding_area_background_div} style={getBoardingArea(boardingArea, invalidateTime) === "?" ? {} : {color: "#e8edec", backgroundColor: "#00796b"}}>{getBoardingArea(boardingArea, invalidateTime)}</div>
         
-    </div>;
+    </div></Link>;
 }
 
 export default function School({ school: schoolOrUndef }: Props<typeof getServerSideProps>): JSX.Element {

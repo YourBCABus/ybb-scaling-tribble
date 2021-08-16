@@ -16,7 +16,7 @@ import styles from "../../styles/School.module.scss";
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar } from '@fortawesome/free-solid-svg-icons';
-import { useState, useEffect, MouseEventHandler } from "react";
+import { useState, useEffect, MouseEventHandler, MouseEvent } from "react";
 
 import getBoardingArea from "../../lib/boardingAreas";
 
@@ -77,6 +77,19 @@ export default function School({ school: schoolOrUndef }: Props<typeof getServer
         return () => clearInterval(interval);
     }, [router]);
 
+
+    const starCallback = (id: string, event: MouseEvent<SVGSVGElement>): void => {
+        event.stopPropagation();
+        event.preventDefault();
+        const starred = new Set(starredBusses);
+        if (starred.has(id)) {
+            starred.delete(id);
+        } else {
+            starred.add(id);
+        }
+        setStarredBusses(starred);
+    };
+
     return (
         <div>
             <Head>
@@ -93,15 +106,7 @@ export default function School({ school: schoolOrUndef }: Props<typeof getServer
                         {buses.filter(bus => starredBusses.has(bus.id)).map(
                             bus => 
                                 <Bus bus={bus} starCallback={
-                                    () => {
-                                        const starred = new Set(starredBusses);
-                                        if (starred.has(bus.id)) {
-                                            starred.delete(bus.id);
-                                        } else {
-                                            starred.add(bus.id);
-                                        }
-                                        setStarredBusses(starred);
-                                    }
+                                    (event) => starCallback(bus.id, event)
                                 } isStarred={starredBusses.has(bus.id)} key={bus.id} />
                         )}
                     </div>
@@ -113,15 +118,7 @@ export default function School({ school: schoolOrUndef }: Props<typeof getServer
                     {buses.map(
                         bus => 
                             <Bus bus={bus} starCallback={
-                                () => {
-                                    const starred = new Set(starredBusses);
-                                    if (starred.has(bus.id)) {
-                                        starred.delete(bus.id);
-                                    } else {
-                                        starred.add(bus.id);
-                                    }
-                                    setStarredBusses(starred);
-                                }
+                                (event) => starCallback(bus.id, event)
                             } isStarred={starredBusses.has(bus.id)} key={bus.id} />
                     )}
                 </div>

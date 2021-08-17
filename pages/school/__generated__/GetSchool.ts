@@ -27,7 +27,6 @@ export interface GetSchool_school {
   id: string;
   name: string | null;
   location: GetSchool_school_location | null;
-  available: boolean;
   buses: GetSchool_school_buses[];
 }
 

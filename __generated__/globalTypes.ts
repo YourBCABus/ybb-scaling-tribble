@@ -7,6 +7,11 @@
 // START Enums and Input Objects
 //==============================================================
 
+export interface BusStatusInput {
+  invalidateTime?: any | null;
+  boardingArea?: string | null;
+}
+
 //==============================================================
 // END Enums and Input Objects
 //==============================================================

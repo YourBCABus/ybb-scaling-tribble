@@ -5,6 +5,8 @@
     align-content: center;
     flex-direction: row;
 }
+
+
 .logo {
     display: inline-flex;
     align-items: middle;
@@ -27,4 +29,14 @@
 .about {
     margin: auto;
     padding: 15px 15px 0px 15px;
+}
+
+
+.edit {
+    position: absolute;
+    right: 15px;
+    top: 15px;
+
+    line-height: 20px;
+    vertical-align: middle;
 }

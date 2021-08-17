@@ -1,4 +1,4 @@
-import NextAuth from "next-auth";
+import NextAuth, { Session } from "next-auth";
 
 const url = "https://api.yourbcabus.com";
 
@@ -28,7 +28,7 @@ export default NextAuth({
             name: "YourBCABus",
             type: "oauth",
             version: "2.0",
-            scope: "openid email offline_access read",
+            scope: "openid email offline_access read bus.create bus.update bus.updateStatus bus.delete",
             params: { grant_type: "authorization_code" },
             accessTokenUrl: `${url}/token`,
             requestTokenUrl: `${url}/token`,
@@ -63,8 +63,8 @@ export default NextAuth({
             }
             return token;
         },
-        async session(session, token) {
-            session.accessToken = token.accessToken;
+        async session(session: Session, token) {
+            session.accessToken = token.accessToken as string;
             session.sub = token.sub;
             return session;
         },

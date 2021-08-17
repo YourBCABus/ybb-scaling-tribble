@@ -1,7 +1,6 @@
 import { gql } from '@apollo/client';
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { useRouter } from 'next/router';
-import client from '../../lib/apollo-client';
+import createNewClient from '../../lib/apollo-client';
 import { UpdateBusStatus } from './__generated__/UpdateBusStatus';
 
 export const UPDATE_BUS_STATUS = gql`
@@ -39,6 +38,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 invalidateTime = new Date();
             }
 
+            const client = createNewClient();
             try {
                 const { data } = await client.mutate<UpdateBusStatus>({mutation: UPDATE_BUS_STATUS, variables: {busID: req.query.id, busStatus: {invalidateTime, boardingArea}}, context: {req}});
                 res.status(200).send(data);

@@ -18,10 +18,9 @@ const authLink = setContext(async (_, { headers, req }) => {
     };
 });
 
-// Defining it this way lets VS Code auto-import client
-export const client = new ApolloClient({
-    link: authLink.concat(httpLink),
-    cache: new InMemoryCache(),
-});
-
-export default client;
+export default function createNewClient() {
+    return new ApolloClient({
+        link: authLink.concat(httpLink),
+        cache: new InMemoryCache(),
+    });
+};

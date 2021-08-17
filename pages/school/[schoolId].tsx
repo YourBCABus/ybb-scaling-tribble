@@ -1,4 +1,4 @@
-import client from "../../lib/apollo-client";
+import createNewClient from "../../lib/apollo-client";
 import gql from "graphql-tag";
 import { GetSchool, GetSchool_school_buses } from "./__generated__/GetSchool";
 import { ApolloError } from "@apollo/client";
@@ -228,6 +228,8 @@ function returnSortedBuses(buses: GetSchool_school_buses[]): GetSchool_school_bu
 }
 
 export const getServerSideProps = async function<Q extends ParsedUrlQuery> (context: GetServerSidePropsContext<Q>) {
+    const client = createNewClient();
+    
     let data: GetSchool | null = null;
     try {
         const { data: scopedData } = await client.query<GetSchool>({query: GET_SCHOOL, variables: {id: context.params!.schoolId}});

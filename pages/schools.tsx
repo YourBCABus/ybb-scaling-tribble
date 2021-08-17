@@ -1,4 +1,4 @@
-import client from "../lib/apollo-client";
+import createNewClient from "../lib/apollo-client";
 import gql from "graphql-tag";
 import { GetSchools } from "./__generated__/GetSchools";
 import { Props } from "../lib/utils";
@@ -31,6 +31,7 @@ export default function Schools({ schools }: Props<typeof getServerSideProps>) {
 }
 
 export async function getServerSideProps() {
+    const client = createNewClient();
     const { data } = await client.query<GetSchools>({query: GET_SCHOOLS});
     return {props: {schools: data.schools}};
 }

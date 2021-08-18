@@ -39,7 +39,45 @@ query GetSchoolAndPerms($id: ID!) {
 }
 `;
 
+interface BusListProps {
+    buses: readonly GetSchoolAndPerms_school_buses[];
+    starredBusIDs: Set<string>;
+    isStarredList: boolean;
+    currEdit: {id: string, content: string};
+    editing: boolean;
+    starCallback: (id: string, event: MouseEvent<SVGSVGElement>) => void;
+    onEditCallback: (id: string, event: ChangeEvent<HTMLInputElement>) => void;
+    saveCallback: (id: string, boardingArea: string | null) => Promise<void>;
+}
 
+function BusList( { buses, starredBusIDs, isStarredList, currEdit, editing, starCallback, onEditCallback, saveCallback }: BusListProps ): JSX.Element {
+    return <div className={styles.bus_container_container + (isStarredList ? ` ${styles.bus_container_starred_container}` : ``)}>
+        <div className={styles.bus_container}>
+            {buses.map(
+                bus => 
+                    <Bus
+                        bus={
+                            bus.id === currEdit.id
+                                ? {
+                                    __typename: "Bus",
+                                    name: bus.name,
+                                    available: bus.available,
+                                    id: bus.id,
+                                    invalidateTime: new Date(new Date().getTime() + 10000),
+                                    boardingArea: currEdit.content}
+                                : bus
+                        }
+                        starCallback={(event) => starCallback(bus.id, event)}
+                        isStarred={starredBusIDs.has(bus.id)}
+                        key={bus.id}
+                        editing={editing}
+                        onEdit={(event) => onEditCallback(bus.id, event)}
+                        saveCallback={() => saveCallback(bus.id, bus.id === currEdit.id ? currEdit.content : bus.boardingArea)}
+                    />
+            )}
+        </div>
+    </div>;
+}
 
 export default function School({ school: schoolOrUndef, currentSchoolScopes: permsOrUndef }: Props<typeof getServerSideProps>): JSX.Element {
     const school = Object.freeze(schoolOrUndef!);
@@ -104,60 +142,28 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
                 <br/>
             </header>
             {
-                starredBuses.length > 0 && <div className={`${styles.bus_container_container} ${styles.bus_container_starred_container}`}>
-                    <div className={styles.bus_container}>
-                        {starredBuses.map(
-                            bus => 
-                                <Bus
-                                    bus={
-                                        bus.id === currEdit.id
-                                            ? {
-                                                __typename: "Bus",
-                                                name: bus.name,
-                                                available: bus.available,
-                                                id: bus.id,
-                                                invalidateTime: new Date(new Date().getTime() + 10000),
-                                                boardingArea: currEdit.content}
-                                            : bus
-                                    }
-                                    starCallback={(event) => starCallback(bus.id, event)}
-                                    isStarred={starredBusIDs.has(bus.id)}
-                                    key={bus.id}
-                                    editing={editMode && perms.bus.updateStatus}
-                                    onEdit={(event) => onEditCallback(bus.id, event)}
-                                    saveCallback={() => saveCallback(bus.id, bus.id === currEdit.id ? currEdit.content : bus.boardingArea)}
-                                />
-                        )}
-                    </div>
-                </div>
+                starredBuses.length > 0 && <BusList
+                    buses={starredBuses}
+                    starredBusIDs={starredBusIDs}
+                    isStarredList={true}
+                    currEdit={currEdit}
+                    editing={editMode && perms.bus.updateStatus}
+                    starCallback={starCallback}
+                    onEditCallback={onEditCallback}
+                    saveCallback={saveCallback}
+                />
             }
             
-            <div className={styles.bus_container_container}>
-                <div className={styles.bus_container}>
-                    {buses.map(
-                        bus => 
-                            <Bus
-                                bus={
-                                    bus.id === currEdit.id
-                                        ? {
-                                            __typename: "Bus",
-                                            name: bus.name,
-                                            available: bus.available,
-                                            id: bus.id,
-                                            invalidateTime: new Date(new Date().getTime() + 10000),
-                                            boardingArea: currEdit.content}
-                                        : bus
-                                }
-                                starCallback={(event) => starCallback(bus.id, event)}
-                                isStarred={starredBusIDs.has(bus.id)}
-                                key={bus.id}
-                                editing={editMode && perms.bus.updateStatus}
-                                onEdit={(event) => onEditCallback(bus.id, event)}
-                                saveCallback={() => saveCallback(bus.id, bus.id === currEdit.id ? currEdit.content : bus.boardingArea)}
-                            />
-                    )}
-                </div>
-            </div>
+            <BusList
+                buses={buses}
+                starredBusIDs={starredBusIDs}
+                isStarredList={false}
+                currEdit={currEdit}
+                editing={editMode && perms.bus.updateStatus}
+                starCallback={starCallback}
+                onEditCallback={onEditCallback}
+                saveCallback={saveCallback}
+            />
         </div>
     );
 }

@@ -4,16 +4,16 @@
 // This file was automatically generated and should not be edited.
 
 // ====================================================
-// GraphQL query operation: GetSchool
+// GraphQL query operation: GetSchoolAndPerms
 // ====================================================
 
-export interface GetSchool_school_location {
+export interface GetSchoolAndPerms_school_location {
   __typename: "Location";
   lat: number;
   long: number;
 }
 
-export interface GetSchool_school_buses {
+export interface GetSchoolAndPerms_school_buses {
   __typename: "Bus";
   id: string;
   name: string | null;
@@ -22,18 +22,19 @@ export interface GetSchool_school_buses {
   available: boolean;
 }
 
-export interface GetSchool_school {
+export interface GetSchoolAndPerms_school {
   __typename: "School";
   id: string;
   name: string | null;
-  location: GetSchool_school_location | null;
-  buses: GetSchool_school_buses[];
+  location: GetSchoolAndPerms_school_location | null;
+  buses: GetSchoolAndPerms_school_buses[];
 }
 
-export interface GetSchool {
-  school: GetSchool_school | null;
+export interface GetSchoolAndPerms {
+  school: GetSchoolAndPerms_school | null;
+  currentSchoolScopes: string[];
 }
 
-export interface GetSchoolVariables {
+export interface GetSchoolAndPermsVariables {
   id: string;
 }

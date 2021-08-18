@@ -1,6 +1,6 @@
 import createNewClient from "../../lib/apollo-client";
 import gql from "graphql-tag";
-import { GetSchool, GetSchool_school_buses } from "./__generated__/GetSchool";
+import { GetSchoolAndPerms, GetSchoolAndPerms_school_buses } from "./__generated__/GetSchoolAndPerms";
 import { ApolloError } from "@apollo/client";
 
 import { Props } from "../../lib/utils";
@@ -10,20 +10,16 @@ import { ParsedUrlQuery } from "node:querystring";
 
 import Head from 'next/head';
 import NavBar, { PagesInNavbar } from "../../lib/navbar";
+import Bus from "../../lib/busComponent";
 
 import styles from "../../styles/School.module.scss";
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faStar } from '@fortawesome/free-solid-svg-icons';
-import { useState, useEffect, MouseEventHandler, ChangeEventHandler, MouseEvent, ChangeEvent } from "react";
+import { useState, useEffect, MouseEvent, ChangeEvent } from "react";
 
-import getBoardingArea from "../../lib/boardingAreas";
-import Link from "next/link";
-import { GetPerms } from "./__generated__/GetPerms";
 import permParseFunc from "../../lib/perms";
 
-export const GET_SCHOOL = gql`
-query GetSchool($id: ID!) {
+export const GET_SCHOOL_AND_PERMS = gql`
+query GetSchoolAndPerms($id: ID!) {
     school(id: $id) {
         id
         name
@@ -39,65 +35,13 @@ query GetSchool($id: ID!) {
             available
         }
     }
-}
-`;
-
-export const GET_PERMS = gql`
-query GetPerms($id: ID!) {
     currentSchoolScopes(schoolID: $id) 
 }
 `;
 
-interface BusProps {
-    bus: GetSchool_school_buses,
-    starCallback: MouseEventHandler<SVGSVGElement>,
-    isStarred: boolean, 
-    editing: boolean,
-    onEdit: ChangeEventHandler<HTMLInputElement>,
-    saveCallback: () => void
-}
 
 
-function Bus({ bus: { name, id, available, boardingArea, invalidateTime }, starCallback, isStarred, editing, onEdit, saveCallback }:  BusProps): JSX.Element {
-    const inner = <div className={styles.bus_view}>
-        <div className={styles.bus_name_and_status}>
-            <span className={styles.bus_name}>{name}</span>
-            <br/>
-            <span className={styles.bus_status}>{available ? (getBoardingArea(boardingArea, invalidateTime) === "?" ? "Not on location" : "On location") : "Not running"}</span>
-        </div>
-        <FontAwesomeIcon icon={faStar} className={styles.bus_star_indicator} style={{color: isStarred ? "#00b0ff" : "rgba(0,0,0,.2)"}} onClick={starCallback} size={"lg"}/>
-        <div className={styles.bus_boarding_area_background_div} style={getBoardingArea(boardingArea, invalidateTime) === "?" ? {} : {color: "#e8edec", backgroundColor: "#00796b"}}>
-            {
-                editing
-                    ? <input
-                        className={styles.bus_boarding_area_input}
-                        onChange={onEdit}
-                        onBlur={saveCallback}
-                        value={getBoardingArea(boardingArea, invalidateTime)}
-                        onClick={
-                            (event) => {
-                                event.preventDefault();
-                                event.stopPropagation();
-                                event.currentTarget.focus();
-                            }
-                        }
-                        onKeyDown={
-                            (event) => {
-                                console.log(event.key);
-                                if (event.key === "Enter") event.currentTarget.blur();
-                            }
-                        }
-                    />
-                    : getBoardingArea(boardingArea, invalidateTime)
-            }
-        </div>
-        
-    </div>;
-    
-    return editing ? inner : <Link href={`/bus/${id}`} passHref={true}>{inner}</Link>;
-}
-
-export default function School({ school: schoolOrUndef, perms: permsOrUndef }: Props<typeof getServerSideProps>): JSX.Element {
+export default function School({ school: schoolOrUndef, currentSchoolScopes: permsOrUndef }: Props<typeof getServerSideProps>): JSX.Element {
     const school = Object.freeze(schoolOrUndef!);
     const perms = Object.freeze(permParseFunc(Object.freeze(permsOrUndef!)));
     const buses = Object.freeze(returnSortedBuses(school.buses));
@@ -141,7 +85,7 @@ export default function School({ school: schoolOrUndef, perms: permsOrUndef }: P
         if (boardingArea == null) {
             boardingArea = "?";
         }
-        await fetch(`/api/updateBusStatus?id=${id}&boardingArea=${boardingArea}`);
+        await fetch(`/api/updateBusStatus?id=${encodeURIComponent(id)}&boardingArea=${encodeURIComponent(boardingArea)}`);
         router.replace(router.asPath, undefined, {scroll: false});
         setCurrEdit({id: "", content: ""});
     };
@@ -219,10 +163,10 @@ export default function School({ school: schoolOrUndef, perms: permsOrUndef }: P
 }
 
 
-function returnSortedBuses(buses: GetSchool_school_buses[]): GetSchool_school_buses[] {
-    let availableBuses:   GetSchool_school_buses[] = buses.filter((bus) =>  bus.available);
+function returnSortedBuses(buses: GetSchoolAndPerms_school_buses[]): GetSchoolAndPerms_school_buses[] {
+    let availableBuses:   GetSchoolAndPerms_school_buses[] = buses.filter((bus) =>  bus.available);
     availableBuses.sort((a, b) => a.name?.localeCompare(b.name!) ?? 1);
-    let unavailableBuses: GetSchool_school_buses[] = buses.filter((bus) => !bus.available);
+    let unavailableBuses: GetSchoolAndPerms_school_buses[] = buses.filter((bus) => !bus.available);
     unavailableBuses.sort((a, b) => a.name?.localeCompare(b.name!) ?? 1);
     return [...availableBuses, ...unavailableBuses];
 }
@@ -230,19 +174,13 @@ function returnSortedBuses(buses: GetSchool_school_buses[]): GetSchool_school_bu
 export const getServerSideProps = async function<Q extends ParsedUrlQuery> (context: GetServerSidePropsContext<Q>) {
     const client = createNewClient();
     
-    let data: GetSchool | null = null;
+    let data: GetSchoolAndPerms | null = null;
     try {
-        const { data: scopedData } = await client.query<GetSchool>({query: GET_SCHOOL, variables: {id: context.params!.schoolId}});
+        const { data: scopedData } = await client.query<GetSchoolAndPerms>({query: GET_SCHOOL_AND_PERMS, variables: {id: context.params!.schoolId}, context: {req: context.req}});
         data = scopedData;
     } catch (e) {
         console.log(e);
-        if (e instanceof ApolloError) {
-            e.clientErrors.map((error) => console.log(error.name));
-        } else throw e;
     }
 
-
-    const { data: permData } = await client.query<GetPerms>({query: GET_PERMS, variables: {id: context.params!.schoolId}, context: {req: context.req}});
-
-    return data?.school == null ? {notFound: true, props: {}} : {props: {school: data.school, perms: permData.currentSchoolScopes }};
+    return data?.school == null ? { notFound: true, props: { school: null, currentSchoolScopes: null } } : { props: data };
 };

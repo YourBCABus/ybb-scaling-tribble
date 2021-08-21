@@ -1,12 +1,11 @@
 import createNewClient from "../../lib/apollo-client";
 import gql from "graphql-tag";
 import { GetSchoolAndPerms, GetSchoolAndPerms_school_buses } from "./__generated__/GetSchoolAndPerms";
-import { ApolloError } from "@apollo/client";
 
 import { Props } from "../../lib/utils";
 import { GetServerSidePropsContext } from "next";
-import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from "node:querystring";
+import { MouseEvent } from "react";
 
 import Head from 'next/head';
 import NavBar, { PagesInNavbar } from "../../lib/navbar";
@@ -14,9 +13,11 @@ import Bus from "../../lib/busComponent";
 
 import styles from "../../styles/School.module.scss";
 
-import { useState, useEffect, MouseEvent, ChangeEvent } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from 'next/router';
 
 import permParseFunc from "../../lib/perms";
+import { saveBoardingAreaCallback } from "../../lib/editingCallbacks";
 
 export const GET_SCHOOL_AND_PERMS = gql`
 query GetSchoolAndPerms($id: ID!) {
@@ -43,36 +44,25 @@ interface BusListProps {
     buses: readonly GetSchoolAndPerms_school_buses[];
     starredBusIDs: Set<string>;
     isStarredList: boolean;
-    currEdit: {id: string, content: string};
     editing: boolean;
     starCallback: (id: string, event: MouseEvent<SVGSVGElement>) => void;
-    onEditCallback: (id: string, event: ChangeEvent<HTMLInputElement>) => void;
-    saveCallback: (id: string, boardingArea: string | null) => Promise<void>;
+    saveBoardingAreaCallback: (id: string, boardingArea: string | null) => Promise<void>;
 }
 
-function BusList( { buses, starredBusIDs, isStarredList, currEdit, editing, starCallback, onEditCallback, saveCallback }: BusListProps ): JSX.Element {
+function BusList( { buses, starredBusIDs, isStarredList, editing, starCallback, saveBoardingAreaCallback }: BusListProps ): JSX.Element {
     return <div className={styles.bus_container_container + (isStarredList ? ` ${styles.bus_container_starred_container}` : ``)}>
         <div className={styles.bus_container}>
             {buses.map(
                 bus => 
                     <Bus
                         bus={
-                            bus.id === currEdit.id
-                                ? {
-                                    __typename: "Bus",
-                                    name: bus.name,
-                                    available: bus.available,
-                                    id: bus.id,
-                                    invalidateTime: new Date(new Date().getTime() + 10000),
-                                    boardingArea: currEdit.content}
-                                : bus
+                            bus
                         }
                         starCallback={(event) => starCallback(bus.id, event)}
                         isStarred={starredBusIDs.has(bus.id)}
                         key={bus.id}
                         editing={editing}
-                        onEdit={(event) => onEditCallback(bus.id, event)}
-                        saveCallback={() => saveCallback(bus.id, bus.id === currEdit.id ? currEdit.content : bus.boardingArea)}
+                        saveBoardingAreaCallback={(boardingArea) => saveBoardingAreaCallback(bus.id, boardingArea)}
                     />
             )}
         </div>
@@ -96,15 +86,11 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
     let [editMode, setEditMode] = useState<boolean>(false);
 
     const router = useRouter();
+    const updateServerSidePropsFunction = useCallback(() => router.replace(router.asPath, undefined, {scroll: false}), [router]);
     useEffect(() => {
-        const interval = setInterval(() => {
-            router.replace(router.asPath, undefined, {scroll: false});
-        }, editMode ? 2000 : 15000);
+        const interval = setInterval(updateServerSidePropsFunction, editMode ? 2000 : 15000);
         return () => clearInterval(interval);
-    }, [router, editMode]);
-
-
-    let [currEdit, setCurrEdit] = useState<{id: string, content: string}>({id: "", content: ""});
+    }, [editMode, updateServerSidePropsFunction]);
 
 
     const starCallback = (id: string, event: MouseEvent<SVGSVGElement>): void => {
@@ -118,54 +104,38 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
         }
         setStarredBusIDs(starred);
     };
-    const onEditCallback = (id: string, event: ChangeEvent<HTMLInputElement>): void => setCurrEdit({id, content: event.target.value});
-    const saveCallback = async (id: string, boardingArea: string | null): Promise<void> => {
-        if (boardingArea == null) {
-            boardingArea = "?";
-        }
-        await fetch(`/api/updateBusStatus?id=${encodeURIComponent(id)}&boardingArea=${encodeURIComponent(boardingArea)}`);
-        router.replace(router.asPath, undefined, {scroll: false});
-        setCurrEdit({id: "", content: ""});
-    };
-
 
     const starredBuses = Object.freeze(buses.filter(bus => starredBusIDs.has(bus.id)));
 
-    return (
-        <div>
-            <Head>
-                <link rel="stylesheet" href="https://use.typekit.net/qjo5whp.css"/>
-            </Head>
-            <header className={styles.header}>
-                <NavBar selectedPage={PagesInNavbar.HOME} editSwitchOptions={perms.bus.create || perms.bus.updateStatus ? {state: editMode, onChange: setEditMode} : undefined}/>
-                <h1 className={styles.school_name}>{school.name}</h1>
-                <br/>
-            </header>
-            {
-                starredBuses.length > 0 && <BusList
-                    buses={starredBuses}
-                    starredBusIDs={starredBusIDs}
-                    isStarredList={true}
-                    currEdit={currEdit}
-                    editing={editMode && perms.bus.updateStatus}
-                    starCallback={starCallback}
-                    onEditCallback={onEditCallback}
-                    saveCallback={saveCallback}
-                />
-            }
-            
-            <BusList
-                buses={buses}
+    return <div>
+        <Head>
+            <link rel="stylesheet" href="https://use.typekit.net/qjo5whp.css"/>
+        </Head>
+        <header className={styles.header}>
+            <NavBar selectedPage={PagesInNavbar.NONE} editSwitchOptions={perms.bus.create || perms.bus.updateStatus ? {state: editMode, onChange: setEditMode} : undefined}/>
+            <h1 className={styles.school_name}>{school.name}</h1>
+            <br/>
+        </header>
+        {
+            starredBuses.length > 0 && <BusList
+                buses={starredBuses}
                 starredBusIDs={starredBusIDs}
-                isStarredList={false}
-                currEdit={currEdit}
+                isStarredList={true}
                 editing={editMode && perms.bus.updateStatus}
                 starCallback={starCallback}
-                onEditCallback={onEditCallback}
-                saveCallback={saveCallback}
+                saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction)}
             />
-        </div>
-    );
+        }
+        
+        <BusList
+            buses={buses}
+            starredBusIDs={starredBusIDs}
+            isStarredList={false}
+            editing={editMode && perms.bus.updateStatus}
+            starCallback={starCallback}
+            saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction)}
+        />
+    </div>;
 }
 
 

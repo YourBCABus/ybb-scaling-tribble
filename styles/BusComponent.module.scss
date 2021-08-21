@@ -18,6 +18,10 @@
     box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
 }
 
+.bus_view.size_large {
+    height: 130px;
+}
+
 .bus_name_and_status {
     grid-area: a;
     margin: auto 0px;
@@ -31,6 +35,15 @@
         font-weight: 450;
         font-size: 1rem;
         color: #6c757d;
+    }
+}
+
+.bus_name_and_status.size_large {
+    .bus_name {
+        font-size: 1.5rem
+    }
+    .bus_status {
+        font-size: 1.3rem;
     }
 }
 
@@ -58,6 +71,12 @@
     vertical-align: middle;
     text-align: center;
     
+}
+
+.bus_boarding_area_background_div.size_large {
+    width: 100px;
+    height: 100px;
+    line-height: 100px;
 }
 
 .bus_boarding_area_input {

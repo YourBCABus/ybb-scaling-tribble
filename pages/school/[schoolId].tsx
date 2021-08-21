@@ -46,7 +46,7 @@ interface BusListProps {
     isStarredList: boolean;
     editing: false | ReturnType<typeof permParseFunc>;
     starCallback: (id: string, event: MouseEvent<SVGSVGElement>) => void;
-    saveBoardingAreaCallback: (id: string, boardingArea: string | null) => Promise<void>;
+    saveBoardingAreaCallback: (id: string) => (boardingArea: string | null) => Promise<void>;
 }
 
 function BusList( { buses, starredBusIDs, isStarredList, editing, starCallback, saveBoardingAreaCallback }: BusListProps ): JSX.Element {
@@ -62,7 +62,7 @@ function BusList( { buses, starredBusIDs, isStarredList, editing, starCallback, 
                         isStarred={starredBusIDs.has(bus.id)}
                         key={bus.id}
                         editing={editing}
-                        saveBoardingAreaCallback={(boardingArea) => saveBoardingAreaCallback(bus.id, boardingArea)}
+                        saveBoardingAreaCallback={saveBoardingAreaCallback(bus.id)}
                     />
             )}
         </div>
@@ -121,7 +121,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
                 buses={starredBuses}
                 starredBusIDs={starredBusIDs}
                 isStarredList={true}
-                editing={editMode ? perms : false}
+                editing={editMode && perms}
                 starCallback={starCallback}
                 saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction)}
             />
@@ -131,7 +131,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
             buses={buses}
             starredBusIDs={starredBusIDs}
             isStarredList={false}
-            editing={editMode ? perms : false}
+            editing={editMode && perms}
             starCallback={starCallback}
             saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction)}
         />

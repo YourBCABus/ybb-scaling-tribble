@@ -44,7 +44,7 @@ interface BusListProps {
     buses: readonly GetSchoolAndPerms_school_buses[];
     starredBusIDs: Set<string>;
     isStarredList: boolean;
-    editing: boolean;
+    editing: false | ReturnType<typeof permParseFunc>;
     starCallback: (id: string, event: MouseEvent<SVGSVGElement>) => void;
     saveBoardingAreaCallback: (id: string, boardingArea: string | null) => Promise<void>;
 }
@@ -121,7 +121,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
                 buses={starredBuses}
                 starredBusIDs={starredBusIDs}
                 isStarredList={true}
-                editing={editMode && perms.bus.updateStatus}
+                editing={editMode ? perms : false}
                 starCallback={starCallback}
                 saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction)}
             />
@@ -131,7 +131,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
             buses={buses}
             starredBusIDs={starredBusIDs}
             isStarredList={false}
-            editing={editMode && perms.bus.updateStatus}
+            editing={editMode ? perms : false}
             starCallback={starCallback}
             saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction)}
         />

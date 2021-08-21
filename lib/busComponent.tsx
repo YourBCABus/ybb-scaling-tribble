@@ -10,6 +10,8 @@ import { SizeProp } from '@fortawesome/fontawesome-svg-core';
 
 import Link from "next/link";
 
+import permParseFunc from './perms';
+
 export interface BusObj {
     __typename: "Bus";
     id: string;
@@ -28,7 +30,7 @@ interface BusProps {
     bus: BusObj;
     starCallback: MouseEventHandler<SVGSVGElement>;
     isStarred: boolean;
-    editing: boolean;
+    editing: false | ReturnType<typeof permParseFunc>;
     saveBoardingAreaCallback?: (boardingArea: string | null) => void;
     size?: BusComponentSizes;
     noLink?: boolean;
@@ -79,7 +81,7 @@ export default function Bus({ bus: { name, id, available, boardingArea, invalida
     };
 
     let boardingAreaBackgroundDivContents: JSX.Element | string;
-    if (editing) {
+    if (editing && editing.bus.updateStatus) {
         boardingAreaBackgroundDivContents = <input
             className={styles.bus_boarding_area_input}
             onChange={(event) => setCurrBoardingAreaEdit(event.currentTarget.value)}

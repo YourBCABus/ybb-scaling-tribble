@@ -32,6 +32,7 @@ interface BusProps {
     isStarred: boolean;
     editing: false | ReturnType<typeof permParseFunc>;
     saveBoardingAreaCallback?: (boardingArea: string | null) => void;
+    saveBusNameCallback?: (busName: string | null) => void
     size?: BusComponentSizes;
     noLink?: boolean;
 }
@@ -65,39 +66,74 @@ function textSizeToFitContainer(text: string, font: string, containerWidth: numb
 
 const bus_view_boarding_area_font: string = "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif";
 
-export default function Bus({ bus: { name, id, available, boardingArea, invalidateTime }, starCallback, isStarred, editing, saveBoardingAreaCallback, size = BusComponentSizes.NORMAL, noLink = false}:  BusProps): JSX.Element {
-    let [busBoardingAreaFontSize, setBusBoardingAreaFontSize] = useState<number>(24);
+export default function Bus(
+    {
+        bus: { name, id, available, boardingArea, invalidateTime },
+        starCallback,
+        isStarred,
+        editing,
+        saveBoardingAreaCallback,
+        saveBusNameCallback,
+        size = BusComponentSizes.NORMAL,
+        noLink = false,
+    }:  BusProps,
+): JSX.Element {
+    const [busBoardingAreaFontSize, setBusBoardingAreaFontSize] = useState<number>(24);
     
-    let [currBoardingAreaEdit, setCurrBoardingAreaEdit] = useState<string | null>(null);
+    const [currBoardingAreaEdit, setCurrBoardingAreaEdit] = useState<string | null>(null);
+    const [currBusNameEdit, setCurrBusNameEdit] = useState<string | null>(null);
 
-    let boardingAreaText = currBoardingAreaEdit ?? getBoardingArea(boardingArea, invalidateTime) ;
+    const boardingAreaText = currBoardingAreaEdit ?? getBoardingArea(boardingArea, invalidateTime);
+    const busNameText = currBusNameEdit ?? name;
 
     useEffect(() => setBusBoardingAreaFontSize(Math.floor(Math.min(textSizeToFitContainer(boardingAreaText, bus_view_boarding_area_font, size * 50), size * 24))), [boardingAreaText, size]);
     
-    let busBoardingAreaBackgroundDivStyle = {
+    const busBoardingAreaBackgroundDivStyle = {
         ...(boardingAreaText === "?" ? {} : {color: "#e8edec", backgroundColor: "#00796b"}),
         font: bus_view_boarding_area_font,
         fontSize: `${busBoardingAreaFontSize}px`,
     };
 
     let boardingAreaBackgroundDivContents: JSX.Element | string;
-    if (editing && editing.bus.updateStatus) {
+    if (editing && editing.bus.updateStatus && saveBoardingAreaCallback) {
         boardingAreaBackgroundDivContents = <input
             className={styles.bus_boarding_area_input}
             onChange={(event) => setCurrBoardingAreaEdit(event.currentTarget.value)}
-            onBlur={() =>  { saveBoardingAreaCallback && saveBoardingAreaCallback(currBoardingAreaEdit); setCurrBoardingAreaEdit(null);}}
+            onBlur={() => { 
+                saveBoardingAreaCallback(currBoardingAreaEdit);
+                setCurrBoardingAreaEdit(null);
+            }}
             value={boardingAreaText}
-            onClick={
-                (event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    event.currentTarget.focus();
-                }
-            }
+            onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                event.currentTarget.focus();
+            }}
             onKeyDown={ (event) => event.key === "Enter" && event.currentTarget.blur() }
         />;
     } else {
         boardingAreaBackgroundDivContents = boardingAreaText;
+    }
+
+    let busNameSpanOrInput: JSX.Element;
+    if (editing && editing.bus.update && saveBusNameCallback) {
+        busNameSpanOrInput = <input
+            className={`${styles.bus_name} ${styles.bus_name_input}`}
+            onChange={(event) => setCurrBusNameEdit(event.currentTarget.value)}
+            onBlur={() => {
+                saveBusNameCallback(currBusNameEdit);
+                setCurrBusNameEdit(null);
+            }}
+            value={busNameText ?? ""}
+            onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                event.currentTarget.focus();
+            }}
+            onKeyDown={ (event) => event.key === "Enter" && event.currentTarget.blur() }
+        />;
+    } else {
+        busNameSpanOrInput = <span className={styles.bus_name}>{busNameText}</span>;
     }
 
     let sizeClassName: string;
@@ -117,7 +153,7 @@ export default function Bus({ bus: { name, id, available, boardingArea, invalida
 
     const inner = <div className={`${styles.bus_view}${sizeClassName}`}>
         <div className={`${styles.bus_name_and_status}${sizeClassName}`}>
-            <span className={styles.bus_name}>{name}</span>
+            {busNameSpanOrInput}
             <br/>
             <span className={styles.bus_status}>{available ? (boardingAreaText === "?" ? "Not on location" : "On location") : "Not running"}</span>
         </div>

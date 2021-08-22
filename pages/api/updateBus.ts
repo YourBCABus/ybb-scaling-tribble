@@ -1,13 +1,14 @@
 import { gql } from '@apollo/client';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import createNewClient from '../../lib/apollo-client';
-import { UpdateBusStatus } from './__generated__/UpdateBusStatus';
+import { UpdateBus } from './__generated__/UpdateBus';
+import { BusInput } from "../../__generated__/globalTypes";
 
-export const UPDATE_BUS_STATUS = gql`
-mutation UpdateBusStatus($busID: ID!, $busStatus: BusStatusInput!) {
-    updateBusStatus(
+export const UPDATE_BUS = gql`
+mutation UpdateBus($busID: ID!, $bus: BusInput!) {
+    updateBus(
         busID: $busID,
-        status: $busStatus
+        bus: $bus
     ) {
         id,
         schoolID,
@@ -25,22 +26,16 @@ mutation UpdateBusStatus($busID: ID!, $busStatus: BusStatusInput!) {
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse): Promise<void> {
     if (req.method === "GET") {
-        if (req.query.id && req.query.boardingArea && typeof req.query.id === 'string' && typeof req.query.boardingArea === 'string') {
+        if (req.query.id && req.query.busData && typeof req.query.id === 'string' && typeof req.query.busData === 'string') {
 
             var invalidateTime = new Date();
             invalidateTime.setUTCHours(24,0,0,0);
 
-            let boardingArea: string | null = req.query.boardingArea;
-
-            if (boardingArea === "" || boardingArea === "?") {
-                boardingArea = null;
-
-                invalidateTime = new Date();
-            }
+            let bus: BusInput = JSON.parse(req.query.busData);
 
             const client = createNewClient();
             try {
-                const { data } = await client.mutate<UpdateBusStatus>({mutation: UPDATE_BUS_STATUS, variables: {busID: req.query.id, busStatus: {invalidateTime, boardingArea}}, context: {req}});
+                const { data } = await client.mutate<UpdateBus>({mutation: UPDATE_BUS, variables: {busID: req.query.id, bus}, context: {req}});
                 res.send(data);
             } catch (e) {
                 console.log(e);

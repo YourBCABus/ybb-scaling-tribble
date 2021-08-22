@@ -1,3 +1,5 @@
+import { BusInput } from "../__generated__/globalTypes";
+
 export const saveBoardingAreaCallback = 
     (updateServerSidePropsFunction: () => void) => 
         (id: string) => 
@@ -10,3 +12,12 @@ export const saveBoardingAreaCallback =
             }
     ;
 
+
+export const saveBusCallback = 
+    (updateServerSidePropsFunction: () => void) => 
+        (id: string) => 
+            async (busInput: BusInput) => {
+                await fetch(`/api/updateBus?id=${encodeURIComponent(id)}&busData=${encodeURIComponent(JSON.stringify(busInput))}`);
+                updateServerSidePropsFunction();
+            }
+    ;

@@ -1,42 +1,32 @@
 .navbar {
     display: inline-flex;
-    align-items: middle;
+    align-items: center;
     justify-content: center;
     align-content: center;
     flex-direction: row;
+    width: 100%;
+    padding: 15px;
 }
 
+.spacer {
+    flex-grow: 1;
+}
 
 .logo {
     display: inline-flex;
-    align-items: middle;
+    align-items: center;
     justify-content: center;
     align-content: center;
     flex-direction: row;
     
-
-    padding: 15px 15px 0px 15px;
+    padding-right: 15px;
 
     font-family: neue-haas-grotesk-display;
     font-weight: 600;
     font-size: 1.25rem;
 }
-.logo span {
-    margin: auto;
-}
-
-
-.about {
-    margin: auto;
-    padding: 15px 15px 0px 15px;
-}
-
 
 .edit {
-    position: absolute;
-    right: 15px;
-    top: 15px;
-
     line-height: 20px;
     vertical-align: middle;
 }
@@ -47,4 +37,39 @@
 
 .edit_text {
     vertical-align: middle;
+}
+
+.auth {
+    padding-left: 15px;
+}
+
+.sign_in_button, .sign_out_button {
+    color: white;
+    font-size: 1rem;
+
+    border-radius: 3px;
+    padding: 8px 12px;
+
+    cursor: pointer;
+    transition: background-color 0.1s;
+}
+
+.sign_in_button {
+    background-color: rgba(255, 255, 255, 0.2);
+    border: none;
+    font-weight: 500;
+}
+
+.sign_in_button:hover, .sign_in_button:focus {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.sign_out_button {
+    background-color: rgba(255, 255, 255, 0);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    font-weight: normal;
+}
+
+.sign_out_button:hover, .sign_out_button:focus {
+    background-color: rgba(255, 255, 255, 0.1);
 }

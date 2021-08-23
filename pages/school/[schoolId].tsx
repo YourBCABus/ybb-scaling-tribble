@@ -114,7 +114,6 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
         <header className={styles.header}>
             <NavBar selectedPage={PagesInNavbar.NONE} editSwitchOptions={perms.bus.create || perms.bus.updateStatus ? {state: editMode, onChange: setEditMode} : undefined}/>
             <h1 className={styles.school_name}>{school.name}</h1>
-            <br/>
         </header>
         {
             starredBuses.length > 0 && <BusList

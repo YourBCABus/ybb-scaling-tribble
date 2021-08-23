@@ -103,8 +103,6 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
                         : undefined
                 }
             />
-            <br/>
-            <br/>
         </header>
         <BusComponent
             bus={bus}

@@ -23,7 +23,7 @@ export default function NavBar( { selectedPage, editSwitchOptions }: { selectedP
     return <div className={styles.navbar}>
         <Link href={"/"} passHref={true}><a>
             <div className={styles.logo}>
-                <Image src="/logo.png" alt="YourBCABus Logo" width={40} height={40} />
+                <Image src="/logo.png" alt="YourBCABus Logo" height={32} width={32} />
                 <span>YourBCABus</span>
             </div>
         </a></Link>

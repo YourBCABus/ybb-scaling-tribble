@@ -1,3 +1,4 @@
+import { useSession } from 'next-auth/client';
 import Image from 'next/image';
 import Link from 'next/link';
 import Switch from "react-switch";
@@ -17,6 +18,7 @@ interface EditSwitchOptions {
 }
 
 export default function NavBar( { selectedPage, editSwitchOptions }: { selectedPage: PagesInNavbar, editSwitchOptions?: EditSwitchOptions } ) {
+    // const [session, loading] = useSession();
     return <div className={styles.navbar}>
         <Link href={"/"} passHref={true}><a>
             <div className={styles.logo}>
@@ -25,6 +27,7 @@ export default function NavBar( { selectedPage, editSwitchOptions }: { selectedP
             </div>
         </a></Link>
         <Link href={"/about"} passHref={true}><a className={styles.about}>About</a></Link>
+        <div className={styles.spacer}></div>
         {
             editSwitchOptions && <span className={styles.edit}>
                 <Switch className={styles.edit_switch} checked={editSwitchOptions.state} onChange={editSwitchOptions.onChange} height={20} width={40}/>{" "}

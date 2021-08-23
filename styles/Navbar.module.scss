@@ -1,42 +1,32 @@
 .navbar {
     display: inline-flex;
-    align-items: middle;
+    align-items: center;
     justify-content: center;
     align-content: center;
     flex-direction: row;
+    width: 100%;
+    padding: 15px;
 }
 
+.spacer {
+    flex-grow: 1;
+}
 
 .logo {
     display: inline-flex;
-    align-items: middle;
+    align-items: center;
     justify-content: center;
     align-content: center;
     flex-direction: row;
     
-
-    padding: 15px 15px 0px 15px;
+    padding-right: 15px;
 
     font-family: neue-haas-grotesk-display;
     font-weight: 600;
     font-size: 1.25rem;
 }
-.logo span {
-    margin: auto;
-}
-
-
-.about {
-    margin: auto;
-    padding: 15px 15px 0px 15px;
-}
-
 
 .edit {
-    position: absolute;
-    right: 15px;
-    top: 15px;
-
     line-height: 20px;
     vertical-align: middle;
 }

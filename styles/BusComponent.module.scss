@@ -25,11 +25,11 @@
 .bus_name_and_status {
     grid-area: a;
     margin: auto 0px;
-    font-weight: 500;
     line-height: 1.5;
     .bus_name {
         line-height: 0.6;
         font-size: 1.15rem;
+        font-weight: 500;
     }
     .bus_name.bus_name_input {
         width: 100%;

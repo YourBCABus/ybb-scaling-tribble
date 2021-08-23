@@ -1,12 +1,13 @@
 import createNewClient from "../../lib/apollo-client";
 import gql from "graphql-tag";
-import { GetBus } from "./__generated__/GetBus";
+import { GetBus, GetBus_bus_stops } from "./__generated__/GetBus";
 import { GetPerms } from "./__generated__/GetPerms";
 
 import { GetServerSidePropsContext } from "next";
 import { ParsedUrlQuery } from "node:querystring";
 import { Props } from "../../lib/utils";
 import { MouseEvent } from "react";
+import { DroppableProvided, DraggableProvided, resetServerContext } from "react-beautiful-dnd";
 
 import styles from "../../styles/Bus.module.scss";
 
@@ -16,6 +17,10 @@ import { useRouter } from "next/router";
 import Head from 'next/head';
 import BusComponent, { BusComponentSizes } from "../../lib/busComponent";
 import NavBar, { PagesInNavbar } from "../../lib/navbar";
+import NoSSRComponent from "../../lib/noSSRComponent";
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBars } from '@fortawesome/free-solid-svg-icons';
 
 import permParseFunc from "../../lib/perms";
 import { saveBoardingAreaCallback, saveBusCallback } from "../../lib/editingCallbacks";
@@ -55,6 +60,7 @@ query GetPerms($schoolID: ID!) {
 export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef }: Props<typeof getServerSideProps>): JSX.Element {
     const bus = Object.freeze(busOrUndef!);
     const perms = Object.freeze(permParseFunc(Object.freeze(permsOrUndef!)));
+    const stops = Object.freeze(returnSortedStops(bus.stops));
 
     let [editMode, setEditMode] = useState<boolean>(false);
 
@@ -124,10 +130,44 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
                 )
             }
         />
-        
+        <NoSSRComponent>
+            <DragDropContext onDragEnd={() => null}>
+                <Droppable droppableId="stops">
+                    
+                    {(provided: DroppableProvided) => (
+                        <div className={styles.stops}>
+                            <h1> </h1>
+                            <ul {...provided.droppableProps} ref={provided.innerRef} >
+                                {
+                                    stops.map(
+                                        (stop, index) => <Draggable isDragDisabled={!editMode} key={stop.id} draggableId={stop.id} index={index}>
+                                            {
+                                                (provided: DraggableProvided) => (
+                                                    <li ref={provided.innerRef} {...provided.draggableProps}>
+                                                        <div>
+                                                            <h1>{stop.name}</h1>
+                                                            <p>{stop.description}</p>
+                                                        </div>
+                                                        {editMode && <span {...provided.dragHandleProps} className={styles.stop_drag_handle}><FontAwesomeIcon icon={faBars} size="lg"/></span>}
+                                                    </li>
+                                                )
+                                            }
+                                        </Draggable>
+                                    )
+                                }
+                                {provided.placeholder}
+                            </ul>
+                        </div>
+                    )}
+                </Droppable>
+            </DragDropContext>
+        </NoSSRComponent>
     </div>;
 }
 
+function returnSortedStops(stops: GetBus_bus_stops[]): GetBus_bus_stops[] {
+    return [...stops].sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity));
+}
 
 export const getServerSideProps = async function<Q extends ParsedUrlQuery> (context: GetServerSidePropsContext<Q>) {
     const client = createNewClient();
@@ -143,7 +183,6 @@ export const getServerSideProps = async function<Q extends ParsedUrlQuery> (cont
     } catch (e) {
         console.log(e);
     }
-
 
     return !data?.bus || !currentSchoolScopes ? {notFound: true, props: {}} : {props: {bus: data.bus, currentSchoolScopes}};
 };

@@ -2,3 +2,49 @@
     background-image: linear-gradient(135deg,#006054,#00332b);
     color: white;
 }
+
+.stops {
+    padding: 1em;
+}
+
+.stops ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.stops li {
+    background-color: white;
+    border: solid 2px #d0d0d0;
+    border-radius: .2em;
+    margin-bottom: 1em;
+
+    padding: 10px 10px 10px 10px;
+
+    display: grid;
+    grid-template-areas: 
+        "a a a b";
+    grid-template-columns: 1fr 1fr 1fr 20px;
+}
+.stops li div {
+    grid-area: a;
+
+    h1 {
+        max-width: none;
+        font-weight: bold;
+        margin-bottom: 0;
+        font-size: 16px;
+    }
+    
+    p {
+        font-weight: 400;
+        font-size: 14px;
+    }
+}
+
+.stop_drag_handle {
+    grid-area: b;
+    justify-self: center;
+    align-self: center;
+    vertical-align: middle;
+    color: rgba(0, 0, 0, 0.4);
+}

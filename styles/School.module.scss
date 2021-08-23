@@ -38,7 +38,15 @@
     grid-template-columns: 400px;
 }
 
+@media (max-width: 416px) {
+    .bus_container_container {
+        grid-template-columns: 1fr;
+    }
 
+    .bus_container {
+        grid-template-columns: 100%;
+    }
+}
 
 @media (min-width: 930px) {
     .bus_container {
@@ -52,4 +60,3 @@
         grid-template-columns: 350px 350px 350px;
     }
 }
-

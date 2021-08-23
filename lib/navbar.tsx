@@ -27,8 +27,8 @@ export default function NavBar( { selectedPage, editSwitchOptions }: { selectedP
         <Link href={"/about"} passHref={true}><a className={styles.about}>About</a></Link>
         {
             editSwitchOptions && <span className={styles.edit}>
-                <Switch checked={editSwitchOptions.state} onChange={editSwitchOptions.onChange} height={20} width={40}/>{" "}
-                Editing mode
+                <Switch className={styles.edit_switch} checked={editSwitchOptions.state} onChange={editSwitchOptions.onChange} height={20} width={40}/>{" "}
+                <span className={styles.edit_text}>Editing mode</span>
             </span>
         }
     </div>;

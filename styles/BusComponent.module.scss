@@ -29,7 +29,8 @@
     .bus_name {
         line-height: 0.6;
         font-size: 1.15rem;
-        font-weight: 500;
+        font-weight: bold;
+        font-family: neue-haas-grotesk-text, Helvetica, Arial, sans-serif;
     }
     .bus_name.bus_name_input {
         width: 100%;
@@ -43,7 +44,7 @@
 
 .bus_name_and_status.size_large {
     .bus_name {
-        font-size: 1.5rem
+        font-size: 1.5rem;
     }
     .bus_status {
         font-size: 1.3rem;

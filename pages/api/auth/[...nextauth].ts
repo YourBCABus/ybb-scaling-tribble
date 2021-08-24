@@ -28,7 +28,7 @@ export default NextAuth({
             name: "YourBCABus",
             type: "oauth",
             version: "2.0",
-            scope: "openid email offline_access read bus.create bus.update bus.updateStatus bus.delete",
+            scope: "openid email offline_access read bus.create bus.update bus.updateStatus bus.delete stop.create stop.update stop.delete",
             params: { grant_type: "authorization_code" },
             accessTokenUrl: `${url}/token`,
             requestTokenUrl: `${url}/token`,

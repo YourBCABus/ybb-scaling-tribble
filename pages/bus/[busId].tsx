@@ -23,7 +23,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBars } from '@fortawesome/free-solid-svg-icons';
 
 import permParseFunc from "../../lib/perms";
-import { saveBoardingAreaCallback, saveBusCallback } from "../../lib/editingCallbacks";
+import { saveBoardingAreaCallback, saveBusCallback, saveStopOrderCallback } from "../../lib/editingCallbacks";
 
 export const GET_BUS = gql`
 query GetBus($id: ID!) {
@@ -56,11 +56,22 @@ query GetPerms($schoolID: ID!) {
     currentSchoolScopes(schoolID: $schoolID) 
 }
 `;
+function reorder<T>(list: readonly T[], startIndex: number, endIndex: number): T[] {
+    const result = Array.from(list);
+    const [removed] = result.splice(startIndex, 1);
+    result.splice(endIndex, 0, removed);
+  
+    return result;
+};
 
 export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef }: Props<typeof getServerSideProps>): JSX.Element {
     const bus = Object.freeze(busOrUndef!);
     const perms = Object.freeze(permParseFunc(Object.freeze(permsOrUndef!)));
-    const stops = Object.freeze(returnSortedStops(bus.stops));
+
+    const [stops, setStops] = useState(Object.freeze(returnSortedStops(bus.stops)));
+    useEffect(() => {
+        setStops(Object.freeze(returnSortedStops(bus.stops)));
+    }, [bus.stops]);
 
     let [editMode, setEditMode] = useState<boolean>(false);
 
@@ -131,7 +142,13 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
             }
         />
         <NoSSRComponent>
-            <DragDropContext onDragEnd={() => null}>
+            <DragDropContext onDragEnd={(result) => {
+                if (!result.destination) return;
+                if (result.destination.index === result.source.index) return;
+                let newStopOrder = reorder(stops, result.source.index, result.destination.index);
+                setStops(newStopOrder);
+                saveStopOrderCallback(updateServerSidePropsFunction)(bus.id)(newStopOrder);
+            }}>
                 <Droppable droppableId="stops">
                     
                     {(provided: DroppableProvided) => (

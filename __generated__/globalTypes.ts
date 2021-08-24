@@ -20,6 +20,21 @@ export interface BusStatusInput {
   boardingArea?: string | null;
 }
 
+export interface LocationInput {
+  lat: number;
+  long: number;
+}
+
+export interface StopInput {
+  name?: string | null;
+  description?: string | null;
+  location?: LocationInput | null;
+  order?: number | null;
+  arrivalTime?: any | null;
+  invalidateTime?: any | null;
+  available: boolean;
+}
+
 //==============================================================
 // END Enums and Input Objects
 //==============================================================

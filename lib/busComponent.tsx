@@ -121,6 +121,7 @@ export default function Bus(
             className={`${styles.bus_name} ${styles.bus_name_input}`}
             onChange={(event) => setCurrBusNameEdit(event.currentTarget.value)}
             onBlur={() => {
+                if (currBusNameEdit === null) return;
                 saveBusNameCallback(currBusNameEdit);
                 setCurrBusNameEdit(null);
             }}

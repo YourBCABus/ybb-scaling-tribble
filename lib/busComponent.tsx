@@ -22,6 +22,7 @@ export interface BusObj {
 }
 
 export enum BusComponentSizes {
+    COMPACT = 0,
     NORMAL = 1,
     LARGE = 2,
 }
@@ -86,7 +87,11 @@ export default function Bus(
     const boardingAreaText = currBoardingAreaEdit ?? getBoardingArea(boardingArea, invalidateTime);
     const busNameText = currBusNameEdit ?? name;
 
-    useEffect(() => setBusBoardingAreaFontSize(Math.floor(Math.min(textSizeToFitContainer(boardingAreaText, bus_view_boarding_area_font, size * 50), size * 24))), [boardingAreaText, size]);
+    useEffect(() => {
+        const width = (size === BusComponentSizes.COMPACT) ? 50 : (size * 50);
+        const maxFontSize = (size === BusComponentSizes.COMPACT) ? 18 : (size * 24);
+        setBusBoardingAreaFontSize(Math.floor(Math.min(textSizeToFitContainer(boardingAreaText, bus_view_boarding_area_font, width), maxFontSize)));
+    }, [boardingAreaText, size]);
     
     const busBoardingAreaBackgroundDivStyle = {
         ...(boardingAreaText === "?" ? {} : {color: "#e8edec", backgroundColor: "#00796b"}),
@@ -140,6 +145,11 @@ export default function Bus(
     let sizeClassName: string;
     let fontAwesomeIconSizeParam: SizeProp;
     switch (size) {
+    case BusComponentSizes.COMPACT:
+        sizeClassName = ` ${styles.size_compact}`;
+        fontAwesomeIconSizeParam = "1x";
+        break;
+
     case BusComponentSizes.NORMAL:
         sizeClassName = ``;
         fontAwesomeIconSizeParam = "lg";

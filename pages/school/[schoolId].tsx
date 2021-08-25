@@ -9,7 +9,7 @@ import { MouseEvent } from "react";
 
 import Head from 'next/head';
 import NavBar, { PagesInNavbar } from "../../lib/navbar";
-import Bus from "../../lib/busComponent";
+import Bus, { BusComponentSizes } from "../../lib/busComponent";
 
 import styles from "../../styles/School.module.scss";
 
@@ -63,6 +63,7 @@ function BusList( { buses, starredBusIDs, isStarredList, editing, starCallback, 
                         key={bus.id}
                         editing={editing}
                         saveBoardingAreaCallback={saveBoardingAreaCallback(bus.id)}
+                        size={editing ? BusComponentSizes.COMPACT : BusComponentSizes.NORMAL}
                     />
             )}
         </div>

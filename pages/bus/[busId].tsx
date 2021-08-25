@@ -15,12 +15,13 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
 
 import Head from 'next/head';
+import Link from "next/link";
 import BusComponent, { BusComponentSizes } from "../../lib/busComponent";
 import NavBar, { PagesInNavbar } from "../../lib/navbar";
 import NoSSRComponent from "../../lib/noSSRComponent";
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBars } from '@fortawesome/free-solid-svg-icons';
+import { faBars, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 
 import permParseFunc from "../../lib/perms";
 import { saveBoardingAreaCallback, saveBusCallback, saveStopOrderCallback } from "../../lib/editingCallbacks";
@@ -47,7 +48,9 @@ query GetBus($id: ID!) {
             }
             order
         }
-        
+        school {
+            name
+        }
     }
 }
 `;
@@ -120,6 +123,12 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
                         : undefined
                 }
             />
+            <Link href={`/school/${bus.schoolID}`}>
+                <a className={styles.back_button}>
+                    <FontAwesomeIcon icon={faChevronLeft} className={styles.back_button_icon} />
+                    <span className={styles.back_button_text}>{bus.school.name}</span>
+                </a>
+            </Link>
         </header>
         <BusComponent
             bus={bus}

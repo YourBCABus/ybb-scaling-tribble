@@ -22,6 +22,11 @@ export interface GetBus_bus_stops {
   order: number | null;
 }
 
+export interface GetBus_bus_school {
+  __typename: "School";
+  name: string | null;
+}
+
 export interface GetBus_bus {
   __typename: "Bus";
   available: boolean;
@@ -34,6 +39,7 @@ export interface GetBus_bus {
   phone: string[];
   schoolID: string;
   stops: GetBus_bus_stops[];
+  school: GetBus_bus_school;
 }
 
 export interface GetBus {

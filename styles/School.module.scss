@@ -40,6 +40,11 @@
     grid-template-columns: 400px;
 }
 
+.bus_container_compact {
+    gap: 2px;
+    grid-template-columns: 300px;
+}
+
 @media (max-width: 416px) {
     .bus_container_container {
         grid-template-columns: 1fr;
@@ -55,10 +60,18 @@
 
         grid-template-columns: 400px 400px;
     }
+
+    .bus_container_compact {
+        grid-template-columns: 300px 300px 300px;
+    }
 }
 
 @media (min-width: 1200px) {
     .bus_container {
         grid-template-columns: 350px 350px 350px;
+    }
+
+    .bus_container_compact {
+        grid-template-columns: 290px 290px 290px 290px;
     }
 }

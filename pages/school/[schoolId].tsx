@@ -51,7 +51,7 @@ interface BusListProps {
 
 function BusList( { buses, starredBusIDs, isStarredList, editing, starCallback, saveBoardingAreaCallback }: BusListProps ): JSX.Element {
     return <div className={styles.bus_container_container + (isStarredList ? ` ${styles.bus_container_starred_container}` : ``)}>
-        <div className={styles.bus_container}>
+        <div className={editing ? `${styles.bus_container} ${styles.bus_container_compact}` : styles.bus_container}>
             {buses.map(
                 bus => 
                     <Bus

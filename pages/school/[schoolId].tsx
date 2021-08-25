@@ -117,7 +117,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
             <h1 className={styles.school_name}>{school.name}</h1>
         </header>
         {
-            starredBuses.length > 0 && <BusList
+            starredBuses.length > 0 && !editMode && <BusList
                 buses={starredBuses}
                 starredBusIDs={starredBusIDs}
                 isStarredList={true}

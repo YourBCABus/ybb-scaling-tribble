@@ -10,6 +10,7 @@ import { MouseEvent } from "react";
 import Head from 'next/head';
 import NavBar, { PagesInNavbar } from "../../lib/navbar";
 import Bus from "../../lib/busComponent";
+import ConnectionMonitor from "../../lib/serverSidePropsMonitorComponent";
 
 import styles from "../../styles/School.module.scss";
 
@@ -84,6 +85,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
 
 
     let [editMode, setEditMode] = useState<boolean>(false);
+    let [editFreeze, setEditFreeze] = useState<boolean>(false);
 
     const router = useRouter();
     const updateServerSidePropsFunction = useCallback(() => router.replace(router.asPath, undefined, {scroll: false}), [router]);
@@ -134,6 +136,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
             starCallback={starCallback}
             saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction)}
         />
+        <ConnectionMonitor editing={editMode} editFreeze={editFreeze} setEditFreeze={setEditFreeze}/>
     </div>;
 }
 

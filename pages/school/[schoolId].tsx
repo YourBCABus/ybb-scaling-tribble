@@ -136,7 +136,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
             starCallback={starCallback}
             saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction)}
         />
-        <ConnectionMonitor editing={editMode} editFreeze={editFreeze} setEditFreeze={setEditFreeze}/>
+        <ConnectionMonitor editing={editMode} setEditFreeze={setEditFreeze}/>
     </div>;
 }
 

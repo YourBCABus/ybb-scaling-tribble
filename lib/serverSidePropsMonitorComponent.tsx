@@ -9,10 +9,7 @@ import Switch from "react-switch";
 
 interface ConnectionMonitorProps {
     editing: boolean;
-    
-    editFreeze: boolean;
     setEditFreeze: (state: boolean) => void;
-
 }
 
 enum ConnectionStates {
@@ -52,7 +49,6 @@ async function handleConnQual(setConnQual: (state: ConnectionStates) => void, ch
 export default function ConnectionMonitor(
     {
         editing,
-        editFreeze,
         setEditFreeze,
     }: ConnectionMonitorProps
 ): JSX.Element {

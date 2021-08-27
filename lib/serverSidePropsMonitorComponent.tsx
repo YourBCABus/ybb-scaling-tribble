@@ -70,6 +70,12 @@ export default function ConnectionMonitor(
         localStorage.setItem("editingWithSlowNetwork", slowModeSwitch.toString());
     }, [slowModeSwitch]);
 
+
+    useEffect(
+        () => setEditFreeze(connQual === ConnectionStates.NONE || (connQual === ConnectionStates.SLOW && !slowModeSwitch)),
+        [connQual, slowModeSwitch, setEditFreeze]
+    );
+
     let color: string;
     let warningString: string;
     switch (connQual) {

@@ -28,13 +28,18 @@ export enum BusComponentSizes {
 
 interface BusProps {
     bus: BusObj;
-    starCallback: MouseEventHandler<SVGSVGElement>;
+
+    size?: BusComponentSizes;
+
     isStarred: boolean;
+    starCallback: MouseEventHandler<SVGSVGElement>;
+
     editing: false | ReturnType<typeof permParseFunc>;
+    editFreeze: boolean;
+    noLink?: boolean;
+
     saveBoardingAreaCallback?: (boardingArea: string | null) => void;
     saveBusNameCallback?: (busName: string | null) => void
-    size?: BusComponentSizes;
-    noLink?: boolean;
 }
 
 function measureTextWidth(text: string, font: string, size: number): number {
@@ -69,13 +74,17 @@ const bus_view_boarding_area_font: string = "-apple-system, BlinkMacSystemFont, 
 export default function Bus(
     {
         bus: { name, id, available, boardingArea, invalidateTime },
-        starCallback,
+        size = BusComponentSizes.NORMAL,
+
         isStarred,
+        starCallback,
+        
         editing,
+        editFreeze,
+        noLink = false,
+
         saveBoardingAreaCallback,
         saveBusNameCallback,
-        size = BusComponentSizes.NORMAL,
-        noLink = false,
     }:  BusProps,
 ): JSX.Element {
     const [busBoardingAreaFontSize, setBusBoardingAreaFontSize] = useState<number>(24);
@@ -98,7 +107,12 @@ export default function Bus(
     if (editing && editing.bus.updateStatus && saveBoardingAreaCallback) {
         boardingAreaBackgroundDivContents = <input
             className={styles.bus_boarding_area_input}
-            onChange={(event) => setCurrBoardingAreaEdit(event.currentTarget.value)}
+            onChange={
+                editFreeze
+                    ? undefined
+                    : (event) => setCurrBoardingAreaEdit(event.currentTarget.value)
+            }
+            readOnly={editFreeze}
             onBlur={() => { 
                 saveBoardingAreaCallback(currBoardingAreaEdit);
                 setCurrBoardingAreaEdit(null);
@@ -119,7 +133,12 @@ export default function Bus(
     if (editing && editing.bus.update && saveBusNameCallback) {
         busNameSpanOrInput = <input
             className={`${styles.bus_name} ${styles.bus_name_input}`}
-            onChange={(event) => setCurrBusNameEdit(event.currentTarget.value)}
+            onChange={
+                editFreeze
+                    ? undefined
+                    : (event) => setCurrBusNameEdit(event.currentTarget.value)
+            }
+            readOnly={editFreeze}
             onBlur={() => {
                 if (currBusNameEdit === null) return;
                 saveBusNameCallback(currBusNameEdit);

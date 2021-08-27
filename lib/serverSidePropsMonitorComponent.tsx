@@ -1,6 +1,6 @@
 import styles from '../styles/ConnectionMonitor.module.scss';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
@@ -17,6 +17,15 @@ enum ConnectionStates {
     SLOW,
     NONE,
 }
+
+const NONE_MESSAGE: [string, string] = [
+    "You do not have any network connection.",
+    "Editing is disabled.",
+];
+const SLOW_MESSAGE: [string, string] = [
+    "Your network is slow or unresponsive.",
+    "By default, this disables editing. To enable editing while the network is slow, turn on the switch. (This setting will persist.)",
+];
 
 async function handleConnQual(setConnQual: (state: ConnectionStates) => void, checkUrl: string) {
     function sleep<T>(ms: number, resolveVal: T) {
@@ -55,21 +64,37 @@ export default function ConnectionMonitor(
     );
 
     let color: string;
+    let warningString: string;
     switch (connQual) {
     case ConnectionStates.NONE:
         color = "#C31A00";
+        warningString = NONE_MESSAGE[0] + (editing ? ` ${NONE_MESSAGE[1]}` : "");
         break;
 
     case ConnectionStates.SLOW:
         color = "#FFCC00";
+        warningString = SLOW_MESSAGE[0] + (editing ? ` ${SLOW_MESSAGE[1]}` : "");
         break;
 
     case ConnectionStates.GOOD:
         color = "#00CC55";
+        warningString = "";
         break;
     }
 
     return (
-        <FontAwesomeIcon icon={faExclamationTriangle} className={styles.warning_symbol} size="4x" style={{color, display: connQual === ConnectionStates.GOOD ? 'none' : undefined}}/>
+        <React.Fragment>
+            <FontAwesomeIcon
+                icon={faExclamationTriangle}
+                className={styles.warning_symbol}
+                size="4x" style={{
+                    color,
+                    display:connQual === ConnectionStates.GOOD ? 'none' : undefined,
+                }}
+            />
+            <div className={styles.warning_info}>
+                {warningString}
+            </div>
+        </React.Fragment>
     );
 }

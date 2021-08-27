@@ -135,6 +135,7 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
             starCallback={(event) => starCallback(bus.id, event)}
             isStarred={starredBusIDs.has(bus.id)}
             editing={editMode && perms}
+            editFreeze={false}
             size={BusComponentSizes.LARGE}
             noLink={true}
             saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction)(bus.id)}

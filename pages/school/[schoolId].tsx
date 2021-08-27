@@ -43,26 +43,43 @@ query GetSchoolAndPerms($id: ID!) {
 
 interface BusListProps {
     buses: readonly GetSchoolAndPerms_school_buses[];
-    starredBusIDs: Set<string>;
-    isStarredList: boolean;
+ 
     editing: false | ReturnType<typeof permParseFunc>;
+    editFreeze: boolean;
+
+    isStarredList: boolean;
+    starredBusIDs: Set<string>;
     starCallback: (id: string, event: MouseEvent<SVGSVGElement>) => void;
+
     saveBoardingAreaCallback: (id: string) => (boardingArea: string | null) => Promise<void>;
 }
 
-function BusList( { buses, starredBusIDs, isStarredList, editing, starCallback, saveBoardingAreaCallback }: BusListProps ): JSX.Element {
+function BusList(
+    {
+        buses,
+        editing,
+        editFreeze,
+        isStarredList,
+        starredBusIDs,
+        starCallback,
+        saveBoardingAreaCallback,
+    }: BusListProps
+): JSX.Element {
     return <div className={styles.bus_container_container + (isStarredList ? ` ${styles.bus_container_starred_container}` : ``)}>
         <div className={styles.bus_container}>
             {buses.map(
                 bus => 
                     <Bus
-                        bus={
-                            bus
-                        }
+                        key={bus.id}
+                                
+                        bus={bus}
+                        
+                        editing={editing}
+                        editFreeze={editFreeze}
+                        
                         starCallback={(event) => starCallback(bus.id, event)}
                         isStarred={starredBusIDs.has(bus.id)}
-                        key={bus.id}
-                        editing={editing}
+                        
                         saveBoardingAreaCallback={saveBoardingAreaCallback(bus.id)}
                     />
             )}
@@ -120,20 +137,28 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
         {
             starredBuses.length > 0 && <BusList
                 buses={starredBuses}
-                starredBusIDs={starredBusIDs}
-                isStarredList={true}
+                
                 editing={editMode && perms}
+                editFreeze={editFreeze}
+
+                isStarredList={true}
+                starredBusIDs={starredBusIDs}
                 starCallback={starCallback}
+                
                 saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction)}
             />
         }
         
         <BusList
             buses={buses}
-            starredBusIDs={starredBusIDs}
-            isStarredList={false}
+            
             editing={editMode && perms}
+            editFreeze={editFreeze}
+
+            isStarredList={false}
+            starredBusIDs={starredBusIDs}
             starCallback={starCallback}
+
             saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction)}
         />
         <ConnectionMonitor editing={editMode} setEditFreeze={setEditFreeze}/>

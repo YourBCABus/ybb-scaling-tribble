@@ -44,7 +44,7 @@ export default function ConnectionMonitor(
         setEditFreeze,
     }: ConnectionMonitorProps
 ): JSX.Element {
-    let [connQual, setConnQual] = useState<ConnectionStates>(ConnectionStates.GOOD);
+    const [connQual, setConnQual] = useState<ConnectionStates>(ConnectionStates.GOOD);
 
     useEffect(
         () => {

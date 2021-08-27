@@ -4,6 +4,9 @@ import React, { useState, useEffect } from 'react';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+import Switch from "react-switch";
+
+
 interface ConnectionMonitorProps {
     editing: boolean;
     
@@ -63,6 +66,14 @@ export default function ConnectionMonitor(
         [],
     );
 
+    const [slowModeSwitch, setSlowModeSwitch] = useState<boolean>(false);
+    useEffect(() => {
+        setSlowModeSwitch(localStorage.getItem("editingWithSlowNetwork") === "true");
+    }, []);
+    useEffect(() => {
+        localStorage.setItem("editingWithSlowNetwork", slowModeSwitch.toString());
+    }, [slowModeSwitch]);
+
     let color: string;
     let warningString: string;
     switch (connQual) {
@@ -94,6 +105,16 @@ export default function ConnectionMonitor(
             />
             <div className={styles.warning_info}>
                 {warningString}
+                <br/>
+                <Switch
+                    className={styles.edit_switch}
+                    
+                    checked={slowModeSwitch}
+                    onChange={setSlowModeSwitch}
+
+                    height={20}
+                    width={40}
+                />
             </div>
         </React.Fragment>
     );

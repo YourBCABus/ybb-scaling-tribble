@@ -27,7 +27,10 @@ async function handleConnQual(setConnQual: (state: ConnectionStates) => void, ch
     let controller = new AbortController();
     let signal = controller.signal;
 
-    let newQuality = await Promise.any([fetch(checkUrl, {signal}).then(() => ConnectionStates.GOOD).catch(() => ConnectionStates.NONE), sleep(2900, ConnectionStates.SLOW)]);
+    let newQuality = await Promise.race([
+        fetch(checkUrl, {signal}).then(() => ConnectionStates.GOOD).catch(() => ConnectionStates.NONE),
+        sleep(2900, ConnectionStates.SLOW),
+    ]);
     controller.abort();
 
 

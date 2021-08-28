@@ -107,16 +107,20 @@ export default function ConnectionMonitor(
             />
             <div className={styles.warning_info}>
                 {warningString}
-                <br/>
-                <Switch
-                    className={styles.edit_switch}
-                    
-                    checked={slowModeSwitch}
-                    onChange={setSlowModeSwitch}
+                {
+                    editing && connQual === ConnectionStates.SLOW && <React.Fragment>
+                        <br/>
+                        <Switch
+                            className={styles.edit_switch}
+                            
+                            checked={slowModeSwitch}
+                            onChange={setSlowModeSwitch}
 
-                    height={20}
-                    width={40}
-                />
+                            height={20}
+                            width={40}
+                        />
+                    </React.Fragment>
+                }
             </div>
         </React.Fragment>
     );

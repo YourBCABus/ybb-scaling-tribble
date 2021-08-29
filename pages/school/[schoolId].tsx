@@ -76,7 +76,6 @@ function BusList( { buses, starredBusIDs, isStarredList, editing, starCallback, 
 export default function School({ school: schoolOrUndef, currentSchoolScopes: permsOrUndef }: Props<typeof getServerSideProps>): JSX.Element {
     const school = Object.freeze(schoolOrUndef!);
     const perms = Object.freeze(permParseFunc(Object.freeze(permsOrUndef!)));
-    const buses = Object.freeze(returnSortedBuses(school.buses));
 
     let [starredBusIDs, setStarredBusIDs] = useState<Set<string>>(new Set());
     useEffect(() => {
@@ -108,12 +107,12 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
         }
         setStarredBusIDs(starred);
     };
-
-    const starredBuses = Object.freeze(buses.filter(bus => starredBusIDs.has(bus.id)));
-
+    
+    const editing = editMode && perms;
     const [searchTerm, setSearchTerm] = useState("");
 
-    const editing = editMode && perms;
+    const buses = Object.freeze(editing ? returnSortedBuses(school.buses) : filterBuses(returnSortedBuses(school.buses), searchTerm));
+    const starredBuses = Object.freeze(buses.filter(bus => starredBusIDs.has(bus.id)));
 
     return <div>
         <Head>
@@ -135,7 +134,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
         </header>
         {
             starredBuses.length > 0 && !editMode && <BusList
-                buses={editing ? starredBuses : filterBuses(starredBuses, searchTerm)}
+                buses={starredBuses}
                 starredBusIDs={starredBusIDs}
                 isStarredList={true}
                 editing={editing}
@@ -145,7 +144,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
         }
         
         <BusList
-            buses={editing ? buses : filterBuses(buses, searchTerm)}
+            buses={buses}
             starredBusIDs={starredBusIDs}
             isStarredList={false}
             editing={editing}

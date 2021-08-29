@@ -168,15 +168,15 @@ function filterBuses(buses: readonly GetSchoolAndPerms_school_buses[], searchTer
 
     // Allow users to search by name, boarding area, or exact ID
     return term.length > 0 ? buses.filter(bus => {
-        if (bus.name?.toLowerCase().includes(searchTerm)) return true;
+        if (bus.name?.toLowerCase().includes(term)) return true;
         if (bus.invalidateTime) {
-            if (getBoardingArea(bus.boardingArea, new Date(bus.invalidateTime)).toLowerCase().includes(searchTerm)) return true;
+            if (getBoardingArea(bus.boardingArea, new Date(bus.invalidateTime)).toLowerCase().includes(term)) return true;
         } else if (bus.boardingArea) {
-            if (bus.boardingArea.toLowerCase().includes(searchTerm)) return true;
+            if (bus.boardingArea.toLowerCase().includes(term)) return true;
         } else {
-            if (searchTerm === "?") return true;
+            if (term === "?") return true;
         }
-        if (bus.id.toLowerCase() === searchTerm) return true;
+        if (bus.id.toLowerCase() === term) return true;
         return false;
     }) : buses;
 }

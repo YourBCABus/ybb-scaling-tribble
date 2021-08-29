@@ -3,13 +3,18 @@ import NextAuth, { Session } from "next-auth";
 const url = "https://api.yourbcabus.com";
 
 async function refreshAccessToken(token: string) {
-    const refreshURL = `${url}/token?` + new URLSearchParams({
-        client_id: process.env.YBB_CLIENT_ID || "changeme",
-        client_secret: process.env.YBB_CLIENT_SECRET || "",
-        grant_type: "refresh_token",
-        refresh_token: token,
+    const response = await fetch(`${url}/token`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+            client_id: process.env.YBB_CLIENT_ID || "changeme",
+            client_secret: process.env.YBB_CLIENT_SECRET || "",
+            grant_type: "refresh_token",
+            refresh_token: token,
+        }).toString(),
     });
-    const response = await fetch(refreshURL, {method: "POST"});
     const result = await response.json();
     if (!result) {
         throw result;
@@ -50,7 +55,7 @@ export default NextAuth({
                 token.accessToken = account.accessToken;
                 token.accessTokenExpires = Date.now() + account.expires_in! * 1000;
                 token.refreshToken = account.refreshToken;
-            } else if (typeof token.refreshToken === "string" && typeof token.accessTokenExpires === "number" && Date.now() >= token.accessTokenExpires) {
+            } else if (typeof token.refreshToken === "string" && (!token.accessToken || (typeof token.accessTokenExpires === "number" && Date.now() >= token.accessTokenExpires))) {
                 // Refresh the access token.
                 try {
                     const { accessToken, accessTokenExpires, refreshToken } = await refreshAccessToken(token.refreshToken);

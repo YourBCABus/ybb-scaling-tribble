@@ -25,6 +25,7 @@ import { faBars, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 
 import permParseFunc from "../../lib/perms";
 import { saveBoardingAreaCallback, saveBusCallback, saveStopOrderCallback } from "../../lib/editingCallbacks";
+import ConnectionMonitor from "../../lib/serverSidePropsMonitorComponent";
 
 export const GET_BUS = gql`
 query GetBus($id: ID!) {
@@ -77,6 +78,7 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
     }, [bus.stops]);
 
     let [editMode, setEditMode] = useState<boolean>(false);
+    let [editFreeze, setEditFreeze] = useState<boolean>(false);
 
     let [starredBusIDs, setStarredBusIDs] = useState<Set<string>>(new Set());
     useEffect(() => {
@@ -135,7 +137,7 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
             starCallback={(event) => starCallback(bus.id, event)}
             isStarred={starredBusIDs.has(bus.id)}
             editing={editMode && perms}
-            editFreeze={false}
+            editFreeze={editFreeze}
             size={BusComponentSizes.LARGE}
             noLink={true}
             saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction)(bus.id)}
@@ -167,7 +169,7 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
                             <ul {...provided.droppableProps} ref={provided.innerRef} >
                                 {
                                     stops.map(
-                                        (stop, index) => <Draggable isDragDisabled={!editMode} key={stop.id} draggableId={stop.id} index={index}>
+                                        (stop, index) => <Draggable isDragDisabled={!editMode || editFreeze} key={stop.id} draggableId={stop.id} index={index}>
                                             {
                                                 (provided: DraggableProvided) => (
                                                     <li ref={provided.innerRef} {...provided.draggableProps}>
@@ -189,6 +191,7 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
                 </Droppable>
             </DragDropContext>
         </NoSSRComponent>
+        <ConnectionMonitor editing={editMode} setEditFreeze={setEditFreeze}/>
     </div>;
 }
 

@@ -111,6 +111,12 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
     const editing = editMode && perms;
     const [searchTerm, setSearchTerm] = useState("");
 
+
+    let setEditModePlusClearSearch = (editMode: boolean) => {
+        setEditMode(editMode);
+        setSearchTerm("");   
+    };
+
     const buses = Object.freeze(filterBuses(returnSortedBuses(school.buses), searchTerm));
     const starredBuses = Object.freeze(buses.filter(bus => starredBusIDs.has(bus.id)));
 
@@ -119,7 +125,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
             <link rel="stylesheet" href="https://use.typekit.net/qjo5whp.css"/>
         </Head>
         <header className={styles.header}>
-            <NavBar selectedPage={PagesInNavbar.NONE} editSwitchOptions={perms.bus.create || perms.bus.updateStatus ? {state: editMode, onChange: setEditMode} : undefined}/>
+            <NavBar selectedPage={PagesInNavbar.NONE} editSwitchOptions={perms.bus.create || perms.bus.updateStatus ? {state: editMode, onChange: setEditModePlusClearSearch} : undefined}/>
             <h1 className={styles.school_name}>{school.name}</h1>
             <div className={styles.search_box}>
                 <FontAwesomeIcon className={styles.search_icon} icon={faSearch}></FontAwesomeIcon>

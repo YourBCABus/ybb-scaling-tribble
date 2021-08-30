@@ -11,6 +11,8 @@ import Head from 'next/head';
 import NavBar, { PagesInNavbar } from "../../lib/navbar";
 import Bus from "../../lib/busComponent";
 import ConnectionMonitor from "../../lib/serverSidePropsMonitorComponent";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSearch } from "@fortawesome/free-solid-svg-icons";
 
 import styles from "../../styles/School.module.scss";
 
@@ -19,6 +21,7 @@ import { useRouter } from 'next/router';
 
 import permParseFunc from "../../lib/perms";
 import { saveBoardingAreaCallback } from "../../lib/editingCallbacks";
+import getBoardingArea from "../../lib/boardingAreas";
 
 export const GET_SCHOOL_AND_PERMS = gql`
 query GetSchoolAndPerms($id: ID!) {
@@ -66,7 +69,7 @@ function BusList(
     }: BusListProps
 ): JSX.Element {
     return <div className={styles.bus_container_container + (isStarredList ? ` ${styles.bus_container_starred_container}` : ``)}>
-        <div className={styles.bus_container}>
+        <div className={editing ? `${styles.bus_container} ${styles.bus_container_compact}` : styles.bus_container}>
             {buses.map(
                 bus => 
                     <Bus
@@ -81,6 +84,7 @@ function BusList(
                         isStarred={starredBusIDs.has(bus.id)}
                         
                         saveBoardingAreaCallback={saveBoardingAreaCallback(bus.id)}
+                        size={editing ? BusComponentSizes.COMPACT : BusComponentSizes.NORMAL}
                     />
             )}
         </div>
@@ -90,7 +94,6 @@ function BusList(
 export default function School({ school: schoolOrUndef, currentSchoolScopes: permsOrUndef }: Props<typeof getServerSideProps>): JSX.Element {
     const school = Object.freeze(schoolOrUndef!);
     const perms = Object.freeze(permParseFunc(Object.freeze(permsOrUndef!)));
-    const buses = Object.freeze(returnSortedBuses(school.buses));
 
     let [starredBusIDs, setStarredBusIDs] = useState<Set<string>>(new Set());
     useEffect(() => {
@@ -123,7 +126,17 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
         }
         setStarredBusIDs(starred);
     };
+    
+    const editing = editMode && perms;
+    const [searchTerm, setSearchTerm] = useState("");
 
+
+    let setEditModePlusClearSearch = (editMode: boolean) => {
+        setEditMode(editMode);
+        setSearchTerm("");   
+    };
+
+    const buses = Object.freeze(filterBuses(returnSortedBuses(school.buses), searchTerm));
     const starredBuses = Object.freeze(buses.filter(bus => starredBusIDs.has(bus.id)));
 
     return <div>
@@ -131,11 +144,21 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
             <link rel="stylesheet" href="https://use.typekit.net/qjo5whp.css"/>
         </Head>
         <header className={styles.header}>
-            <NavBar selectedPage={PagesInNavbar.NONE} editSwitchOptions={perms.bus.create || perms.bus.updateStatus ? {state: editMode, onChange: setEditMode} : undefined}/>
+            <NavBar selectedPage={PagesInNavbar.NONE} editSwitchOptions={perms.bus.create || perms.bus.updateStatus ? {state: editMode, onChange: setEditModePlusClearSearch} : undefined}/>
             <h1 className={styles.school_name}>{school.name}</h1>
+            <div className={styles.search_box}>
+                <FontAwesomeIcon className={styles.search_icon} icon={faSearch}></FontAwesomeIcon>
+                <input
+                    className={styles.search_input}
+                    type="search"
+                    value={searchTerm}
+                    onChange={event => setSearchTerm(event.target.value)}
+                    placeholder="Search for a bus..."
+                />
+            </div>
         </header>
         {
-            starredBuses.length > 0 && <BusList
+            starredBuses.length > 0 && !editMode && <BusList
                 buses={starredBuses}
                 
                 editing={editMode && perms}
@@ -172,6 +195,24 @@ function returnSortedBuses(buses: GetSchoolAndPerms_school_buses[]): GetSchoolAn
     let unavailableBuses: GetSchoolAndPerms_school_buses[] = buses.filter((bus) => !bus.available);
     unavailableBuses.sort((a, b) => a.name?.localeCompare(b.name!) ?? 1);
     return [...availableBuses, ...unavailableBuses];
+}
+
+function filterBuses(buses: readonly GetSchoolAndPerms_school_buses[], searchTerm: string): readonly GetSchoolAndPerms_school_buses[] {
+    const term = searchTerm.trim().toLowerCase();
+
+    // Allow users to search by name, boarding area, or exact ID
+    return term.length > 0 ? buses.filter(bus => {
+        if (bus.name?.toLowerCase().includes(term)) return true;
+        if (bus.invalidateTime) {
+            if (getBoardingArea(bus.boardingArea, new Date(bus.invalidateTime)).toLowerCase().includes(term)) return true;
+        } else if (bus.boardingArea) {
+            if (bus.boardingArea.toLowerCase().includes(term)) return true;
+        } else {
+            if (term === "?") return true;
+        }
+        if (bus.id.toLowerCase() === term) return true;
+        return false;
+    }) : buses;
 }
 
 export const getServerSideProps = async function<Q extends ParsedUrlQuery> (context: GetServerSidePropsContext<Q>) {

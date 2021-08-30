@@ -111,7 +111,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
     const editing = editMode && perms;
     const [searchTerm, setSearchTerm] = useState("");
 
-    const buses = Object.freeze(editing ? returnSortedBuses(school.buses) : filterBuses(returnSortedBuses(school.buses), searchTerm));
+    const buses = Object.freeze(filterBuses(returnSortedBuses(school.buses), searchTerm));
     const starredBuses = Object.freeze(buses.filter(bus => starredBusIDs.has(bus.id)));
 
     return <div>
@@ -121,7 +121,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
         <header className={styles.header}>
             <NavBar selectedPage={PagesInNavbar.NONE} editSwitchOptions={perms.bus.create || perms.bus.updateStatus ? {state: editMode, onChange: setEditMode} : undefined}/>
             <h1 className={styles.school_name}>{school.name}</h1>
-            {!editing && <div className={styles.search_box}>
+            <div className={styles.search_box}>
                 <FontAwesomeIcon className={styles.search_icon} icon={faSearch}></FontAwesomeIcon>
                 <input
                     className={styles.search_input}
@@ -130,7 +130,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
                     onChange={event => setSearchTerm(event.target.value)}
                     placeholder="Search for a bus..."
                 />
-            </div>}
+            </div>
         </header>
         {
             starredBuses.length > 0 && !editMode && <BusList

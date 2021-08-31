@@ -1,6 +1,6 @@
 import createNewClient from "../../lib/apollo-client";
 import gql from "graphql-tag";
-import { GetSchoolAndPerms, GetSchoolAndPerms_school_buses } from "./__generated__/GetSchoolAndPerms";
+import { GetSchoolAndPerms, GetSchoolAndPerms_school_buses } from "../../__generated__/GetSchoolAndPerms";
 
 import { Props } from "../../lib/utils";
 import { GetServerSidePropsContext } from "next";
@@ -10,8 +10,6 @@ import { MouseEvent } from "react";
 import Head from 'next/head';
 import NavBar, { PagesInNavbar } from "../../lib/navbar";
 import Bus, { BusComponentSizes } from "../../lib/busComponent";
-import Footer from "../../lib/footer";
-import Bus from "../../lib/busComponent";
 import ConnectionMonitor from "../../lib/serverSidePropsMonitorComponent";
 import Footer from "../../lib/footer";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -25,6 +23,8 @@ import { useRouter } from 'next/router';
 import permParseFunc from "../../lib/perms";
 import { saveBoardingAreaCallback } from "../../lib/editingCallbacks";
 import getBoardingArea from "../../lib/boardingAreas";
+import { NextSeo } from "next-seo";
+import { migrateOldStarredBuses } from "../../lib/utils";
 
 export const GET_SCHOOL_AND_PERMS = gql`
 query GetSchoolAndPerms($id: ID!) {
@@ -100,7 +100,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
 
     let [starredBusIDs, setStarredBusIDs] = useState<Set<string>>(new Set());
     useEffect(() => {
-        setStarredBusIDs(new Set(JSON.parse(localStorage.getItem("starred")!) as string[]));
+        setStarredBusIDs(new Set((JSON.parse(localStorage.getItem("starred")!) as string[]).concat(migrateOldStarredBuses())));
     }, []);
     useEffect(() => {
         localStorage.setItem("starred", JSON.stringify([...starredBusIDs]));
@@ -146,6 +146,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
         <Head>
             <link rel="stylesheet" href="https://use.typekit.net/qjo5whp.css"/>
         </Head>
+        <NextSeo title={school.name ?? "School"} />
         <header className={styles.header}>
             <NavBar selectedPage={PagesInNavbar.NONE} editSwitchOptions={perms.bus.create || perms.bus.updateStatus ? {state: editMode, onChange: setEditModePlusClearSearch} : undefined}/>
             <h1 className={styles.school_name}>{school.name}</h1>

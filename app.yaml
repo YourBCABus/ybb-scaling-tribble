@@ -1,0 +1,13 @@
+runtime: nodejs14
+env: standard
+service: default
+
+handlers:
+  - url: /.*
+    secure: always
+    script: auto
+
+env_variables:
+  YBB_CLIENT_ID: 612dac7f41b76bfe50fa309c
+  YBB_CLIENT_SECRET: ==REDACTED_SECRET==
+  NEXTAUTH_URL: https://yourbcabus.com

@@ -5,7 +5,7 @@
     align-content: center;
     flex-direction: row;
     width: 100%;
-    padding: 15px 15px 0 15px;
+    padding: 15px 20px 0 20px;
 }
 
 .spacer {
@@ -19,7 +19,7 @@
     align-content: center;
     flex-direction: row;
     
-    padding-right: 15px;
+    padding-right: 24px;
 
     font-family: neue-haas-grotesk-display;
     font-weight: 600;
@@ -27,6 +27,18 @@
 
     span {
         padding-left: 8px;
+    }
+}
+
+.about {
+    margin-right: 15px;
+}
+
+.about, .support {
+    color: rgba(255, 255, 255, 0.5);
+
+    &:hover {
+        color: rgba(255, 255, 255, 0.7);
     }
 }
 

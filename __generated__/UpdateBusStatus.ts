@@ -3,13 +3,13 @@
 // @generated
 // This file was automatically generated and should not be edited.
 
-import { BusInput } from "./../../../__generated__/globalTypes";
+import { BusStatusInput } from "./globalTypes";
 
 // ====================================================
-// GraphQL mutation operation: UpdateBus
+// GraphQL mutation operation: UpdateBusStatus
 // ====================================================
 
-export interface UpdateBus_updateBus {
+export interface UpdateBusStatus_updateBusStatus {
   __typename: "Bus";
   id: string;
   schoolID: string;
@@ -23,11 +23,11 @@ export interface UpdateBus_updateBus {
   numbers: string[];
 }
 
-export interface UpdateBus {
-  updateBus: UpdateBus_updateBus;
+export interface UpdateBusStatus {
+  updateBusStatus: UpdateBusStatus_updateBusStatus;
 }
 
-export interface UpdateBusVariables {
+export interface UpdateBusStatusVariables {
   busID: string;
-  bus: BusInput;
+  busStatus: BusStatusInput;
 }

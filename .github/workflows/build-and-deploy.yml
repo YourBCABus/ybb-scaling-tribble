@@ -9,6 +9,30 @@ on:
     branches: [ main ]
 
 jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v2
+    - name: Set up Node.js v14
+      uses: actions/setup-node@v2
+      with:
+        node-version: 14.x
+        cache: 'npm'
+    - name: Install dependencies
+      run: npm ci
+    - name: Use Next.js build cache # https://nextjs.org/docs/messages/no-cache
+      uses: actions/cache@v2
+      with:
+        path: ${{ github.workspace }}/.next/cache
+        # Generate a new cache whenever packages or source files change.
+        key: ${{ runner.os }}-nextjs-lint-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**.[jt]sx?') }}
+        # If source files changed but packages didn't, rebuild from a prior cache.
+        restore-keys: |
+          ${{ runner.os }}-nextjs-lint-${{ hashFiles('**/package-lock.json') }}-
+    - name: Lint
+      run: next lint
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -42,7 +66,9 @@ jobs:
           !.next/cache/
   deploy:
     name: Deploy to App Engine
-    needs: build
+    needs:
+      - lint
+      - build
     runs-on: ubuntu-latest
     if: ${{ github.ref == 'refs/heads/main' }}
     steps:

@@ -27,6 +27,7 @@ import permParseFunc from "../../lib/perms";
 import { saveBoardingAreaCallback, saveBusCallback, saveStopOrderCallback } from "../../lib/editingCallbacks";
 import ConnectionMonitor from "../../lib/serverSidePropsMonitorComponent";
 import { migrateOldStarredBuses, Props } from "../../lib/utils";
+import { EditModeProps } from "../_app";
 
 export const GET_BUS = gql`
 query GetBus($id: ID!) {
@@ -69,7 +70,9 @@ function reorder<T>(list: readonly T[], startIndex: number, endIndex: number): T
     return result;
 };
 
-export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef }: Props<typeof getServerSideProps>): JSX.Element {
+type BusProps = Props<typeof getServerSideProps> & EditModeProps;
+
+export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef, editMode, setEditMode, editFreeze, setEditFreeze }: BusProps): JSX.Element {
     const bus = Object.freeze(busOrUndef!);
     const perms = Object.freeze(permParseFunc(Object.freeze(permsOrUndef!)));
 
@@ -77,9 +80,6 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
     useEffect(() => {
         setStops(Object.freeze(returnSortedStops(bus.stops)));
     }, [bus.stops]);
-
-    let [editMode, setEditMode] = useState<boolean>(false);
-    let [editFreeze, setEditFreeze] = useState<boolean>(false);
 
     let [starredBusIDs, setStarredBusIDs] = useState<Set<string>>(new Set());
     useEffect(() => {

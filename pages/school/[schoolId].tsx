@@ -25,6 +25,7 @@ import { saveBoardingAreaCallback } from "../../lib/editingCallbacks";
 import getBoardingArea from "../../lib/boardingAreas";
 import { NextSeo } from "next-seo";
 import { migrateOldStarredBuses } from "../../lib/utils";
+import { EditModeProps } from '../_app';
 
 export const GET_SCHOOL_AND_PERMS = gql`
 query GetSchoolAndPerms($id: ID!) {
@@ -103,7 +104,9 @@ function BusList(
     </div>;
 }
 
-export default function School({ school: schoolOrUndef, currentSchoolScopes: permsOrUndef }: Props<typeof getServerSideProps>): JSX.Element {
+type SchoolProps = Props<typeof getServerSideProps> & EditModeProps;
+
+export default function School({ school: schoolOrUndef, currentSchoolScopes: permsOrUndef, editMode, setEditMode, editFreeze, setEditFreeze }: SchoolProps): JSX.Element {
     const school = Object.freeze(schoolOrUndef!);
     const perms = Object.freeze(permParseFunc(Object.freeze(permsOrUndef!)));
 
@@ -114,10 +117,6 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
     useEffect(() => {
         localStorage.setItem("starred", JSON.stringify([...starredBusIDs]));
     }, [starredBusIDs]);
-
-
-    let [editMode, setEditMode] = useState<boolean>(false);
-    let [editFreeze, setEditFreeze] = useState<boolean>(false);
 
     const router = useRouter();
     const updateServerSidePropsFunction = useCallback(() => router.replace(router.asPath, undefined, {scroll: false}), [router]);

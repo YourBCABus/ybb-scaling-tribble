@@ -11,6 +11,7 @@ import Head from 'next/head';
 import NavBar, { PagesInNavbar } from "../../lib/navbar";
 import Bus, { BusComponentSizes } from "../../lib/busComponent";
 import ConnectionMonitor from "../../lib/serverSidePropsMonitorComponent";
+import Footer from "../../lib/footer";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 
@@ -187,6 +188,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
 
             saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction)}
         />
+        <Footer />
         <ConnectionMonitor editing={editMode} setEditFreeze={setEditFreeze}/>
     </div>;
 }

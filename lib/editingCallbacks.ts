@@ -1,3 +1,5 @@
+import { NextRouter } from "next/router";
+
 import { BusInput } from "../__generated__/globalTypes";
 import { GetBus_bus_stops } from "../__generated__/GetBus";
 
@@ -33,3 +35,19 @@ export const saveStopOrderCallback =
                 updateServerSidePropsFunction();
             }
     ;
+
+
+export const createBusCallback = 
+    async (router: NextRouter, id: string) => {
+        try {
+            const response = await fetch(`/api/createBus?schoolId=${encodeURIComponent(id)}`);
+            const json = await response.json();
+
+            if (!json.createBus || typeof json.createBus.id !== "string") throw new Error("No ID");
+            router.push("/bus/[busId]", `/bus/${json.createBus.id}`);
+        } catch (e) {
+            console.error(e);
+            // TODO: Better error handling
+            alert("Unable to create bus");
+        }
+    };

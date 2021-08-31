@@ -21,7 +21,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from 'next/router';
 
 import permParseFunc from "../../lib/perms";
-import { saveBoardingAreaCallback } from "../../lib/editingCallbacks";
+import { saveBoardingAreaCallback, createBusCallback} from "../../lib/editingCallbacks";
 import getBoardingArea from "../../lib/boardingAreas";
 import { NextSeo } from "next-seo";
 import { migrateOldStarredBuses } from "../../lib/utils";
@@ -150,19 +150,6 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
     const buses = Object.freeze(filterBuses(returnSortedBuses(school.buses), searchTerm));
     const starredBuses = Object.freeze(buses.filter(bus => starredBusIDs.has(bus.id)));
 
-    const createBusCallback = async () => {
-        try {
-            const response = await fetch(`/api/createBus?schoolId=${encodeURIComponent(school.id)}`);
-            const json = await response.json();
-
-            if (!json.createBus || typeof json.createBus.id !== "string") throw new Error("No ID");
-            router.push("/bus/[busId]", `/bus/${json.createBus.id}`);
-        } catch (e) {
-            console.error(e);
-            // TODO: Better error handling
-            alert("Unable to create bus");
-        }
-    };
 
     return <div>
         <Head>
@@ -197,7 +184,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
                 saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction)}
 
                 showCreate={false}
-                createBusCallback={createBusCallback}
+                createBusCallback={() => createBusCallback(router, school.id)}
             />
         }
         
@@ -214,7 +201,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
             saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction)}
 
             showCreate={editMode && perms?.bus.create}
-            createBusCallback={createBusCallback}
+            createBusCallback={() => createBusCallback(router, school.id)}
         />
         <Footer />
         <ConnectionMonitor editing={editMode} setEditFreeze={setEditFreeze}/>

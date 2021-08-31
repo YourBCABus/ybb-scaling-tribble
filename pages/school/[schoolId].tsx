@@ -210,10 +210,12 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
 
 
 function returnSortedBuses(buses: GetSchoolAndPerms_school_buses[]): GetSchoolAndPerms_school_buses[] {
+    const defaultVal = "\u{10FFFD}".repeat(100);
+
     let availableBuses:   GetSchoolAndPerms_school_buses[] = buses.filter((bus) =>  bus.available);
-    availableBuses.sort((a, b) => a.name?.localeCompare(b.name!) ?? 1);
+    availableBuses.sort((a, b) => (a.name || defaultVal).localeCompare(b.name || defaultVal));
     let unavailableBuses: GetSchoolAndPerms_school_buses[] = buses.filter((bus) => !bus.available);
-    unavailableBuses.sort((a, b) => a.name?.localeCompare(b.name!) ?? 1);
+    unavailableBuses.sort((a, b) => (a.name || defaultVal).localeCompare(b.name || defaultVal));
     return [...availableBuses, ...unavailableBuses];
 }
 

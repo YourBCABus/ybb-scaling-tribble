@@ -10,6 +10,7 @@ import { MouseEvent } from "react";
 import Head from 'next/head';
 import NavBar, { PagesInNavbar } from "../../lib/navbar";
 import Bus, { BusComponentSizes } from "../../lib/busComponent";
+import Footer from "../../lib/footer";
 
 import styles from "../../styles/School.module.scss";
 
@@ -135,6 +136,8 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
             starCallback={starCallback}
             saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction)}
         />
+
+        <Footer />
     </div>;
 }
 

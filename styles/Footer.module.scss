@@ -1,0 +1,24 @@
+$footer-padding: 32px;
+
+.footer {
+    width: 100%;
+    padding-top: $footer-padding;
+    padding-bottom: $footer-padding;
+
+    a {
+        color: rgba(0, 0, 0, 0.5);
+    }
+
+    h6 {
+        width: 100%;
+        text-align: center;
+        font-size: 1.2rem;
+        font-weight: 500;
+    }
+
+    p {
+        width: 100%;
+        text-align: center;
+        font-size: 0.8rem;
+    }
+}

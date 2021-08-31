@@ -10,7 +10,7 @@ import { MouseEvent } from "react";
 import Head from 'next/head';
 import NavBar, { PagesInNavbar } from "../../lib/navbar";
 import Bus, { BusComponentSizes } from "../../lib/busComponent";
-import ConnectionMonitor from "../../lib/serverSidePropsMonitorComponent";
+import ConnectionMonitor from "../../lib/connectionMonitorComponent";
 import Footer from "../../lib/footer";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus, faSearch } from "@fortawesome/free-solid-svg-icons";

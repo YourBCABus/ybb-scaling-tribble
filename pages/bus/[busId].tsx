@@ -27,7 +27,7 @@ import { faBars, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 
 import permParseFunc from "../../lib/perms";
 import { saveBoardingAreaCallback, saveBusCallback, saveStopOrderCallback } from "../../lib/editingCallbacks";
-import ConnectionMonitor from "../../lib/serverSidePropsMonitorComponent";
+import ConnectionMonitor from "../../lib/connectionMonitorComponent";
 import { migrateOldStarredBuses, Props } from "../../lib/utils";
 import { EditModeProps } from "../_app";
 

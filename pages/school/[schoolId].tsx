@@ -22,6 +22,7 @@ import { useRouter } from 'next/router';
 import permParseFunc from "../../lib/perms";
 import { saveBoardingAreaCallback } from "../../lib/editingCallbacks";
 import getBoardingArea from "../../lib/boardingAreas";
+import { NextSeo } from "next-seo";
 
 export const GET_SCHOOL_AND_PERMS = gql`
 query GetSchoolAndPerms($id: ID!) {
@@ -143,6 +144,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
         <Head>
             <link rel="stylesheet" href="https://use.typekit.net/qjo5whp.css"/>
         </Head>
+        <NextSeo title={school.name ?? "School"} />
         <header className={styles.header}>
             <NavBar selectedPage={PagesInNavbar.NONE} editSwitchOptions={perms.bus.create || perms.bus.updateStatus ? {state: editMode, onChange: setEditModePlusClearSearch} : undefined}/>
             <h1 className={styles.school_name}>{school.name}</h1>

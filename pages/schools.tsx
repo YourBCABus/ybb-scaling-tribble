@@ -2,6 +2,7 @@ import createNewClient from "../lib/apollo-client";
 import gql from "graphql-tag";
 import { GetSchools } from "./__generated__/GetSchools";
 import { Props } from "../lib/utils";
+import { NextSeo } from "next-seo";
 
 export const GET_SCHOOLS = gql`
 query GetSchools {
@@ -16,6 +17,7 @@ query GetSchools {
 export default function Schools({ schools }: Props<typeof getServerSideProps>) {
     return (
         <div>
+            <NextSeo title="Schools" />
             <h1>Schools</h1>
             <ul>
                 {schools.map(school => {

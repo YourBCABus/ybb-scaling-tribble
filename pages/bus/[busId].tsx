@@ -26,6 +26,7 @@ import { faBars, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import permParseFunc from "../../lib/perms";
 import { saveBoardingAreaCallback, saveBusCallback, saveStopOrderCallback } from "../../lib/editingCallbacks";
 import ConnectionMonitor from "../../lib/serverSidePropsMonitorComponent";
+import { NextSeo } from "next-seo";
 
 export const GET_BUS = gql`
 query GetBus($id: ID!) {
@@ -111,6 +112,7 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
         <Head>
             <link rel="stylesheet" href="https://use.typekit.net/qjo5whp.css"/>
         </Head>
+        <NextSeo title={bus.name ?? "Bus"} />
         <header className={styles.header}>
             <NavBar
                 selectedPage={PagesInNavbar.NONE}

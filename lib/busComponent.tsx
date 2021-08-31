@@ -119,6 +119,7 @@ export default function Bus(
             }
             readOnly={editFreeze}
             onBlur={() => { 
+                if (currBoardingAreaEdit === null) return;
                 saveBoardingAreaCallback(currBoardingAreaEdit);
                 setCurrBoardingAreaEdit(null);
             }}

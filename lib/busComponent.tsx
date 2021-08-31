@@ -5,7 +5,7 @@ import { MouseEventHandler, ChangeEventHandler, useEffect, useState } from 'reac
 import getBoardingArea from "./boardingAreas";
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faStar } from '@fortawesome/free-solid-svg-icons';
+import { faStar, faInfoCircle } from '@fortawesome/free-solid-svg-icons';
 import { SizeProp } from '@fortawesome/fontawesome-svg-core';
 
 import Link from "next/link";
@@ -157,6 +157,7 @@ export default function Bus(
                 event.currentTarget.focus();
             }}
             onKeyDown={ (event) => event.key === "Enter" && event.currentTarget.blur() }
+            placeholder="Bus Name"
         />;
     } else {
         busNameSpanOrInput = <span className={styles.bus_name}>{busNameText}</span>;
@@ -188,7 +189,9 @@ export default function Bus(
             <br/>
             <span className={styles.bus_status}>{available ? (boardingAreaText === "?" ? "Not on location" : "On location") : "Not running"}</span>
         </div>
-        {size === BusComponentSizes.COMPACT || <FontAwesomeIcon icon={faStar} className={styles.bus_star_indicator} style={{color: isStarred ? "#00b0ff" : "rgba(0,0,0,.2)"}} onClick={starCallback} size={fontAwesomeIconSizeParam}/>}
+        {size === BusComponentSizes.COMPACT ?
+            <Link href="/bus/[busId]" as={`/bus/${id}`}><a className={styles.bus_info_button}><FontAwesomeIcon icon={faInfoCircle} /></a></Link>
+            : <FontAwesomeIcon icon={faStar} className={styles.bus_star_indicator} style={{color: isStarred ? "#00b0ff" : "rgba(0,0,0,.2)"}} onClick={starCallback} size={fontAwesomeIconSizeParam}/>}
         <div className={`${styles.bus_boarding_area_background_div}${sizeClassName}`} style={busBoardingAreaBackgroundDivStyle}>{boardingAreaBackgroundDivContents}</div>
         
     </div>;

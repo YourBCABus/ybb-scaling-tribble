@@ -5,7 +5,6 @@ import { GetPerms } from "../../__generated__/GetPerms";
 
 import { GetServerSidePropsContext } from "next";
 import { ParsedUrlQuery } from "node:querystring";
-import { Props } from "../../lib/utils";
 import { MouseEvent } from "react";
 import { DroppableProvided, DraggableProvided, resetServerContext } from "react-beautiful-dnd";
 
@@ -19,6 +18,7 @@ import Link from "next/link";
 import BusComponent, { BusComponentSizes } from "../../lib/busComponent";
 import NavBar, { PagesInNavbar } from "../../lib/navbar";
 import NoSSRComponent from "../../lib/noSSRComponent";
+import { NextSeo } from "next-seo";
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBars, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
@@ -26,7 +26,7 @@ import { faBars, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import permParseFunc from "../../lib/perms";
 import { saveBoardingAreaCallback, saveBusCallback, saveStopOrderCallback } from "../../lib/editingCallbacks";
 import ConnectionMonitor from "../../lib/serverSidePropsMonitorComponent";
-import { NextSeo } from "next-seo";
+import { migrateOldStarredBuses, Props } from "../../lib/utils";
 
 export const GET_BUS = gql`
 query GetBus($id: ID!) {
@@ -83,7 +83,7 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
 
     let [starredBusIDs, setStarredBusIDs] = useState<Set<string>>(new Set());
     useEffect(() => {
-        setStarredBusIDs(new Set(JSON.parse(localStorage.getItem("starred")!) as string[]));
+        setStarredBusIDs(new Set((JSON.parse(localStorage.getItem("starred")!) as string[]).concat(migrateOldStarredBuses())));
     }, []);
     useEffect(() => {
         localStorage.setItem("starred", JSON.stringify([...starredBusIDs]));

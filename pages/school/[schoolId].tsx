@@ -23,6 +23,7 @@ import permParseFunc from "../../lib/perms";
 import { saveBoardingAreaCallback } from "../../lib/editingCallbacks";
 import getBoardingArea from "../../lib/boardingAreas";
 import { NextSeo } from "next-seo";
+import { migrateOldStarredBuses } from "../../lib/utils";
 
 export const GET_SCHOOL_AND_PERMS = gql`
 query GetSchoolAndPerms($id: ID!) {
@@ -98,7 +99,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
 
     let [starredBusIDs, setStarredBusIDs] = useState<Set<string>>(new Set());
     useEffect(() => {
-        setStarredBusIDs(new Set(JSON.parse(localStorage.getItem("starred")!) as string[]));
+        setStarredBusIDs(new Set((JSON.parse(localStorage.getItem("starred")!) as string[]).concat(migrateOldStarredBuses())));
     }, []);
     useEffect(() => {
         localStorage.setItem("starred", JSON.stringify([...starredBusIDs]));

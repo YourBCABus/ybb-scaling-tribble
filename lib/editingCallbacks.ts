@@ -51,3 +51,9 @@ export const createBusCallback =
             alert("Unable to create bus");
         }
     };
+
+export const deleteBusCallback =
+    async (router: NextRouter, id: string, schoolID: string) => {
+        await fetch(`/api/deleteBus?busId=${encodeURIComponent(id)}`, {method: "DELETE"});
+        router.push("/school/[schoolId]", `/school/${schoolID}`);
+    };

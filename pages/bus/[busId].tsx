@@ -22,9 +22,10 @@ import { NextSeo } from "next-seo";
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBars, faChevronLeft, faTrash } from '@fortawesome/free-solid-svg-icons';
+import ReactModal from "react-modal";
 
 import permParseFunc from "../../lib/perms";
-import { saveBoardingAreaCallback, saveBusCallback, saveStopOrderCallback } from "../../lib/editingCallbacks";
+import { deleteBusCallback, saveBoardingAreaCallback, saveBusCallback, saveStopOrderCallback } from "../../lib/editingCallbacks";
 import ConnectionMonitor from "../../lib/serverSidePropsMonitorComponent";
 import { migrateOldStarredBuses, Props } from "../../lib/utils";
 import { EditModeProps } from "../_app";
@@ -107,6 +108,8 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
         }
         setStarredBusIDs(starred);
     };
+
+    const [isDeletingBus, setDeletingBus] = useState<boolean>(false);
 
     return <div>
         <Head>
@@ -194,8 +197,21 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
             </DragDropContext>
         </NoSSRComponent>
         <div className={styles.actions}>
-            <button className={styles.delete_bus}><FontAwesomeIcon icon={faTrash} /> Delete Bus</button>
+            <button className={styles.delete_bus} onClick={() => setDeletingBus(true)}><FontAwesomeIcon icon={faTrash} /> Delete Bus</button>
         </div>
+        <ReactModal isOpen={isDeletingBus} style={{content: {
+            maxWidth: "400px",
+            height: "200px",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+        }}}>
+            <h3>Are you sure you want to delete {bus.name ? `"${bus.name}"` : "this bus"}?</h3>
+            <button onClick={() => setDeletingBus(false)}>Cancel</button>
+            <button className={styles.delete_bus} onClick={() => {
+                deleteBusCallback(router, bus.id, bus.schoolID);
+            }}>Delete</button>
+        </ReactModal>
         <ConnectionMonitor editing={editMode} setEditFreeze={setEditFreeze}/>
     </div>;
 }

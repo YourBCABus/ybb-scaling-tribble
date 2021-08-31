@@ -83,19 +83,23 @@
     padding-top: 0;
 }
 
-.delete_bus {
-    background-color: rgba(0, 0, 0, 0.1);
+.delete_bus, .delete_bus_modal_cancel, .delete_bus_modal_confirm {
     border: none;
     border-radius: 3px;
-    color: #C31A00;
     cursor: pointer;
     padding: 8px 12px;
     font-size: 0.9rem;
     transition: background-color 0.2s, color 0.2s;
+    margin: 0;
 
     svg {
         margin-right: 0.2rem;
     }
+}
+
+.delete_bus {
+    background-color: rgba(0, 0, 0, 0.1);
+    color: #C31A00;
 }
 
 .delete_bus:hover {
@@ -105,4 +109,34 @@
 .delete_bus:focus, .delete_bus:active {
     background-color: #C31A00;
     color: white;
+}
+
+.delete_bus_modal_title {
+    margin-bottom: 15px;
+}
+
+.delete_bus_modal_cancel {
+    background-color: rgba(0, 0, 0, 0.1);
+    margin-right: 8px;
+}
+
+.delete_bus_modal_cancel:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.delete_bus_modal_cancel:focus, .delete_bus_modal_cancel:active {
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+.delete_bus_modal_confirm {
+    background-color: #C31A00;
+    color: white;
+}
+
+.delete_bus_modal_confirm:hover {
+    background-color: darken(#C31A00, 10%);
+}
+
+.delete_bus_modal_confirm:focus, .delete_bus_modal_confirm:active {
+    background-color: darken(#C31A00, 20%);
 }

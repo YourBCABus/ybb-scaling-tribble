@@ -197,18 +197,18 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
             </DragDropContext>
         </NoSSRComponent>
         <div className={styles.actions}>
-            <button className={styles.delete_bus} onClick={() => setDeletingBus(true)}><FontAwesomeIcon icon={faTrash} /> Delete Bus</button>
+            {(editMode && perms.bus.delete) && <button className={styles.delete_bus} onClick={() => setDeletingBus(true)}><FontAwesomeIcon icon={faTrash} /> Delete Bus</button>}
         </div>
         <ReactModal isOpen={isDeletingBus} style={{content: {
             maxWidth: "400px",
-            height: "200px",
+            height: "140px",
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -50%)",
         }}}>
-            <h3>Are you sure you want to delete {bus.name ? `"${bus.name}"` : "this bus"}?</h3>
-            <button onClick={() => setDeletingBus(false)}>Cancel</button>
-            <button className={styles.delete_bus} onClick={() => {
+            <h3 className={styles.delete_bus_modal_title}>Are you sure you want to delete {bus.name ? `"${bus.name}"` : "this bus"}?</h3>
+            <button className={styles.delete_bus_modal_cancel} onClick={() => setDeletingBus(false)}>Cancel</button>
+            <button className={styles.delete_bus_modal_confirm} onClick={() => {
                 deleteBusCallback(router, bus.id, bus.schoolID);
             }}>Delete</button>
         </ReactModal>

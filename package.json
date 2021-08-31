@@ -16,6 +16,7 @@
     "@fortawesome/free-solid-svg-icons": "^5.15.4",
     "@fortawesome/react-fontawesome": "^0.1.15",
     "@types/react-beautiful-dnd": "^13.1.1",
+    "google-map-react": "^2.1.10",
     "graphql": "^15.0.0",
     "next": "^11.1.0",
     "next-auth": "^3.27.3",
@@ -27,6 +28,7 @@
     "sass": "^1.37.0"
   },
   "devDependencies": {
+    "@types/google-map-react": "^2.1.2",
     "@types/react": "17.0.15",
     "apollo": "^2.33.4",
     "eslint": "7.32.0",

@@ -56,7 +56,7 @@ jobs:
       env:
         CLIENT_SECRET: ${{ secrets.YBB_CLIENT_SECRET }}
       run: |
-        sed -i "s/asdihfwetur8921736489712364rhgsdfvhjzxcvnbaskdfas/$CLIENT_SECRET" app.yaml
+        sed -i "s/asdihfwetur8921736489712364rhgsdfvhjzxcvnbaskdfas/$CLIENT_SECRET/g" app.yaml
     - name: Deploy
       uses: google-github-actions/deploy-appengine@v0.4.0
       with:

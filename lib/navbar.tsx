@@ -27,7 +27,8 @@ export default function NavBar( { selectedPage, editSwitchOptions }: { selectedP
                 <span>YourBCABus</span>
             </div>
         </a></Link>
-        <Link href={"/about"} passHref={true}><a className={styles.about}>About</a></Link>
+        <a href="https://about.yourbcabus.com" className={styles.about}>About</a>
+        <a href="https://about.yourbcabus.com/support" className={styles.support}>Support</a>
         <div className={styles.spacer}></div>
         {
             editSwitchOptions && <span className={styles.edit}>

@@ -8,8 +8,19 @@ config.autoAddCss = false;
 
 import { Provider } from 'next-auth/client';
 import { DefaultSeo } from 'next-seo';
+import { useState } from 'react';
+
+export interface EditModeProps {
+    editMode: boolean;
+    setEditMode: (editMode: boolean) => void;
+    editFreeze: boolean;
+    setEditFreeze: (editFreeze: boolean) => void;
+}
 
 function MyApp({ Component, pageProps }: AppProps) {
+    const [editMode, setEditMode] = useState<boolean>(false);
+    const [editFreeze, setEditFreeze] = useState<boolean>(false);
+
     return <Provider session={pageProps.session}>
         <DefaultSeo 
             openGraph={{
@@ -21,7 +32,7 @@ function MyApp({ Component, pageProps }: AppProps) {
             titleTemplate="%s - YourBCABus"
             defaultTitle="YourBCABus"
         />
-        <Component {...pageProps} />
+        <Component {...pageProps} editMode={editMode} setEditMode={setEditMode} editFreeze={editFreeze} setEditFreeze={setEditFreeze} />
     </Provider>;
 }
 export default MyApp;

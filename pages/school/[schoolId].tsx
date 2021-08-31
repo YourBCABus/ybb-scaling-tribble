@@ -13,7 +13,7 @@ import Bus, { BusComponentSizes } from "../../lib/busComponent";
 import ConnectionMonitor from "../../lib/serverSidePropsMonitorComponent";
 import Footer from "../../lib/footer";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSearch } from "@fortawesome/free-solid-svg-icons";
+import { faPlus, faSearch } from "@fortawesome/free-solid-svg-icons";
 
 import styles from "../../styles/School.module.scss";
 
@@ -58,6 +58,9 @@ interface BusListProps {
     starCallback: (id: string, event: MouseEvent<SVGSVGElement>) => void;
 
     saveBoardingAreaCallback: (id: string) => (boardingArea: string | null) => Promise<void>;
+
+    showCreate: boolean;
+    createBusCallback: () => Promise<void>;
 }
 
 function BusList(
@@ -69,6 +72,8 @@ function BusList(
         starredBusIDs,
         starCallback,
         saveBoardingAreaCallback,
+        showCreate,
+        createBusCallback,
     }: BusListProps
 ): JSX.Element {
     return <div className={styles.bus_container_container + (isStarredList ? ` ${styles.bus_container_starred_container}` : ``)}>
@@ -90,6 +95,10 @@ function BusList(
                         size={editing ? BusComponentSizes.COMPACT : BusComponentSizes.NORMAL}
                     />
             )}
+            {showCreate && <a href="#" className={styles.create_bus} onClick={event => {
+                event.preventDefault();
+                createBusCallback();
+            }}><FontAwesomeIcon icon={faPlus} /> Add Bus</a>}
         </div>
     </div>;
 }
@@ -142,6 +151,20 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
     const buses = Object.freeze(filterBuses(returnSortedBuses(school.buses), searchTerm));
     const starredBuses = Object.freeze(buses.filter(bus => starredBusIDs.has(bus.id)));
 
+    const createBusCallback = async () => {
+        try {
+            const response = await fetch(`/api/createBus?schoolId=${encodeURIComponent(school.id)}`);
+            const json = await response.json();
+
+            if (!json.createBus || typeof json.createBus.id !== "string") throw new Error("No ID");
+            router.push("/bus/[busId]", `/bus/${json.createBus.id}`);
+        } catch (e) {
+            console.error(e);
+            // TODO: Better error handling
+            alert("Unable to create bus");
+        }
+    };
+
     return <div>
         <Head>
             <link rel="stylesheet" href="https://use.typekit.net/qjo5whp.css"/>
@@ -173,6 +196,9 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
                 starCallback={starCallback}
                 
                 saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction)}
+
+                showCreate={false}
+                createBusCallback={createBusCallback}
             />
         }
         
@@ -187,6 +213,9 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
             starCallback={starCallback}
 
             saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction)}
+
+            showCreate={editMode && perms?.bus.create}
+            createBusCallback={createBusCallback}
         />
         <Footer />
         <ConnectionMonitor editing={editMode} setEditFreeze={setEditFreeze}/>

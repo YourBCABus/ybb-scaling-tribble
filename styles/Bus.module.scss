@@ -77,3 +77,32 @@
 .back_button_icon {
     margin-right: 8px;
 }
+
+.actions {
+    padding: 1em;
+    padding-top: 0;
+}
+
+.delete_bus {
+    background-color: rgba(0, 0, 0, 0.1);
+    border: none;
+    border-radius: 3px;
+    color: #C31A00;
+    cursor: pointer;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    transition: background-color 0.2s, color 0.2s;
+
+    svg {
+        margin-right: 0.2rem;
+    }
+}
+
+.delete_bus:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.delete_bus:focus, .delete_bus:active {
+    background-color: #C31A00;
+    color: white;
+}

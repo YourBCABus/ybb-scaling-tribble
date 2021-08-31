@@ -21,7 +21,7 @@ import NoSSRComponent from "../../lib/noSSRComponent";
 import { NextSeo } from "next-seo";
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBars, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
+import { faBars, faChevronLeft, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 import permParseFunc from "../../lib/perms";
 import { saveBoardingAreaCallback, saveBusCallback, saveStopOrderCallback } from "../../lib/editingCallbacks";
@@ -193,6 +193,9 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
                 </Droppable>
             </DragDropContext>
         </NoSSRComponent>
+        <div className={styles.actions}>
+            <button className={styles.delete_bus}><FontAwesomeIcon icon={faTrash} /> Delete Bus</button>
+        </div>
         <ConnectionMonitor editing={editMode} setEditFreeze={setEditFreeze}/>
     </div>;
 }

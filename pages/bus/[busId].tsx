@@ -83,7 +83,7 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
 
     let [starredBusIDs, setStarredBusIDs] = useState<Set<string>>(new Set());
     useEffect(() => {
-        setStarredBusIDs(new Set((JSON.parse(localStorage.getItem("starred")!) as string[]).concat(migrateOldStarredBuses())));
+        setStarredBusIDs(new Set((JSON.parse(localStorage.getItem("starred") ?? "[]") as string[]).concat(migrateOldStarredBuses())));
     }, []);
     useEffect(() => {
         localStorage.setItem("starred", JSON.stringify([...starredBusIDs]));

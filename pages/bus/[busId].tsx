@@ -10,8 +10,10 @@ import { DroppableProvided, DraggableProvided, resetServerContext } from "react-
 
 import styles from "../../styles/Bus.module.scss";
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/router";
+import { useState, useEffect, useCallback, useContext } from "react";
+import { useRouter } from 'next/router';
+
+import MutationQueueContext from "../../lib/mutationQueue";
 
 import Head from 'next/head';
 import Link from "next/link";
@@ -108,6 +110,8 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
         setStarredBusIDs(starred);
     };
 
+    const currentMutationQueue = useContext(MutationQueueContext);
+
     return <div>
         <Head>
             <link rel="stylesheet" href="https://use.typekit.net/qjo5whp.css"/>
@@ -142,9 +146,9 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
             editFreeze={editFreeze}
             size={BusComponentSizes.LARGE}
             noLink={true}
-            saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction)(bus.id)}
+            saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction, currentMutationQueue)(bus.id)}
             saveBusNameCallback={
-                (name) => saveBusCallback(updateServerSidePropsFunction)(bus.id)(
+                (name) => saveBusCallback(updateServerSidePropsFunction, currentMutationQueue)(bus.id)(
                     {
                         name,
                         company: bus.company,
@@ -161,7 +165,7 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
                 if (result.destination.index === result.source.index) return;
                 let newStopOrder = reorder(stops, result.source.index, result.destination.index);
                 setStops(newStopOrder);
-                saveStopOrderCallback(updateServerSidePropsFunction)(bus.id)(newStopOrder);
+                saveStopOrderCallback(updateServerSidePropsFunction, currentMutationQueue)(bus.id)(newStopOrder);
             }}>
                 <Droppable droppableId="stops">
                     

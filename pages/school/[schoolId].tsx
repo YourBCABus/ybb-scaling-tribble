@@ -17,8 +17,10 @@ import { faPlus, faSearch } from "@fortawesome/free-solid-svg-icons";
 
 import styles from "../../styles/School.module.scss";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useContext } from "react";
 import { useRouter } from 'next/router';
+
+import MutationQueueContext from "../../lib/mutationQueue";
 
 import permParseFunc from "../../lib/perms";
 import { saveBoardingAreaCallback, createBusCallback} from "../../lib/editingCallbacks";
@@ -58,10 +60,10 @@ interface BusListProps {
     starredBusIDs: Set<string>;
     starCallback: (id: string, event: MouseEvent<SVGSVGElement>) => void;
 
-    saveBoardingAreaCallback: (id: string) => (boardingArea: string | null) => Promise<void>;
+    saveBoardingAreaCallback: (id: string) => (boardingArea: string | null) => void;
 
     showCreate: boolean;
-    createBusCallback: () => Promise<void>;
+    createBusCallback: () => void;
 }
 
 function BusList(
@@ -150,6 +152,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
     const buses = Object.freeze(filterBuses(returnSortedBuses(school.buses), searchTerm));
     const starredBuses = Object.freeze(buses.filter(bus => starredBusIDs.has(bus.id)));
 
+    const currentMutationQueue = useContext(MutationQueueContext);
 
     return <div>
         <Head>
@@ -181,10 +184,10 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
                 starredBusIDs={starredBusIDs}
                 starCallback={starCallback}
                 
-                saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction)}
+                saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction, currentMutationQueue)}
 
                 showCreate={false}
-                createBusCallback={() => createBusCallback(router, school.id)}
+                createBusCallback={() => createBusCallback(currentMutationQueue, router, school.id)}
             />
         }
         
@@ -198,10 +201,10 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
             starredBusIDs={starredBusIDs}
             starCallback={starCallback}
 
-            saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction)}
+            saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction, currentMutationQueue)}
 
             showCreate={editMode && perms?.bus.create}
-            createBusCallback={() => createBusCallback(router, school.id)}
+            createBusCallback={() => createBusCallback(currentMutationQueue, router, school.id)}
         />
         <Footer />
         <ConnectionMonitor editing={editMode} setEditFreeze={setEditFreeze}/>

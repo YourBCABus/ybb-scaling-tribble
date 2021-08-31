@@ -32,7 +32,7 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-nextjs-lint-${{ hashFiles('**/package-lock.json') }}-
     - name: Lint
-      run: next lint
+      run: npm run lint
   build:
     name: Build
     runs-on: ubuntu-latest

@@ -9,7 +9,7 @@ import { MouseEvent } from "react";
 
 import Head from 'next/head';
 import NavBar, { PagesInNavbar } from "../../lib/navbar";
-import Bus from "../../lib/busComponent";
+import Bus, { BusComponentSizes } from "../../lib/busComponent";
 import ConnectionMonitor from "../../lib/serverSidePropsMonitorComponent";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";

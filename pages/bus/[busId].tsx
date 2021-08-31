@@ -1,7 +1,7 @@
 import createNewClient from "../../lib/apollo-client";
 import gql from "graphql-tag";
-import { GetBus, GetBus_bus_stops } from "./__generated__/GetBus";
-import { GetPerms } from "./__generated__/GetPerms";
+import { GetBus, GetBus_bus_stops } from "../../__generated__/GetBus";
+import { GetPerms } from "../../__generated__/GetPerms";
 
 import { GetServerSidePropsContext } from "next";
 import { ParsedUrlQuery } from "node:querystring";

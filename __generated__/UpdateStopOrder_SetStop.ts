@@ -3,7 +3,7 @@
 // @generated
 // This file was automatically generated and should not be edited.
 
-import { StopInput } from "./../../../__generated__/globalTypes";
+import { StopInput } from "./globalTypes";
 
 // ====================================================
 // GraphQL mutation operation: UpdateStopOrder_SetStop

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "download-schema": "apollo schema:download --endpoint=https://api.yourbcabus.com/graphql graphql-schema.json",
-    "codegen": "apollo codegen:generate --target=typescript",
+    "codegen": "apollo codegen:generate --target=typescript --outputFlat",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",

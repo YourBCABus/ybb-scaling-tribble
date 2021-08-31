@@ -1,5 +1,5 @@
 import { BusInput } from "../__generated__/globalTypes";
-import { GetBus_bus_stops } from "../pages/bus/__generated__/GetBus";
+import { GetBus_bus_stops } from "../__generated__/GetBus";
 
 export const saveBoardingAreaCallback = 
     (updateServerSidePropsFunction: () => void) => 

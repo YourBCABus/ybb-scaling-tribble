@@ -1,6 +1,6 @@
 import createNewClient from "../../lib/apollo-client";
 import gql from "graphql-tag";
-import { GetSchoolAndPerms, GetSchoolAndPerms_school_buses } from "./__generated__/GetSchoolAndPerms";
+import { GetSchoolAndPerms, GetSchoolAndPerms_school_buses } from "../../__generated__/GetSchoolAndPerms";
 
 import { Props } from "../../lib/utils";
 import { GetServerSidePropsContext } from "next";

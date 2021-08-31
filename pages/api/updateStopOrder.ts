@@ -1,8 +1,8 @@
 import { ApolloError, gql } from '@apollo/client';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import createNewClient from '../../lib/apollo-client';
-import { UpdateStopOrder_GetBus, UpdateStopOrder_GetBus_bus_stops } from './__generated__/UpdateStopOrder_GetBus';
-import { UpdateStopOrder_SetStop } from './__generated__/UpdateStopOrder_SetStop';
+import { UpdateStopOrder_GetBus, UpdateStopOrder_GetBus_bus_stops } from '../../__generated__/UpdateStopOrder_GetBus';
+import { UpdateStopOrder_SetStop } from '../../__generated__/UpdateStopOrder_SetStop';
 
 export const UPDATE_STOP_ORDER_GET_BUS = gql`
 query UpdateStopOrder_GetBus($busID: ID!) {

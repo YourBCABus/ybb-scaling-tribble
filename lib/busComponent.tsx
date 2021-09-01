@@ -97,7 +97,7 @@ export default function Bus(
     const busNameText = currBusNameEdit ?? name;
 
     useEffect(() => {
-        const width = (size === BusComponentSizes.COMPACT) ? 50 : (size * 50);
+        const width = (size === BusComponentSizes.COMPACT) ? 48 : (size * 50);
         const maxFontSize = (size === BusComponentSizes.COMPACT) ? 18 : (size * 24);
         setBusBoardingAreaFontSize(Math.floor(Math.min(textSizeToFitContainer(boardingAreaText, bus_view_boarding_area_font, width), maxFontSize)));
     }, [boardingAreaText, size]);

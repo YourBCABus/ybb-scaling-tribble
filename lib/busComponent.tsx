@@ -123,7 +123,7 @@ export default function Bus(
                 saveBoardingAreaCallback(currBoardingAreaEdit);
                 setCurrBoardingAreaEdit(null);
             }}
-            value={boardingAreaText}
+            value={boardingAreaText === "?" ? "" : boardingAreaText}
             onClick={(event) => {
                 event.preventDefault();
                 event.stopPropagation();

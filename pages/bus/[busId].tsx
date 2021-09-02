@@ -94,7 +94,7 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
     const router = useRouter();
     const updateServerSidePropsFunction = useCallback(() => router.replace(router.asPath, undefined, {scroll: false}), [router]);
     useEffect(() => {
-        const interval = setInterval(updateServerSidePropsFunction, editMode ? 2000 : 15000);
+        const interval = setInterval(updateServerSidePropsFunction, editMode ? 5000 : 15000);
         return () => clearInterval(interval);
     }, [editMode, updateServerSidePropsFunction]);
 

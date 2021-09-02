@@ -108,7 +108,7 @@ function BusList(
 
 type SchoolProps = Props<typeof getServerSideProps> & EditModeProps;
 
-export default function School({ school: schoolOrUndef, currentSchoolScopes: permsOrUndef, editMode, setEditMode, editFreeze, setEditFreeze }: SchoolProps): JSX.Element {
+export default function School({ school: schoolOrUndef, currentSchoolScopes: permsOrUndef, editMode, setEditMode, editFreeze }: SchoolProps): JSX.Element {
     const school = Object.freeze(schoolOrUndef!);
     const perms = Object.freeze(permParseFunc(Object.freeze(permsOrUndef!)));
 
@@ -208,7 +208,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
             createBusCallback={() => createBusCallback(currentMutationQueue, handleConnQual, router, school.id)}
         />
         <Footer />
-        <ConnectionMonitor editing={editMode} setEditFreeze={setEditFreeze}/>
+        <ConnectionMonitor editing={editMode}/>
     </div>;
 }
 

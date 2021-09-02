@@ -10,7 +10,6 @@ import MutationQueueContext from "./mutationQueue";
 
 interface ConnectionMonitorProps {
     editing: boolean;
-    setEditFreeze: (state: boolean) => void;
 }
 
 enum ConnectionStates {
@@ -56,7 +55,6 @@ export async function handleConnQualCallback(setConnQual: (state: ConnectionStat
 export default function ConnectionMonitor(
     {
         editing,
-        setEditFreeze,
     }: ConnectionMonitorProps
 ): JSX.Element {
 

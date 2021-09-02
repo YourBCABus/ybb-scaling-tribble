@@ -74,7 +74,7 @@ function reorder<T>(list: readonly T[], startIndex: number, endIndex: number): T
 
 type BusProps = Props<typeof getServerSideProps> & EditModeProps;
 
-export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef, editMode, setEditMode, editFreeze, setEditFreeze }: BusProps): JSX.Element {
+export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef, editMode, setEditMode, editFreeze }: BusProps): JSX.Element {
     const bus = Object.freeze(busOrUndef!);
     const perms = Object.freeze(permParseFunc(Object.freeze(permsOrUndef!)));
 
@@ -197,7 +197,7 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
                 </Droppable>
             </DragDropContext>
         </NoSSRComponent>
-        <ConnectionMonitor editing={editMode} setEditFreeze={setEditFreeze}/>
+        <ConnectionMonitor editing={editMode}/>
     </div>;
 }
 

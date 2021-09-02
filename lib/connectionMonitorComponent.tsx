@@ -21,11 +21,11 @@ enum ConnectionStates {
 
 const NONE_MESSAGE: [string, string] = [
     "You do not have any network connection.",
-    "Editing is disabled.",
+    "Changes will not be synced with the server. If you leave the page now, recent edits will be lost.",
 ];
 const SLOW_MESSAGE: [string, string] = [
     "Your network is slow or unresponsive.",
-    "By default, this disables editing. To enable editing while the network is slow, turn on the switch. (This setting will persist.)",
+    "If you leave the page before syncing your data, recent edits will be lost. By default, changes will not be synced with the server. To reenable change syncing on slow networks, turn on the switch. (This setting will persist.)",
 ];
 
 const shouldFreezeEdit = 
@@ -43,7 +43,7 @@ export async function handleConnQualCallback(setConnQual: (state: ConnectionStat
 
     let newQuality = await Promise.race([
         fetch(checkUrl, {signal}).then(() => ConnectionStates.GOOD).catch(() => ConnectionStates.NONE),
-        sleep(2900, ConnectionStates.SLOW),
+        sleep(8000, ConnectionStates.SLOW),
     ]);
     controller.abort();
 
@@ -89,7 +89,7 @@ export default function ConnectionMonitor(
     );
     useEffect(
         () => {
-            let interval = setInterval(() => handleConnQual().then((value) => value || mutationQueue.resolvePromise()), 3000);
+            let interval = setInterval(() => handleConnQual().then((value) => value || mutationQueue.resolvePromise()), 10000);
             return () => clearInterval(interval);
         },
         [handleConnQual, mutationQueue],
@@ -127,12 +127,18 @@ export default function ConnectionMonitor(
             <FontAwesomeIcon
                 icon={faExclamationTriangle}
                 className={styles.warning_symbol}
-                size="4x" style={{
+                size="4x"
+                style={{
                     color,
                     display:connQual === ConnectionStates.GOOD ? 'none' : undefined,
                 }}
             />
-            <div className={styles.warning_info}>
+            <div
+                className={styles.warning_info}
+                style={{
+                    display: connQual === ConnectionStates.GOOD ? 'none' : undefined,
+                }}
+            >
                 {warningString}
                 {
                     editing && connQual === ConnectionStates.SLOW && <React.Fragment>

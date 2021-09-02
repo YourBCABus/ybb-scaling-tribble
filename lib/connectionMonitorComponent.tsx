@@ -1,11 +1,12 @@
 import styles from '../styles/ConnectionMonitor.module.scss';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import Switch from "react-switch";
 
+import MutationQueueContext from "./mutationQueue";
 
 interface ConnectionMonitorProps {
     editing: boolean;
@@ -27,7 +28,11 @@ const SLOW_MESSAGE: [string, string] = [
     "By default, this disables editing. To enable editing while the network is slow, turn on the switch. (This setting will persist.)",
 ];
 
-async function handleConnQual(setConnQual: (state: ConnectionStates) => void, checkUrl: string) {
+const shouldFreezeEdit = 
+    (connQual: ConnectionStates, slowModeSwitch: boolean) => 
+        connQual === ConnectionStates.NONE || (connQual === ConnectionStates.SLOW && !slowModeSwitch);
+
+export async function handleConnQualCallback(setConnQual: (state: ConnectionStates) => void, checkUrl: string, slowModeSwitch: boolean): Promise<boolean> {
     function sleep<T>(ms: number, resolveVal: T) {
         return new Promise<T>(resolve => setTimeout(() => resolve(resolveVal), ms));
     }
@@ -44,6 +49,8 @@ async function handleConnQual(setConnQual: (state: ConnectionStates) => void, ch
 
 
     setConnQual(newQuality);
+
+    return shouldFreezeEdit(newQuality, slowModeSwitch);
 }
 
 export default function ConnectionMonitor(
@@ -52,15 +59,6 @@ export default function ConnectionMonitor(
         setEditFreeze,
     }: ConnectionMonitorProps
 ): JSX.Element {
-    const [connQual, setConnQual] = useState<ConnectionStates>(ConnectionStates.GOOD);
-
-    useEffect(
-        () => {
-            let interval = setInterval(() => handleConnQual(setConnQual, "/api/isOnline"), 3000);
-            return () => clearInterval(interval);
-        },
-        [],
-    );
 
     const [slowModeSwitch, setSlowModeSwitch] = useState<boolean>(false);
     useEffect(() => {
@@ -70,10 +68,39 @@ export default function ConnectionMonitor(
         localStorage.setItem("editingWithSlowNetwork", slowModeSwitch.toString());
     }, [slowModeSwitch]);
 
+    const mutationQueue = useContext(MutationQueueContext);
 
     useEffect(
-        () => setEditFreeze(connQual === ConnectionStates.NONE || (connQual === ConnectionStates.SLOW && !slowModeSwitch)),
-        [connQual, slowModeSwitch, setEditFreeze]
+        () => window.addEventListener("beforeunload", (event: BeforeUnloadEvent): string | void => {
+            if (mutationQueue.length) {
+                event.preventDefault();
+                event.returnValue = "If you leave this page, all your unsynced editing data will be lost.";
+                return "If you leave this page, all your unsynced editing data will be lost.";
+            }
+            return;
+        }),
+        [mutationQueue]
+    );
+
+    const [connQual, setConnQual] = useState<ConnectionStates>(ConnectionStates.GOOD);
+    const handleConnQual = useCallback(
+        () => handleConnQualCallback(setConnQual, "/api/isOnline", slowModeSwitch),
+        [setConnQual, slowModeSwitch],
+    );
+    useEffect(
+        () => {
+            let interval = setInterval(() => handleConnQual().then((value) => value || mutationQueue.resolvePromise()), 3000);
+            return () => clearInterval(interval);
+        },
+        [handleConnQual, mutationQueue],
+    );
+
+
+    const handleConnQualContext = useContext(HandleConnQualContext);
+
+    useEffect(
+        () => { handleConnQualContext.handleConnQual = handleConnQual; },
+        [handleConnQualContext, handleConnQual],
     );
 
     let color: string;
@@ -125,3 +152,5 @@ export default function ConnectionMonitor(
         </React.Fragment>
     );
 }
+
+export const HandleConnQualContext: React.Context<{handleConnQual?: () => Promise<boolean>}> = React.createContext({});

@@ -21,8 +21,26 @@ export class MutationQueue {
 
     private generatePromise(): Promise<void> {
         return new Promise((resolve, _) => { this.resolve = resolve; })
-            .then(async () => { for (; this.queue.length > 0; ) await this.queue.shift()?.(); })
+            .then(async () => {
+                for (; this.queue.length > 0; ) {
+                    let currMutation = this.queue.shift();
+                    if (currMutation) {
+                        for (const _ in Array(3).fill(undefined)) {
+                            try {
+                                await currMutation();
+                                break;
+                            } catch (e) {
+                                console.error(e);
+                            }
+                        }
+                    }
+                }
+            })
             .then(() => { this.promise = this.generatePromise(); });
+    }
+
+    get length() {
+        return this.queue.length;
     }
 }
 

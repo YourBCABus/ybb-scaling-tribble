@@ -10,7 +10,7 @@ import { MouseEvent } from "react";
 import Head from 'next/head';
 import NavBar, { PagesInNavbar } from "../../lib/navbar";
 import Bus, { BusComponentSizes } from "../../lib/busComponent";
-import ConnectionMonitor from "../../lib/connectionMonitorComponent";
+import ConnectionMonitor, { HandleConnQualContext } from "../../lib/connectionMonitorComponent";
 import Footer from "../../lib/footer";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus, faSearch } from "@fortawesome/free-solid-svg-icons";
@@ -153,6 +153,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
     const starredBuses = Object.freeze(buses.filter(bus => starredBusIDs.has(bus.id)));
 
     const currentMutationQueue = useContext(MutationQueueContext);
+    const { handleConnQual } = useContext(HandleConnQualContext);
 
     return <div>
         <Head>
@@ -184,10 +185,10 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
                 starredBusIDs={starredBusIDs}
                 starCallback={starCallback}
                 
-                saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction, currentMutationQueue)}
+                saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction, currentMutationQueue, handleConnQual)}
 
                 showCreate={false}
-                createBusCallback={() => createBusCallback(currentMutationQueue, router, school.id)}
+                createBusCallback={() => createBusCallback(currentMutationQueue, handleConnQual, router, school.id)}
             />
         }
         
@@ -204,7 +205,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
             saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction, currentMutationQueue)}
 
             showCreate={editMode && perms?.bus.create}
-            createBusCallback={() => createBusCallback(currentMutationQueue, router, school.id)}
+            createBusCallback={() => createBusCallback(currentMutationQueue, handleConnQual, router, school.id)}
         />
         <Footer />
         <ConnectionMonitor editing={editMode} setEditFreeze={setEditFreeze}/>

@@ -5,7 +5,7 @@ import { BusInput } from "../__generated__/globalTypes";
 import { GetBus_bus_stops } from "../__generated__/GetBus";
 
 export const saveBoardingAreaCallback = 
-    (updateServerSidePropsFunction: () => void, mutationQueue: MutationQueue) => 
+    (updateServerSidePropsFunction: () => void, mutationQueue: MutationQueue, handleConnQualFunction?: () => Promise<boolean>) => 
         (id: string) => 
             (boardingArea: string | null) => {
                 mutationQueue.addToQueue(
@@ -17,13 +17,13 @@ export const saveBoardingAreaCallback =
                         updateServerSidePropsFunction();
                     }
                 );
-                
+                handleConnQualFunction?.().then((value) => value || mutationQueue.resolvePromise());
             }
     ;
 
 
 export const saveBusCallback = 
-    (updateServerSidePropsFunction: () => void, mutationQueue: MutationQueue) => 
+    (updateServerSidePropsFunction: () => void, mutationQueue: MutationQueue, handleConnQualFunction?: () => Promise<boolean>) => 
         (id: string) => 
             (busInput: BusInput) => {
                 mutationQueue.addToQueue(
@@ -32,12 +32,13 @@ export const saveBusCallback =
                         updateServerSidePropsFunction();
                     }
                 );
+                handleConnQualFunction?.().then((value) => value || mutationQueue.resolvePromise());
             }
     ;
 
 
 export const saveStopOrderCallback = 
-    (updateServerSidePropsFunction: () => void, mutationQueue: MutationQueue) =>
+    (updateServerSidePropsFunction: () => void, mutationQueue: MutationQueue, handleConnQualFunction?: () => Promise<boolean>) =>
         (busId: string) => 
             (orderedStops: GetBus_bus_stops[]) => {
                 mutationQueue.addToQueue(
@@ -47,26 +48,21 @@ export const saveStopOrderCallback =
                         updateServerSidePropsFunction();
                     }
                 );
+                handleConnQualFunction?.().then((value) => value || mutationQueue.resolvePromise());
             }
     ;
 
 
 export const createBusCallback = 
-    (mutationQueue: MutationQueue, router: NextRouter, id: string) => {
-        
+    (mutationQueue: MutationQueue, handleConnQualFunction: (() => Promise<boolean>) | undefined, router: NextRouter, id: string) => {
         mutationQueue.addToQueue(
-            async () => { 
-                try {
-                    const response = await fetch(`/api/createBus?schoolId=${encodeURIComponent(id)}`);
-                    const json = await response.json();
+            async () => {
+                const response = await fetch(`/api/createBus?schoolId=${encodeURIComponent(id)}`);
+                const json = await response.json();
 
-                    if (!json.createBus || typeof json.createBus.id !== "string") throw new Error("No ID");
-                    router.push("/bus/[busId]", `/bus/${json.createBus.id}`);
-                } catch (e) {
-                    console.error(e);
-                    // TODO: Better error handling
-                    alert("Unable to create bus");
-                }
+                if (!json.createBus || typeof json.createBus.id !== "string") throw new Error("No ID");
+                router.push("/bus/[busId]", `/bus/${json.createBus.id}`);
             }
         );
+        handleConnQualFunction?.().then((value) => value || mutationQueue.resolvePromise());
     };

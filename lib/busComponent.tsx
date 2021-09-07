@@ -39,8 +39,8 @@ interface BusProps {
     editFreeze: boolean;
     noLink?: boolean;
 
-    saveBoardingAreaCallback?: (boardingArea: string | null) => void;
-    saveBusNameCallback?: (busName: string | null) => void
+    saveBoardingAreaCallback?: (boardingArea: string | null) => Promise<void>;
+    saveBusNameCallback?: (busName: string | null) => Promise<void>;
 }
 
 function measureTextWidth(text: string, font: string, size: number): number {
@@ -74,7 +74,7 @@ const bus_view_boarding_area_font: string = "-apple-system, BlinkMacSystemFont, 
 
 export default function Bus(
     {
-        bus: { name, id, available, boardingArea, invalidateTime },
+        bus,
         size = BusComponentSizes.NORMAL,
 
         isStarred,
@@ -88,10 +88,33 @@ export default function Bus(
         saveBusNameCallback,
     }:  BusProps,
 ): JSX.Element {
+    const { name, id, available, boardingArea, invalidateTime } = bus;
+
     const [busBoardingAreaFontSize, setBusBoardingAreaFontSize] = useState<number>(24);
     
     const [currBoardingAreaEdit, setCurrBoardingAreaEdit] = useState<string | null>(null);
+    const [currBoardingAreaEditClearable, setCurrBoardingAreaEditClearable] = useState<boolean>(false);
+    // useEffect(
+    //     () => {
+    //         if (currBoardingAreaEditClearable) {
+    //             setCurrBoardingAreaEdit(null);
+    //             setCurrBoardingAreaEditClearable(false);
+    //         }
+    //     },
+    //     [bus], //eslint-disable-line
+    // );
+
     const [currBusNameEdit, setCurrBusNameEdit] = useState<string | null>(null);
+    const [currBusNameEditClearable, setCurrBusNameEditClearable] = useState<boolean>(false);
+    // useEffect(
+    //     () => {
+    //         if (currBusNameEditClearable) {
+    //             setCurrBusNameEdit(null);
+    //             setCurrBusNameEditClearable(false);
+    //         }
+    //     },
+    //     [bus], //eslint-disable-line
+    // );
 
     const boardingAreaText = currBoardingAreaEdit ?? getBoardingArea(boardingArea, invalidateTime);
     const busNameText = currBusNameEdit ?? name;
@@ -120,8 +143,8 @@ export default function Bus(
             readOnly={editFreeze}
             onBlur={() => { 
                 if (currBoardingAreaEdit === null) return;
-                saveBoardingAreaCallback(currBoardingAreaEdit);
-                setCurrBoardingAreaEdit(null);
+                saveBoardingAreaCallback(currBoardingAreaEdit).then(() => setCurrBoardingAreaEdit(null));
+                setCurrBoardingAreaEditClearable(true);
             }}
             value={boardingAreaText === "?" ? "" : boardingAreaText}
             onClick={(event) => {
@@ -147,8 +170,8 @@ export default function Bus(
             readOnly={editFreeze}
             onBlur={() => {
                 if (currBusNameEdit === null) return;
-                saveBusNameCallback(currBusNameEdit);
-                setCurrBusNameEdit(null);
+                saveBusNameCallback(currBusNameEdit).then(() => setCurrBusNameEdit(null));
+                setCurrBusNameEditClearable(true);
             }}
             value={busNameText ?? ""}
             onClick={(event) => {

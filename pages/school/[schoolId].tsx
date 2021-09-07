@@ -10,15 +10,17 @@ import { MouseEvent } from "react";
 import Head from 'next/head';
 import NavBar, { PagesInNavbar } from "../../lib/navbar";
 import Bus, { BusComponentSizes } from "../../lib/busComponent";
-import ConnectionMonitor from "../../lib/serverSidePropsMonitorComponent";
+import ConnectionMonitor, { HandleConnQualContext } from "../../lib/connectionMonitorComponent";
 import Footer from "../../lib/footer";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus, faSearch } from "@fortawesome/free-solid-svg-icons";
 
 import styles from "../../styles/School.module.scss";
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from 'next/router';
+import { useState, useEffect, useCallback, useContext } from "react";
+import Router, { useRouter } from 'next/router';
+
+import MutationQueueContext from "../../lib/mutationQueue";
 
 import permParseFunc from "../../lib/perms";
 import { saveBoardingAreaCallback, createBusCallback} from "../../lib/editingCallbacks";
@@ -61,7 +63,7 @@ interface BusListProps {
     saveBoardingAreaCallback: (id: string) => (boardingArea: string | null) => Promise<void>;
 
     showCreate: boolean;
-    createBusCallback: () => Promise<void>;
+    createBusCallback: () => void;
 }
 
 function BusList(
@@ -106,7 +108,7 @@ function BusList(
 
 type SchoolProps = Props<typeof getServerSideProps> & EditModeProps;
 
-export default function School({ school: schoolOrUndef, currentSchoolScopes: permsOrUndef, editMode, setEditMode, editFreeze, setEditFreeze }: SchoolProps): JSX.Element {
+export default function School({ school: schoolOrUndef, currentSchoolScopes: permsOrUndef, editMode, setEditMode, editFreeze }: SchoolProps): JSX.Element {
     const school = Object.freeze(schoolOrUndef!);
     const perms = Object.freeze(permParseFunc(Object.freeze(permsOrUndef!)));
 
@@ -119,9 +121,12 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
     }, [starredBusIDs]);
 
     const router = useRouter();
-    const updateServerSidePropsFunction = useCallback(() => router.replace(router.asPath, undefined, {scroll: false}), [router]);
+    const updateServerSidePropsFunction = useCallback(() => {
+        const currRouter = Router;
+        return currRouter.replace(currRouter.asPath, undefined, {scroll: false});
+    }, []);
     useEffect(() => {
-        const interval = setInterval(updateServerSidePropsFunction, editMode ? 2000 : 15000);
+        const interval = setInterval(updateServerSidePropsFunction, editMode ? 5000 : 15000);
         return () => clearInterval(interval);
     }, [editMode, updateServerSidePropsFunction]);
 
@@ -150,6 +155,8 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
     const buses = Object.freeze(filterBuses(returnSortedBuses(school.buses), searchTerm));
     const starredBuses = Object.freeze(buses.filter(bus => starredBusIDs.has(bus.id)));
 
+    const currentMutationQueue = useContext(MutationQueueContext);
+    const { handleConnQual } = useContext(HandleConnQualContext);
 
     return <div>
         <Head>
@@ -181,10 +188,10 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
                 starredBusIDs={starredBusIDs}
                 starCallback={starCallback}
                 
-                saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction)}
+                saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction, currentMutationQueue, handleConnQual)}
 
                 showCreate={false}
-                createBusCallback={() => createBusCallback(router, school.id)}
+                createBusCallback={() => createBusCallback(currentMutationQueue, handleConnQual, router, school.id)}
             />
         }
         
@@ -198,13 +205,13 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
             starredBusIDs={starredBusIDs}
             starCallback={starCallback}
 
-            saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction)}
+            saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction, currentMutationQueue, handleConnQual)}
 
             showCreate={editMode && perms?.bus.create}
-            createBusCallback={() => createBusCallback(router, school.id)}
+            createBusCallback={() => createBusCallback(currentMutationQueue, handleConnQual, router, school.id)}
         />
         <Footer />
-        <ConnectionMonitor editing={editMode} setEditFreeze={setEditFreeze}/>
+        <ConnectionMonitor editing={editMode}/>
     </div>;
 }
 

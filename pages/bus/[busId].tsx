@@ -10,8 +10,10 @@ import { DroppableProvided, DraggableProvided, resetServerContext } from "react-
 
 import styles from "../../styles/Bus.module.scss";
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/router";
+import { useState, useEffect, useCallback, useContext } from "react";
+import Router, { useRouter } from 'next/router';
+
+import MutationQueueContext from "../../lib/mutationQueue";
 
 import Head from 'next/head';
 import Link from "next/link";
@@ -26,7 +28,7 @@ import ReactModal from "react-modal";
 
 import permParseFunc from "../../lib/perms";
 import { deleteBusCallback, saveBoardingAreaCallback, saveBusCallback, saveStopOrderCallback } from "../../lib/editingCallbacks";
-import ConnectionMonitor from "../../lib/serverSidePropsMonitorComponent";
+import ConnectionMonitor, { HandleConnQualContext } from "../../lib/connectionMonitorComponent";
 import { migrateOldStarredBuses, Props } from "../../lib/utils";
 import { EditModeProps } from "../_app";
 
@@ -73,14 +75,12 @@ function reorder<T>(list: readonly T[], startIndex: number, endIndex: number): T
 
 type BusProps = Props<typeof getServerSideProps> & EditModeProps;
 
-export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef, editMode, setEditMode, editFreeze, setEditFreeze }: BusProps): JSX.Element {
+export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef, editMode, setEditMode, editFreeze }: BusProps): JSX.Element {
     const bus = Object.freeze(busOrUndef!);
     const perms = Object.freeze(permParseFunc(Object.freeze(permsOrUndef!)));
+    const stops = Object.freeze(returnSortedStops(bus.stops));
 
-    const [stops, setStops] = useState(Object.freeze(returnSortedStops(bus.stops)));
-    useEffect(() => {
-        setStops(Object.freeze(returnSortedStops(bus.stops)));
-    }, [bus.stops]);
+    const [currStopsEdit, setCurrStopsEdit] = useState<null | GetBus_bus_stops[]>(null);
 
     let [starredBusIDs, setStarredBusIDs] = useState<Set<string>>(new Set());
     useEffect(() => {
@@ -91,9 +91,12 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
     }, [starredBusIDs]);
 
     const router = useRouter();
-    const updateServerSidePropsFunction = useCallback(() => router.replace(router.asPath, undefined, {scroll: false}), [router]);
+    const updateServerSidePropsFunction = useCallback(() => {
+        const currRouter = Router;
+        return currRouter.replace(currRouter.asPath, undefined, {scroll: false});
+    }, []);
     useEffect(() => {
-        const interval = setInterval(updateServerSidePropsFunction, editMode ? 2000 : 15000);
+        const interval = setInterval(updateServerSidePropsFunction, editMode ? 5000 : 15000);
         return () => clearInterval(interval);
     }, [editMode, updateServerSidePropsFunction]);
 
@@ -108,8 +111,11 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
         }
         setStarredBusIDs(starred);
     };
-
+  
     const [isDeletingBus, setDeletingBus] = useState<boolean>(false);
+
+    const currentMutationQueue = useContext(MutationQueueContext);
+    const { handleConnQual } = useContext(HandleConnQualContext);
 
     return <div>
         <Head>
@@ -145,9 +151,9 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
             editFreeze={editFreeze}
             size={BusComponentSizes.LARGE}
             noLink={true}
-            saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction)(bus.id)}
+            saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction, currentMutationQueue, handleConnQual)(bus.id)}
             saveBusNameCallback={
-                (name) => saveBusCallback(updateServerSidePropsFunction)(bus.id)(
+                (name) => saveBusCallback(updateServerSidePropsFunction, currentMutationQueue, handleConnQual)(bus.id)(
                     {
                         name,
                         company: bus.company,
@@ -162,9 +168,9 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
             <DragDropContext onDragEnd={(result) => {
                 if (!result.destination) return;
                 if (result.destination.index === result.source.index) return;
-                let newStopOrder = reorder(stops, result.source.index, result.destination.index);
-                setStops(newStopOrder);
-                saveStopOrderCallback(updateServerSidePropsFunction)(bus.id)(newStopOrder);
+                let newStopOrder = reorder(currStopsEdit || stops, result.source.index, result.destination.index);
+                setCurrStopsEdit(newStopOrder);
+                saveStopOrderCallback(updateServerSidePropsFunction, currentMutationQueue, handleConnQual)(bus.id)(newStopOrder).then(() => setCurrStopsEdit(null));
             }}>
                 <Droppable droppableId="stops">
                     
@@ -173,7 +179,7 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
                             <h1> </h1>
                             <ul {...provided.droppableProps} ref={provided.innerRef} >
                                 {
-                                    stops.map(
+                                    (currStopsEdit || stops).map(
                                         (stop, index) => <Draggable isDragDisabled={!editMode || editFreeze} key={stop.id} draggableId={stop.id} index={index}>
                                             {
                                                 (provided: DraggableProvided) => (
@@ -212,7 +218,7 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
                 deleteBusCallback(router, bus.id, bus.schoolID);
             }}>Delete</button>
         </ReactModal>
-        <ConnectionMonitor editing={editMode} setEditFreeze={setEditFreeze}/>
+        <ConnectionMonitor editing={editMode}/>
     </div>;
 }
 

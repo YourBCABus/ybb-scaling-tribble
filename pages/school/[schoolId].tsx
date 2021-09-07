@@ -18,7 +18,7 @@ import { faPlus, faSearch } from "@fortawesome/free-solid-svg-icons";
 import styles from "../../styles/School.module.scss";
 
 import { useState, useEffect, useCallback, useContext } from "react";
-import { useRouter } from 'next/router';
+import Router, { useRouter } from 'next/router';
 
 import MutationQueueContext from "../../lib/mutationQueue";
 
@@ -60,7 +60,7 @@ interface BusListProps {
     starredBusIDs: Set<string>;
     starCallback: (id: string, event: MouseEvent<SVGSVGElement>) => void;
 
-    saveBoardingAreaCallback: (id: string) => (boardingArea: string | null) => void;
+    saveBoardingAreaCallback: (id: string) => (boardingArea: string | null) => Promise<void>;
 
     showCreate: boolean;
     createBusCallback: () => void;
@@ -121,7 +121,10 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
     }, [starredBusIDs]);
 
     const router = useRouter();
-    const updateServerSidePropsFunction = useCallback(() => router.replace(router.asPath, undefined, {scroll: false}), [router]);
+    const updateServerSidePropsFunction = useCallback(() => {
+        const currRouter = Router;
+        return currRouter.replace(currRouter.asPath, undefined, {scroll: false});
+    }, []);
     useEffect(() => {
         const interval = setInterval(updateServerSidePropsFunction, editMode ? 5000 : 15000);
         return () => clearInterval(interval);
@@ -202,7 +205,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
             starredBusIDs={starredBusIDs}
             starCallback={starCallback}
 
-            saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction, currentMutationQueue)}
+            saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction, currentMutationQueue, handleConnQual)}
 
             showCreate={editMode && perms?.bus.create}
             createBusCallback={() => createBusCallback(currentMutationQueue, handleConnQual, router, school.id)}

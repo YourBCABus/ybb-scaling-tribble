@@ -5,64 +5,68 @@ import { BusInput } from "../__generated__/globalTypes";
 import { GetBus_bus_stops } from "../__generated__/GetBus";
 
 export const saveBoardingAreaCallback = 
-    (updateServerSidePropsFunction: () => void, mutationQueue: MutationQueue, handleConnQualFunction?: () => Promise<boolean>) => 
+    (updateServerSidePropsFunction: () => Promise<boolean>, mutationQueue: MutationQueue, handleConnQualFunction: (() => Promise<boolean>) | undefined) => 
         (id: string) => 
             (boardingArea: string | null) => {
-                mutationQueue.addToQueue(
+                let returnVal = mutationQueue.addToQueue(
                     async () => {
                         if (!boardingArea) {
                             boardingArea = "?";
                         }
                         await fetch(`/api/updateBusStatus?id=${encodeURIComponent(id)}&boardingArea=${encodeURIComponent(boardingArea)}`);
-                        updateServerSidePropsFunction();
+                        await updateServerSidePropsFunction();
                     }
                 );
                 handleConnQualFunction?.().then((value) => value || mutationQueue.resolvePromise());
+                return returnVal;
             }
     ;
 
 
 export const saveBusCallback = 
-    (updateServerSidePropsFunction: () => void, mutationQueue: MutationQueue, handleConnQualFunction?: () => Promise<boolean>) => 
+    (updateServerSidePropsFunction: () => Promise<boolean>, mutationQueue: MutationQueue, handleConnQualFunction: (() => Promise<boolean>) | undefined) => 
         (id: string) => 
             (busInput: BusInput) => {
-                mutationQueue.addToQueue(
+                let returnVal = mutationQueue.addToQueue(
                     async () => {
                         await fetch(`/api/updateBus?id=${encodeURIComponent(id)}&busData=${encodeURIComponent(JSON.stringify(busInput))}`);
-                        updateServerSidePropsFunction();
+                        await updateServerSidePropsFunction();
                     }
                 );
                 handleConnQualFunction?.().then((value) => value || mutationQueue.resolvePromise());
+                return returnVal;
             }
     ;
 
 
 export const saveStopOrderCallback = 
-    (updateServerSidePropsFunction: () => void, mutationQueue: MutationQueue, handleConnQualFunction?: () => Promise<boolean>) =>
+    (updateServerSidePropsFunction: () => Promise<boolean>, mutationQueue: MutationQueue, handleConnQualFunction: (() => Promise<boolean>) | undefined) =>
         (busId: string) => 
             (orderedStops: GetBus_bus_stops[]) => {
-                mutationQueue.addToQueue(
+                let returnVal = mutationQueue.addToQueue(
                     async () => {
                         let orderedStopIds = orderedStops.map((stop) => stop.id);
                         await fetch(`/api/updateStopOrder?busId=${encodeURIComponent(busId)}&stopOrderData=${encodeURIComponent(JSON.stringify(orderedStopIds))}`);
-                        updateServerSidePropsFunction();
+                        await updateServerSidePropsFunction();
                     }
                 );
                 handleConnQualFunction?.().then((value) => value || mutationQueue.resolvePromise());
+                return returnVal;
             }
     ;
 
 
 export const createBusCallback = 
     (mutationQueue: MutationQueue, handleConnQualFunction: (() => Promise<boolean>) | undefined, router: NextRouter, id: string) => {
-        mutationQueue.addToQueue(
+        let returnVal = mutationQueue.addToQueue(
             async () => {
                 const response = await fetch(`/api/createBus?schoolId=${encodeURIComponent(id)}`);
                 const json = await response.json();
 
                 if (!json.createBus || typeof json.createBus.id !== "string") throw new Error("No ID");
-                router.push("/bus/[busId]", `/bus/${json.createBus.id}`);
+                await router.push("/bus/[busId]", `/bus/${json.createBus.id}`);
             }
         );
         handleConnQualFunction?.().then((value) => value || mutationQueue.resolvePromise());
+        return returnVal;
     };

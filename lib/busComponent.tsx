@@ -39,8 +39,8 @@ interface BusProps {
     editFreeze: boolean;
     noLink?: boolean;
 
-    saveBoardingAreaCallback?: (boardingArea: string | null) => void;
-    saveBusNameCallback?: (busName: string | null) => void
+    saveBoardingAreaCallback?: (boardingArea: string | null) => Promise<void>;
+    saveBusNameCallback?: (busName: string | null) => Promise<void>;
 }
 
 function measureTextWidth(text: string, font: string, size: number): number {
@@ -94,27 +94,27 @@ export default function Bus(
     
     const [currBoardingAreaEdit, setCurrBoardingAreaEdit] = useState<string | null>(null);
     const [currBoardingAreaEditClearable, setCurrBoardingAreaEditClearable] = useState<boolean>(false);
-    useEffect(
-        () => {
-            if (currBoardingAreaEditClearable) {
-                setCurrBoardingAreaEdit(null);
-                setCurrBoardingAreaEditClearable(false);
-            }
-        },
-        [bus], //eslint-disable-line
-    );
+    // useEffect(
+    //     () => {
+    //         if (currBoardingAreaEditClearable) {
+    //             setCurrBoardingAreaEdit(null);
+    //             setCurrBoardingAreaEditClearable(false);
+    //         }
+    //     },
+    //     [bus], //eslint-disable-line
+    // );
 
     const [currBusNameEdit, setCurrBusNameEdit] = useState<string | null>(null);
     const [currBusNameEditClearable, setCurrBusNameEditClearable] = useState<boolean>(false);
-    useEffect(
-        () => {
-            if (currBusNameEditClearable) {
-                setCurrBusNameEdit(null);
-                setCurrBusNameEditClearable(false);
-            }
-        },
-        [bus], //eslint-disable-line
-    );
+    // useEffect(
+    //     () => {
+    //         if (currBusNameEditClearable) {
+    //             setCurrBusNameEdit(null);
+    //             setCurrBusNameEditClearable(false);
+    //         }
+    //     },
+    //     [bus], //eslint-disable-line
+    // );
 
     const boardingAreaText = currBoardingAreaEdit ?? getBoardingArea(boardingArea, invalidateTime);
     const busNameText = currBusNameEdit ?? name;
@@ -143,7 +143,7 @@ export default function Bus(
             readOnly={editFreeze}
             onBlur={() => { 
                 if (currBoardingAreaEdit === null) return;
-                saveBoardingAreaCallback(currBoardingAreaEdit);
+                saveBoardingAreaCallback(currBoardingAreaEdit).then(() => setCurrBoardingAreaEdit(null));
                 setCurrBoardingAreaEditClearable(true);
             }}
             value={boardingAreaText}
@@ -170,7 +170,7 @@ export default function Bus(
             readOnly={editFreeze}
             onBlur={() => {
                 if (currBusNameEdit === null) return;
-                saveBusNameCallback(currBusNameEdit);
+                saveBusNameCallback(currBusNameEdit).then(() => setCurrBusNameEdit(null));
                 setCurrBusNameEditClearable(true);
             }}
             value={busNameText ?? ""}

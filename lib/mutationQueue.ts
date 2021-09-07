@@ -11,8 +11,9 @@ export class MutationQueue {
 
     }
 
-    addToQueue(mutationToAdd: () => Promise<void>): void {
+    addToQueue(mutationToAdd: () => Promise<void>): Promise<void> {
         this.queue.push(mutationToAdd);
+        return this.promise.then(() => new Promise((resolve) => setTimeout(resolve, 100)));
     }
 
     resolvePromise(): void {
@@ -22,10 +23,11 @@ export class MutationQueue {
     private generatePromise(): Promise<void> {
         return new Promise((resolve, _) => { this.resolve = resolve; })
             .then(async () => {
-                for (; this.queue.length > 0; ) {
+                while (this.queue.length > 0) {
                     let currMutation = this.queue.shift();
                     if (currMutation) {
-                        for (const _ in Array(3).fill(undefined)) {
+                        this.queue.unshift(currMutation);
+                        for (const _ of Array(3).fill(undefined)) {
                             try {
                                 await currMutation();
                                 break;
@@ -34,6 +36,7 @@ export class MutationQueue {
                             }
                         }
                     }
+                    this.queue.shift();
                 }
             })
             .then(() => { this.promise = this.generatePromise(); });

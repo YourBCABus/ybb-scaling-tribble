@@ -8,6 +8,8 @@ config.autoAddCss = false;
 
 import { Provider } from 'next-auth/client';
 import { DefaultSeo } from 'next-seo';
+import ReactModal from 'react-modal';
+
 import { useState } from 'react';
 
 export interface EditModeProps {
@@ -16,6 +18,9 @@ export interface EditModeProps {
     editFreeze: boolean;
     setEditFreeze: (editFreeze: boolean) => void;
 }
+
+// TODO: Find a better place to put this and use a better element
+ReactModal.setAppElement("#__next");
 
 function MyApp({ Component, pageProps }: AppProps) {
     const [editMode, setEditMode] = useState<boolean>(false);

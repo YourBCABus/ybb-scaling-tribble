@@ -26,6 +26,9 @@
 
 .bus_view.size_compact {
     padding: 0 0 0 8px;
+    grid-template-areas:
+        "a a a a a a b c"
+        "a a a a a a b c";
 
     border-radius: 3px;
     height: 25px + 2 * 1px;
@@ -115,6 +118,7 @@
 }
 
 .bus_boarding_area_background_div.size_compact {
+    width: 48px;
     height: 25px;
     line-height: 25px;
     border-radius: 0;

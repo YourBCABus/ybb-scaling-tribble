@@ -70,3 +70,9 @@ export const createBusCallback =
         handleConnQualFunction?.().then((value) => value || mutationQueue.resolvePromise());
         return returnVal;
     };
+
+export const deleteBusCallback =
+    async (router: NextRouter, id: string, schoolID: string) => {
+        await fetch(`/api/deleteBus?busId=${encodeURIComponent(id)}`, {method: "DELETE"});
+        router.push("/school/[schoolId]", `/school/${schoolID}`);
+    };

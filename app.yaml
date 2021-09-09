@@ -11,3 +11,6 @@ env_variables:
   YBB_CLIENT_ID: 612dac7f41b76bfe50fa309c
   YBB_CLIENT_SECRET: asdihfwetur8921736489712364rhgsdfvhjzxcvnbaskdfas
   NEXTAUTH_URL: https://yourbcabus.com
+
+automatic_scaling:
+  max_concurrent_requests: 70

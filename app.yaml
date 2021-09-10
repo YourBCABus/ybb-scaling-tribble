@@ -13,4 +13,7 @@ env_variables:
   NEXTAUTH_URL: https://yourbcabus.com
 
 automatic_scaling:
-  max_concurrent_requests: 70
+  target_cpu_utilization: 0.75
+  target_throughput_utilization: 0.75
+  max_concurrent_requests: 80
+

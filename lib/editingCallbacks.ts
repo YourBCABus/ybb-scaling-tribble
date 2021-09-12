@@ -76,3 +76,15 @@ export const deleteBusCallback =
         await fetch(`/api/deleteBus?busId=${encodeURIComponent(id)}`, {method: "DELETE"});
         router.push("/school/[schoolId]", `/school/${schoolID}`);
     };
+
+export const clearAllCallback =
+    (updateServerSidePropsFunction: () => Promise<boolean>, mutationQueue: MutationQueue, handleConnQualFunction: (() => Promise<boolean>) | undefined, id: string) => {
+        let returnVal = mutationQueue.addToQueue(
+            async () => {
+                await fetch(`/api/clearAll?schoolId=${encodeURIComponent(id)}`);
+                await updateServerSidePropsFunction();
+            }
+        );
+        handleConnQualFunction?.().then((value) => value || mutationQueue.resolvePromise());
+        return returnVal;
+    };

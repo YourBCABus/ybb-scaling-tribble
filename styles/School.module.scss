@@ -115,3 +115,61 @@
     text-align: center;
     line-height: 25px;
 }
+
+// TODO: Create global button styling
+
+.reset, .reset_modal_cancel, .reset_modal_confirm {
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    transition: background-color 0.2s, color 0.2s;
+    margin: 0;
+}
+
+.reset {
+    background-color: rgba(0, 0, 0, 0.1);
+    color: #006edb;
+    margin: 15px auto 0 auto;
+    display: block;
+}
+
+.reset:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.reset:focus, .reset:active {
+    background-color: #006edb;
+    color: white;
+}
+
+.reset_modal_title {
+    margin-bottom: 15px;
+}
+
+.reset_modal_cancel {
+    background-color: rgba(0, 0, 0, 0.1);
+    margin-right: 8px;
+}
+
+.reset_modal_cancel:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.reset_modal_cancel:focus, .reset_modal_cancel:active {
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+.reset_modal_confirm {
+    background-color: #C31A00;
+    color: white;
+}
+
+.reset_modal_confirm:hover {
+    background-color: darken(#C31A00, 10%);
+}
+
+.reset_modal_confirm:focus, .reset_modal_confirm:active {
+    background-color: darken(#C31A00, 20%);
+}

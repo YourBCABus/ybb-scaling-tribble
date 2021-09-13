@@ -14,6 +14,7 @@ import ConnectionMonitor, { HandleConnQualContext } from "../../lib/connectionMo
 import Footer from "../../lib/footer";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus, faSearch } from "@fortawesome/free-solid-svg-icons";
+import ReactModal from "react-modal";
 
 import styles from "../../styles/School.module.scss";
 
@@ -23,7 +24,7 @@ import Router, { useRouter } from 'next/router';
 import MutationQueueContext from "../../lib/mutationQueue";
 
 import permParseFunc from "../../lib/perms";
-import { saveBoardingAreaCallback, createBusCallback} from "../../lib/editingCallbacks";
+import { saveBoardingAreaCallback, createBusCallback, clearAllCallback} from "../../lib/editingCallbacks";
 import getBoardingArea from "../../lib/boardingAreas";
 import { NextSeo } from "next-seo";
 import { migrateOldStarredBuses } from "../../lib/utils";
@@ -146,7 +147,6 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
     const editing = editMode && perms;
     const [searchTerm, setSearchTerm] = useState("");
 
-
     let setEditModePlusClearSearch = (editMode: boolean) => {
         setEditMode(editMode);
         setSearchTerm("");   
@@ -157,6 +157,8 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
 
     const currentMutationQueue = useContext(MutationQueueContext);
     const { handleConnQual } = useContext(HandleConnQualContext);
+
+    const [isResetting, setResetting] = useState<boolean>(false);
 
     return <div>
         <Head>
@@ -210,6 +212,23 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
             showCreate={editMode && perms?.bus.create}
             createBusCallback={() => createBusCallback(currentMutationQueue, handleConnQual, router, school.id)}
         />
+        {(editMode && perms.bus.updateStatus) && <button className={styles.reset} onClick={() => setResetting(true)}>Reset All</button>}
+        <ReactModal isOpen={isResetting} style={{
+            content: {
+                maxWidth: "400px",
+                height: "200px",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+            },
+        }}>
+            <h3 className={styles.reset_modal_title}>Are you sure you want to reset all buses?</h3>
+            <button className={styles.reset_modal_cancel} onClick={() => setResetting(false)}>Cancel</button>
+            <button className={styles.reset_modal_confirm} onClick={() => {
+                clearAllCallback(updateServerSidePropsFunction, currentMutationQueue, handleConnQual, school.id);
+                setResetting(false);
+            }}>Reset</button>
+        </ReactModal>
         <Footer />
         <ConnectionMonitor editing={editMode}/>
     </div>;

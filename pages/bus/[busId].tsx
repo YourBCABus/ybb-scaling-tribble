@@ -78,12 +78,7 @@ function reorder<T>(list: readonly T[], startIndex: number, endIndex: number): T
 type BusProps = Props<typeof getServerSideProps> & EditModeProps;
 
 export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef, editMode, setEditMode, editFreeze }: BusProps): JSX.Element {
-    let bus = Object.freeze(busOrUndef!);
-
-    bus = Object.freeze({
-        ...bus,
-        phone: [...bus.phone, "(201) 327 8700 x 573", "201-523-0494", "201-387-3868 or 370-3311\n201-370-3311"],
-    });
+    const bus = Object.freeze(busOrUndef!);
 
     const perms = Object.freeze(permParseFunc(Object.freeze(permsOrUndef!)));
     const stops = Object.freeze(returnSortedStops(bus.stops));

@@ -23,14 +23,16 @@ import NoSSRComponent from "../../lib/noSSRComponent";
 import { NextSeo } from "next-seo";
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBars, faChevronLeft, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faBars, faChevronLeft, faTrash, faAngleUp } from '@fortawesome/free-solid-svg-icons';
 import ReactModal from "react-modal";
 
 import permParseFunc from "../../lib/perms";
+import formatPhoneNumberString, { directlyMatchesPhoneNumber, formatSinglePhoneNumber } from "../../lib/phoneNumberParser";
 import { deleteBusCallback, saveBoardingAreaCallback, saveBusCallback, saveStopOrderCallback } from "../../lib/editingCallbacks";
 import ConnectionMonitor, { HandleConnQualContext } from "../../lib/connectionMonitorComponent";
 import { migrateOldStarredBuses, Props } from "../../lib/utils";
 import { EditModeProps } from "../_app";
+import Collapsible from "react-collapsible";
 
 export const GET_BUS = gql`
 query GetBus($id: ID!) {
@@ -76,11 +78,20 @@ function reorder<T>(list: readonly T[], startIndex: number, endIndex: number): T
 type BusProps = Props<typeof getServerSideProps> & EditModeProps;
 
 export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef, editMode, setEditMode, editFreeze }: BusProps): JSX.Element {
-    const bus = Object.freeze(busOrUndef!);
+    let bus = Object.freeze(busOrUndef!);
+
+    bus = Object.freeze({
+        ...bus,
+        phone: [...bus.phone, "(201) 327 8700 x 573", "201-523-0494", "201-387-3868 or 370-3311\n201-370-3311"],
+    });
+
     const perms = Object.freeze(permParseFunc(Object.freeze(permsOrUndef!)));
     const stops = Object.freeze(returnSortedStops(bus.stops));
 
     const [currStopsEdit, setCurrStopsEdit] = useState<null | GetBus_bus_stops[]>(null);
+
+    const [addPhoneNumberEdit, setAddPhoneNumberEdit] = useState<null | string>(null);
+    const [phoneNumberError, setPhoneNumberError] = useState(false);
 
     let [starredBusIDs, setStarredBusIDs] = useState<Set<string>>(new Set());
     useEffect(() => {
@@ -112,6 +123,12 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
         setStarredBusIDs(starred);
     };
   
+    const [deletingPhoneNumber, setDeletingPhoneNumber] = useState<{
+        deletingSingleNum: true, index: number, subIndex: number
+    } | {
+        deletingSingleNum: false, index: number
+    } | null>(null);
+    
     const [isDeletingBus, setDeletingBus] = useState<boolean>(false);
 
     const currentMutationQueue = useContext(MutationQueueContext);
@@ -164,47 +181,162 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
                 )
             }
         />
-        <NoSSRComponent>
-            <DragDropContext onDragEnd={(result) => {
-                if (!result.destination) return;
-                if (result.destination.index === result.source.index) return;
-                let newStopOrder = reorder(currStopsEdit || stops, result.source.index, result.destination.index);
-                setCurrStopsEdit(newStopOrder);
-                saveStopOrderCallback(updateServerSidePropsFunction, currentMutationQueue, handleConnQual)(bus.id)(newStopOrder).then(() => setCurrStopsEdit(null));
-            }}>
-                <Droppable droppableId="stops">
-                    
-                    {(provided: DroppableProvided) => (
-                        <div className={styles.stops}>
-                            <h1> </h1>
-                            <ul {...provided.droppableProps} ref={provided.innerRef} >
+        <div className={styles.side_by_side}>
+            <NoSSRComponent>
+                <DragDropContext onDragEnd={(result) => {
+                    if (!result.destination) return;
+                    if (result.destination.index === result.source.index) return;
+                    let newStopOrder = reorder(currStopsEdit || stops, result.source.index, result.destination.index);
+                    setCurrStopsEdit(newStopOrder);
+                    saveStopOrderCallback(updateServerSidePropsFunction, currentMutationQueue, handleConnQual)(bus.id)(newStopOrder).then(() => setCurrStopsEdit(null));
+                }}>
+                    <Droppable droppableId="stops">
+                        
+                        {(provided: DroppableProvided) => (
+                            <div className={styles.stops}>
+                                <h1> </h1>
+                                <ul {...provided.droppableProps} ref={provided.innerRef} >
+                                    {
+                                        (currStopsEdit || stops).map(
+                                            (stop, index) => <Draggable isDragDisabled={!editMode || editFreeze} key={stop.id} draggableId={stop.id} index={index}>
+                                                {
+                                                    (provided: DraggableProvided) => (
+                                                        <li ref={provided.innerRef} {...provided.draggableProps}>
+                                                            <div>
+                                                                <h1>{stop.name}</h1>
+                                                                <p>{stop.description}</p>
+                                                            </div>
+                                                            {editMode && <span {...provided.dragHandleProps} className={styles.stop_drag_handle}><FontAwesomeIcon icon={faBars} size="lg"/></span>}
+                                                        </li>
+                                                    )
+                                                }
+                                            </Draggable>
+                                        )
+                                    }
+                                    {provided.placeholder}
+                                </ul>
+                            </div>
+                        )}
+                    </Droppable>
+                </DragDropContext>
+            </NoSSRComponent>
+            <div>
+                <ul className={`${styles.phone_num_list}`}>
+                    {
+                        bus.phone
+                            .flatMap<[string, number,  number]>(
+                                (rawPhoneNumString, index) => formatPhoneNumberString(
+                                    rawPhoneNumString
+                                ).map<[string, number, number]>(
+                                    (numberAndSubInd) => [...numberAndSubInd, index]
+                                )
+                            )
+                            .map(
+                                ([formattedPhoneNum, subInd, index]) => <li key={`${index}, ${subInd}`}><div className={editMode ? styles.with_trash_can : ""}>
+                                    <p>
+                                        Call {editMode ? formattedPhoneNum.replace(";", " #") : <a href={`tel:${formattedPhoneNum}`}>{formattedPhoneNum.replace(";", " #")}</a>}.
+                                    </p>
+                                    {editMode && <FontAwesomeIcon icon={faTrash} onClick={
+                                        () => setDeletingPhoneNumber({
+                                            deletingSingleNum: true,
+                                            index,
+                                            subIndex: subInd,
+                                        })
+                                    }/>}
+                                </div></li>
+                            )
+                    }
+                </ul>
+                {
+                    editMode && <input
+                        placeholder="New Phone Number..."
+                        className={`${styles.phone_num_input}`} 
+                        onChange={(event) => setAddPhoneNumberEdit(event.currentTarget.value)}
+                        readOnly={editFreeze}
+                        onBlur={() => { 
+                            if (addPhoneNumberEdit === null) return;
+                            let formatted = formatSinglePhoneNumber(addPhoneNumberEdit.trim());
+                            if (formatted === null) {
+                                setPhoneNumberError(true);
+                                return;
+                            }
+                            setPhoneNumberError(false);
+                            saveBusCallback(updateServerSidePropsFunction, currentMutationQueue, handleConnQual)(bus.id)(
                                 {
-                                    (currStopsEdit || stops).map(
-                                        (stop, index) => <Draggable isDragDisabled={!editMode || editFreeze} key={stop.id} draggableId={stop.id} index={index}>
-                                            {
-                                                (provided: DraggableProvided) => (
-                                                    <li ref={provided.innerRef} {...provided.draggableProps}>
-                                                        <div>
-                                                            <h1>{stop.name}</h1>
-                                                            <p>{stop.description}</p>
-                                                        </div>
-                                                        {editMode && <span {...provided.dragHandleProps} className={styles.stop_drag_handle}><FontAwesomeIcon icon={faBars} size="lg"/></span>}
-                                                    </li>
-                                                )
-                                            }
-                                        </Draggable>
-                                    )
+                                    name: bus.name,
+                                    company: bus.company,
+                                    phone: [...bus.phone, formatted],
+                                    available: bus.available,
+                                    otherNames: bus.otherNames,
                                 }
-                                {provided.placeholder}
-                            </ul>
-                        </div>
-                    )}
-                </Droppable>
-            </DragDropContext>
-        </NoSSRComponent>
+                            ).then(() => setAddPhoneNumberEdit(null));
+                        }}
+                        value={addPhoneNumberEdit ?? ""}
+                        onKeyDown={ (event) => event.key === "Enter" && event.currentTarget.blur() }
+                    />
+                }
+                {
+                    editMode && phoneNumberError && <p className={styles.phone_number_error}>Invalid Phone number!</p>
+                }
+                
+                {
+                    bus.phone.length !== 0 && <Collapsible className={`${styles.extra_phone_numbers_closed} ${styles.extra_phone_numbers_always}`} openedClassName={styles.extra_phone_numbers_always} trigger={<div>Click for raw phone numbers... <FontAwesomeIcon icon={faAngleUp}/></div>} transitionTime={100}>
+                        {
+                            bus.phone.map(
+                                (phone_string, index) => <div className={styles.with_trash_can} key={index}>
+                                    <p>{phone_string}</p>{editMode && <FontAwesomeIcon icon={faTrash} onClick={() => setDeletingPhoneNumber({
+                                        deletingSingleNum: false,
+                                        index,
+                                    })}/>}
+                                </div>
+                            )
+                        }
+                    </Collapsible>
+                }
+            </div>
+        </div>
+
         <div className={styles.actions}>
             {(editMode && perms.bus.delete) && <button className={styles.delete_bus} onClick={() => setDeletingBus(true)}><FontAwesomeIcon icon={faTrash} /> Delete Bus</button>}
         </div>
+        <ReactModal isOpen={!!deletingPhoneNumber} style={{content: {
+            maxWidth: "400px",
+            height: "140px",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+        }}}>
+            <h3 className={styles.modal_title}>
+                Are you sure you want to this {deletingPhoneNumber?.deletingSingleNum
+                    ? <span>number?: <br/><code>{formatPhoneNumberString(bus.phone[deletingPhoneNumber.index ?? 0]).slice(deletingPhoneNumber.subIndex)[0]}</code></span>
+                    : <span>entry?: <br/><code>{bus.phone[deletingPhoneNumber?.index ?? 0]}</code></span>}</h3>
+            <button className={styles.modal_cancel} onClick={() => setDeletingPhoneNumber(null)}>Cancel</button>
+            <button className={styles.modal_confirm} onClick={
+                deletingPhoneNumber?.deletingSingleNum ? () => {
+                    saveBusCallback(updateServerSidePropsFunction, currentMutationQueue, handleConnQual)(bus.id)(
+                        {
+                            name: bus.name,
+                            company: bus.company,
+                            phone: removeIndPlusSubInd(bus.phone, deletingPhoneNumber.index, deletingPhoneNumber.subIndex),
+                            available: bus.available,
+                            otherNames: bus.otherNames,
+                        }
+                    );
+                    setDeletingPhoneNumber(null);
+                } : () => {
+                    saveBusCallback(updateServerSidePropsFunction, currentMutationQueue, handleConnQual)(bus.id)(
+                        {
+                            name: bus.name,
+                            company: bus.company,
+                            phone: removeInd(bus.phone, deletingPhoneNumber!.index),
+                            available: bus.available,
+                            otherNames: bus.otherNames,
+                        }
+                    );
+                    setDeletingPhoneNumber(null);
+                }
+            }>Delete</button>
+        </ReactModal>
         <ReactModal isOpen={isDeletingBus} style={{content: {
             maxWidth: "400px",
             height: "140px",
@@ -212,14 +344,34 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
             left: "50%",
             transform: "translate(-50%, -50%)",
         }}}>
-            <h3 className={styles.delete_bus_modal_title}>Are you sure you want to delete {bus.name ? `"${bus.name}"` : "this bus"}?</h3>
-            <button className={styles.delete_bus_modal_cancel} onClick={() => setDeletingBus(false)}>Cancel</button>
-            <button className={styles.delete_bus_modal_confirm} onClick={() => {
+            <h3 className={styles.modal_title}>Are you sure you want to delete {bus.name ? `"${bus.name}"` : "this bus"}?</h3>
+            <button className={styles.modal_cancel} onClick={() => setDeletingBus(false)}>Cancel</button>
+            <button className={styles.modal_confirm} onClick={() => {
                 deleteBusCallback(router, bus.id, bus.schoolID);
             }}>Delete</button>
         </ReactModal>
         <ConnectionMonitor editing={editMode}/>
     </div>;
+}
+
+function removeInd(phones: string[], ind: number) {
+    let outPhones = [...phones];
+
+    outPhones.splice(
+        ind,
+        1,
+    );
+
+    return outPhones;
+}
+function removeIndPlusSubInd(phones: string[], ind: number, subInd: number) {
+    let outPhones = [...phones];
+
+    if (directlyMatchesPhoneNumber(outPhones[ind])) return removeInd(phones, ind);
+
+    outPhones.splice(ind, 1, phones[ind].substring(0, subInd) + "❌" + phones[ind].substring(subInd));
+
+    return outPhones;
 }
 
 function returnSortedStops(stops: GetBus_bus_stops[]): GetBus_bus_stops[] {

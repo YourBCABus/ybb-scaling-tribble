@@ -36,7 +36,7 @@ interface DragDrawerProps {
     direction: DragDirection,
     snapToTension: number,
     overTension: number,
-    children?: JSX.Element | JSX.Element[],
+    children?: (relativePosition: {x: number, y: number}) => JSX.Element | JSX.Element[],
     className: string,
 }
 
@@ -173,6 +173,10 @@ export default function Drawer(
 
     useEffect(() => {target.t = refToGrip.current?.clientHeight ?? 0;}, [refToGrip.current]); // eslint-disable-line
 
+    const boundingRect = refToContainer.current?.getBoundingClientRect();
+
+    const screenPosition = {x: boundingRect?.left ?? 0, y: boundingRect?.top ?? 0};
+
     return <NoSSRComponent>
         <div
             ref={refToContainer}
@@ -182,7 +186,7 @@ export default function Drawer(
             }}
         >
             <div ref={refToGrip} className={styles.drawer_handle_div}><FontAwesomeIcon icon={faGripLines} size="lg"/></div>
-            {children}
+            {children?.(screenPosition)}
             <br/>
         </div>
     </NoSSRComponent>;

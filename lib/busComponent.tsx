@@ -144,9 +144,10 @@ export default function Bus(
             eventTarget.addEventListener(`leave:${id}`, leaveListener);
     
             const dropListener = (event: Event) => {
+                console.log(event);
                 if (event instanceof CustomEvent && saveBoardingAreaCallback) {
                     setCurrBoardingAreaEdit(event.detail.boardingArea);
-                    saveBoardingAreaCallback(event.detail.boardingArea).then(() => setCurrBoardingAreaEdit(null));
+                    saveBoardingAreaCallback(event.detail.boardingArea).then(() => setCurrBoardingAreaEdit(null)).then(() => console.log("Done."));
                     setCurrBoardingAreaEditClearable(true);
                 }
             };

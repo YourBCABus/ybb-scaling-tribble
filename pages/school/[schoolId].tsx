@@ -234,9 +234,9 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
             snapToTension={SpringTension.MEDIUM}
             className={styles.pull_up_drawer}
         >
-            <div className={styles.drawer_contents}>
-                <UnassignedBoardingAreas boardingAreas={(school as any).mappingData.boardingAreas} buses={buses} eventTarget={eventTarget} />
-            </div>
+            {(relativePosition) => <div className={styles.drawer_contents}>
+                <UnassignedBoardingAreas boardingAreas={(school as any).mappingData.boardingAreas} buses={buses} eventTarget={eventTarget} relativePosition={relativePosition} />
+            </div>}
         </Drawer>
         <ReactModal isOpen={isResetting} style={{
             content: {

@@ -5,7 +5,7 @@ import { GetSchoolAndPerms_school_buses } from "../__generated__/GetSchoolAndPer
 import getBoardingArea from "./boardingAreas";
 import NoSSRComponent from "./noSSRComponent";
 
-function BoardingArea({area, eventTarget}: {area: string, eventTarget: EventTarget}) {
+function BoardingArea({area, eventTarget, relativePosition}: {area: string, eventTarget: EventTarget, relativePosition: {x: number, y: number}}) {
     const drag = useRef<HTMLSpanElement>(null);
     const [position, setPosition] = useState<{x: number, y: number} | null>(null);
     const [hoveredBus, setHoveredBus] = useState<string | null>(null);
@@ -102,9 +102,9 @@ function BoardingArea({area, eventTarget}: {area: string, eventTarget: EventTarg
         <span className={styles.boarding_area} ref={drag}>{area}</span>
         {position && <span className={styles.boarding_area} style={{
             opacity: 0.4,
-            position: "fixed",
-            left: position.x - drag.current!.clientWidth / 2,
-            top: position.y - drag.current!.clientHeight / 2,
+            position: "absolute",
+            left: position.x - drag.current!.clientWidth / 2 - relativePosition.x,
+            top: position.y - drag.current!.clientHeight / 2 - relativePosition.y,
             width: drag.current!.clientWidth,
             height: drag.current!.clientHeight,
             pointerEvents: "none",
@@ -112,7 +112,14 @@ function BoardingArea({area, eventTarget}: {area: string, eventTarget: EventTarg
     </div>;
 }
 
-export default function UnassignedBoardingAreas({boardingAreas, buses, eventTarget}: {boardingAreas: readonly {name: string}[], buses: readonly GetSchoolAndPerms_school_buses[], eventTarget: EventTarget}) {
+interface UnassignedBoardingAreasProps {
+    boardingAreas: readonly {name: string}[];
+    buses: readonly GetSchoolAndPerms_school_buses[];
+    eventTarget: EventTarget;
+    relativePosition: {x: number, y: number};
+}
+
+export default function UnassignedBoardingAreas({boardingAreas, buses, eventTarget, relativePosition}: UnassignedBoardingAreasProps) {
     const assignedAreas = new Set(buses.map(b => getBoardingArea(b.boardingArea, b.invalidateTime)));
     const unassignedAreas = boardingAreas.map(b => b.name).filter(a => !assignedAreas.has(a)).sort();
 
@@ -120,7 +127,7 @@ export default function UnassignedBoardingAreas({boardingAreas, buses, eventTarg
         <NoSSRComponent>
             <h3>Unassigned Boarding Areas</h3>
             <div className={styles.boarding_area_grid}>
-                {unassignedAreas.map((area, index) => <BoardingArea key={index} area={area} eventTarget={eventTarget} />)}
+                {unassignedAreas.map((area, index) => <BoardingArea key={index} area={area} eventTarget={eventTarget} relativePosition={relativePosition}/>)}
             </div>
         </NoSSRComponent>
     );

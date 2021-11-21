@@ -70,11 +70,11 @@ function BoardingArea({area, eventTarget, relativePosition}: {area: string, even
             document.removeEventListener("mouseup", mouseEnd);
             document.removeEventListener("touchend", touchEnd);
         };
-    }, [area]);
+    }, [area, eventTarget]);
 
     useEffect(() => {
         if (position) {
-            const elements = document.elementsFromPoint(position.x, position.y);
+            const elements = document.elementsFromPoint(position.x, position.y).filter(el => el instanceof HTMLElement) as HTMLElement[];
             const busEl = elements.find(el => el.dataset.bus);
             if (busEl) {
                 if (hoveredBus !== busEl.dataset.bus) {
@@ -83,7 +83,7 @@ function BoardingArea({area, eventTarget, relativePosition}: {area: string, even
                     }
                     eventTarget.dispatchEvent(new CustomEvent(`hover:${busEl.dataset.bus}`));
                 }
-                setHoveredBus(busEl.dataset.bus);
+                setHoveredBus(busEl.dataset.bus || null);
             } else {
                 if (hoveredBus) {
                     eventTarget.dispatchEvent(new CustomEvent(`leave:${hoveredBus}`));
@@ -96,7 +96,7 @@ function BoardingArea({area, eventTarget, relativePosition}: {area: string, even
             }
             setHoveredBus(null);
         }
-    }, [position]);
+    }, [position, eventTarget,  hoveredBus]);
 
     return <div>
         <span className={styles.boarding_area} ref={drag}>{area}</span>

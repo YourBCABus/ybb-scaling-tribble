@@ -43,9 +43,9 @@ interface DragDrawerProps {
 function calculateSpringTension(rawPosition: number, height: number, amountAbove: number, springTension: number): number {
     const springPoint = height - amountAbove;
     if (rawPosition > springPoint) {
-        return springPoint + Math.min(Math.sqrt(rawPosition - springPoint), rawPosition - springPoint);
+        return springPoint + Math.min(Math.pow(rawPosition - springPoint, 1 / (springTension + 1)), rawPosition - springPoint);
     } else if (rawPosition < amountAbove) {
-        return amountAbove - Math.min(Math.sqrt(amountAbove - rawPosition), amountAbove - rawPosition);
+        return amountAbove - Math.min(Math.pow(amountAbove - rawPosition, 1 / (springTension + 1)), amountAbove - rawPosition);
     } else {
         return rawPosition;
     }
@@ -69,7 +69,7 @@ export default function Drawer(
 
     const refToGrip = useRef<HTMLDivElement>(null);
 
-    const [position, setPosition] = useState({o: {p: 30}});
+    const [position, setPosition] = useState({o: {p: 0}});
 
     const [dragHeld] = useState({dH: false});
 
@@ -79,7 +79,7 @@ export default function Drawer(
 
 
 
-    const [target] = useState({t: 30});
+    const [target] = useState({t: 0});
 
     useEffect(() => {
         const pos = position.o;
@@ -88,10 +88,10 @@ export default function Drawer(
         let oldPos: number;
 
         const start = (event: [TouchEvent, false] | [MouseEvent, true]) => {
-            const pageY = event[1] ? event[0].pageY : event[0].touches[0].pageY;
+            const clientY = event[1] ? event[0].clientY : event[0].touches[0].clientY;
 
             dragHeld.dH = true;
-            oldPos = pageY;
+            oldPos = clientY;
             event[0].stopPropagation();
             event[0].preventDefault();
         };
@@ -100,10 +100,10 @@ export default function Drawer(
 
         const move = (event: [TouchEvent, false] | [MouseEvent, true]) => {
             if (dragHeld.dH) {
-                const pageY = event[1] ? event[0].pageY : event[0].touches[0].pageY;
-                momentum.m = (oldPos - pageY) * 0.5;
+                const clientY = event[1] ? event[0].clientY : event[0].touches[0].clientY;
+                momentum.m = (oldPos - clientY) * 0.5;
                 pos.p = calculateSpringTension(
-                    window.innerHeight - pageY + (gripNode?.clientHeight ?? 0) / 2,
+                    window.innerHeight - clientY + (gripNode?.clientHeight ?? 0) / 2,
                     refToContainer.current?.clientHeight ?? 0,
                     20,
                     overTension,
@@ -117,7 +117,7 @@ export default function Drawer(
         const mouseMove = (event: MouseEvent) => move([event, true]);
 
         const end = (event: [TouchEvent, false] | [MouseEvent, true]) => {
-            target.t = calcNewTarget(refToContainer.current?.clientHeight ?? 0, pos.p, momentum.m);
+            target.t = calcNewTarget(refToContainer.current?.clientHeight ?? 0, pos.p, momentum.m, gripNode?.clientHeight ?? 0);
             dragHeld.dH = false;
         };
         const touchEnd = (event: TouchEvent) => end([event, false]);
@@ -132,7 +132,7 @@ export default function Drawer(
         document.addEventListener("touchend", touchEnd);
         document.addEventListener("mouseup",  mouseEnd);
 
-
+        
         return () => {
             gripNode?.removeEventListener("touchstart", touchStart);
             gripNode?.removeEventListener("mousedown",  mouseStart);
@@ -151,13 +151,13 @@ export default function Drawer(
             if (!dragHeld.dH) {
                 const force = (target.t - pos.p) * snapToTension;
 
-                momentum.m += force * 0.04;
-                momentum.m *= 0.8;
+                momentum.m += force * 0.05;
+                momentum.m *= 0.75;
                 
                 const newPos = calculateSpringTension(
                     pos.p + momentum.m,
                     refToContainer.current?.clientHeight ?? 0,
-                    10,
+                    20,
                     overTension,
                 );
 
@@ -170,6 +170,9 @@ export default function Drawer(
         }, 1000 / 60);
         return () => clearInterval(intervalNum);
     }, [overTension, snapToTension, refToContainer.current]); // eslint-disable-line
+
+    useEffect(() => {target.t = refToGrip.current?.clientHeight ?? 0;}, [refToGrip.current]); // eslint-disable-line
+
     return <NoSSRComponent>
         <div
             ref={refToContainer}
@@ -185,10 +188,13 @@ export default function Drawer(
     </NoSSRComponent>;
 }
 
-function calcNewTarget(height: number, position: number, momentum: number): number {
+function calcNewTarget(height: number, position: number, momentum: number, bottomTarget: number): number {
     const expectedPeak = position + momentum * 10;
-    if (Math.abs(expectedPeak - 30) < Math.abs(expectedPeak - (height - 30))) {
-        return 30;
-    } else return height - 30;
+
+    const topTarget = height - 30;
+
+    if (Math.abs(expectedPeak - bottomTarget) < Math.abs(expectedPeak - topTarget)) {
+        return bottomTarget;
+    } else return topTarget;
 }
 

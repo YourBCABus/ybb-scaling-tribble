@@ -117,7 +117,8 @@
 }
 
 .pull_up_drawer {
-    background-color: rgba(127, 127, 127, 0.2);
+    background-color: rgba(220, 220, 220, 0.4);
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
     border-radius: 8px;
     width: min(500px, 100vw);
     backdrop-filter: blur(6px);
@@ -125,9 +126,13 @@
 
 .drawer_contents {
     height: 200px;
-    width: calc(100% - 2em);
-    margin: 1em 1em 1em 1em;
+    width: 100%;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 1em 1em 1em 1em;
+    margin-bottom: 2em;
     overflow-wrap: break-word;
+    overflow-y: scroll;
 }
 
 // TODO: Create global button styling

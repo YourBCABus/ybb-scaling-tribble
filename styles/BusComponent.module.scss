@@ -156,3 +156,12 @@
     background-color: rgba(0, 0, 0, 0);
 
 }
+
+.dnd_hover {
+    opacity: 0.5;
+
+    .bus_boarding_area_background_div {
+        background-color: #00b0ff;
+        color: transparent;
+    }
+}

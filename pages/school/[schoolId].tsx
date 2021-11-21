@@ -27,6 +27,7 @@ import MutationQueueContext from "../../lib/mutationQueue";
 import permParseFunc from "../../lib/perms";
 import { saveBoardingAreaCallback, createBusCallback, clearAllCallback} from "../../lib/editingCallbacks";
 import getBoardingArea from "../../lib/boardingAreas";
+import UnassignedBoardingAreas from "../../lib/unassignedBoardingAreas";
 import { NextSeo } from "next-seo";
 import { migrateOldStarredBuses } from "../../lib/utils";
 import { EditModeProps } from '../_app';
@@ -47,6 +48,11 @@ query GetSchoolAndPerms($id: ID!) {
             invalidateTime
             available
         }
+        mappingData {
+            boardingAreas {
+                name
+            }
+        }
     }
     currentSchoolScopes(schoolID: $id) 
 }
@@ -57,6 +63,7 @@ interface BusListProps {
  
     editing: false | ReturnType<typeof permParseFunc>;
     editFreeze: boolean;
+    eventTarget: EventTarget;
 
     isStarredList: boolean;
     starredBusIDs: Set<string>;
@@ -73,6 +80,7 @@ function BusList(
         buses,
         editing,
         editFreeze,
+        eventTarget,
         isStarredList,
         starredBusIDs,
         starCallback,
@@ -92,6 +100,7 @@ function BusList(
                         
                         editing={editing}
                         editFreeze={editFreeze}
+                        eventTarget={eventTarget}
                         
                         starCallback={(event) => starCallback(bus.id, event)}
                         isStarred={starredBusIDs.has(bus.id)}
@@ -153,6 +162,8 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
         setSearchTerm("");   
     };
 
+    const [eventTarget] = useState(() => new EventTarget());
+
     const buses = Object.freeze(filterBuses(returnSortedBuses(school.buses), searchTerm));
     const starredBuses = Object.freeze(buses.filter(bus => starredBusIDs.has(bus.id)));
 
@@ -186,6 +197,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
                 
                 editing={editMode && perms}
                 editFreeze={editFreeze}
+                eventTarget={eventTarget}
 
                 isStarredList={true}
                 starredBusIDs={starredBusIDs}
@@ -197,12 +209,13 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
                 createBusCallback={() => createBusCallback(currentMutationQueue, handleConnQual, router, school.id)}
             />
         }
-        
+    
         <BusList
             buses={buses}
             
             editing={editMode && perms}
             editFreeze={editFreeze}
+            eventTarget={eventTarget}
 
             isStarredList={false}
             starredBusIDs={starredBusIDs}
@@ -215,13 +228,15 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
         />
         {(editMode && perms.bus.updateStatus) && <button className={styles.reset} onClick={() => setResetting(true)}>Reset All</button>}
         <Drawer
-            location={{x: DragUpDrawerXLocation.MIDDLE, y: DragUpDrawerYLocation.BOTTOM}}
+            location={{x: DragUpDrawerXLocation.RIGHT, y: DragUpDrawerYLocation.BOTTOM}}
             direction={DragDirection.UP}
             overTension={SpringTension.MEDIUM}
             snapToTension={SpringTension.MEDIUM}
             className={styles.pull_up_drawer}
         >
-            <div className={styles.drawer_contents}>[INSERT CONTENT HERE]</div>
+            <div className={styles.drawer_contents}>
+                <UnassignedBoardingAreas boardingAreas={(school as any).mappingData.boardingAreas} buses={buses} eventTarget={eventTarget} />
+            </div>
         </Drawer>
         <ReactModal isOpen={isResetting} style={{
             content: {
@@ -273,7 +288,7 @@ function filterBuses(buses: readonly GetSchoolAndPerms_school_buses[], searchTer
     }) : buses;
 }
 
-export const getServerSideProps = async function<Q extends ParsedUrlQuery> (context: GetServerSidePropsContext<Q>) {
+export const getServerSideProps = async function<Q extends ParsedUrlQuery> (context: GetServerSidePropsContext<Q>) {    
     const client = createNewClient();
     
     let data: GetSchoolAndPerms | null = null;

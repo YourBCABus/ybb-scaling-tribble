@@ -37,6 +37,7 @@ interface BusProps {
 
     editing: false | ReturnType<typeof permParseFunc>;
     editFreeze: boolean;
+    eventTarget?: EventTarget;
     noLink?: boolean;
 
     saveBoardingAreaCallback?: (boardingArea: string | null) => Promise<void>;
@@ -82,6 +83,7 @@ export default function Bus(
         
         editing,
         editFreeze,
+        eventTarget,
         noLink = false,
 
         saveBoardingAreaCallback,
@@ -124,7 +126,41 @@ export default function Bus(
         const maxFontSize = (size === BusComponentSizes.COMPACT) ? 18 : (size * 24);
         setBusBoardingAreaFontSize(Math.floor(Math.min(textSizeToFitContainer(boardingAreaText, bus_view_boarding_area_font, width), maxFontSize)));
     }, [boardingAreaText, size]);
+
+    const [isHovered, setHovered] = useState<boolean>(false);
+
+    useEffect(() => {
+        if (eventTarget) {
+            const hoverListener = () => {
+                setHovered(true);
+            };
     
+            eventTarget.addEventListener(`hover:${id}`, hoverListener);
+    
+            const leaveListener = () => {
+                setHovered(false);
+            };
+    
+            eventTarget.addEventListener(`leave:${id}`, leaveListener);
+    
+            const dropListener = (event: Event) => {
+                if (event instanceof CustomEvent && saveBoardingAreaCallback) {
+                    setCurrBoardingAreaEdit(event.detail.boardingArea);
+                    saveBoardingAreaCallback(event.detail.boardingArea).then(() => setCurrBoardingAreaEdit(null));
+                    setCurrBoardingAreaEditClearable(true);
+                }
+            };
+    
+            eventTarget.addEventListener(`drop:${id}`, dropListener);
+    
+            return () => {
+                eventTarget.removeEventListener(`hover:${id}`, hoverListener);
+                eventTarget.removeEventListener(`leave:${id}`, leaveListener);
+                eventTarget.removeEventListener(`drop:${id}`, dropListener);
+            };
+        }
+    }, [eventTarget, id]);
+
     const busBoardingAreaBackgroundDivStyle = {
         ...(boardingAreaText === "?" ? {} : {color: "#e8edec", backgroundColor: "#00796b"}),
         font: bus_view_boarding_area_font,
@@ -206,7 +242,7 @@ export default function Bus(
     }
 
 
-    const inner = <div className={`${styles.bus_view}${sizeClassName}`}>
+    const inner = <div className={`${styles.bus_view}${sizeClassName}${isHovered ? ` ${styles.dnd_hover}` : ""}`} data-bus={editing ? bus.id : undefined}>
         <div className={`${styles.bus_name_and_status}${sizeClassName}`}>
             {busNameSpanOrInput}
             <br/>

@@ -160,7 +160,7 @@ export default function Bus(
                 eventTarget.removeEventListener(`drop:${id}`, dropListener);
             };
         }
-    }, [eventTarget, id]);
+    }, [eventTarget, id, saveBoardingAreaCallback]);
 
     const busBoardingAreaBackgroundDivStyle = {
         ...(boardingAreaText === "?" ? {} : {color: "#e8edec", backgroundColor: "#00796b"}),

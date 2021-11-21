@@ -70,7 +70,7 @@ function BoardingArea({area, eventTarget}: {area: string, eventTarget: EventTarg
             document.removeEventListener("mouseup", mouseEnd);
             document.removeEventListener("touchend", touchEnd);
         };
-    }, []);
+    }, [area]);
 
     useEffect(() => {
         if (position) {

@@ -116,6 +116,20 @@
     line-height: 25px;
 }
 
+.pull_up_drawer {
+    background-color: rgba(127, 127, 127, 0.2);
+    border-radius: 8px;
+    width: min(500px, 100vw);
+    backdrop-filter: blur(6px);
+}
+
+.drawer_contents {
+    height: 200px;
+    width: calc(100% - 2em);
+    margin: 1em 1em 1em 1em;
+    overflow-wrap: break-word;
+}
+
 // TODO: Create global button styling
 
 .reset, .reset_modal_cancel, .reset_modal_confirm {

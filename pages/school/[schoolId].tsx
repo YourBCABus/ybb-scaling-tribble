@@ -15,6 +15,7 @@ import Footer from "../../lib/footer";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus, faSearch } from "@fortawesome/free-solid-svg-icons";
 import ReactModal from "react-modal";
+import Drawer, { DragDirection, DragUpDrawerXLocation, DragUpDrawerYLocation, SpringTension } from "../../lib/dragDrawer";
 
 import styles from "../../styles/School.module.scss";
 
@@ -213,6 +214,15 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
             createBusCallback={() => createBusCallback(currentMutationQueue, handleConnQual, router, school.id)}
         />
         {(editMode && perms.bus.updateStatus) && <button className={styles.reset} onClick={() => setResetting(true)}>Reset All</button>}
+        <Drawer
+            location={{x: DragUpDrawerXLocation.MIDDLE, y: DragUpDrawerYLocation.BOTTOM}}
+            direction={DragDirection.UP}
+            overTension={SpringTension.MEDIUM}
+            snapToTension={SpringTension.MEDIUM}
+            className={styles.pull_up_drawer}
+        >
+            <div className={styles.drawer_contents}>[INSERT CONTENT HERE]</div>
+        </Drawer>
         <ReactModal isOpen={isResetting} style={{
             content: {
                 maxWidth: "400px",

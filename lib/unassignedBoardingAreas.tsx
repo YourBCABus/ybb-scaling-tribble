@@ -127,7 +127,7 @@ export default function UnassignedBoardingAreas({boardingAreas, buses, eventTarg
         <NoSSRComponent>
             <h3>Unassigned Boarding Areas</h3>
             <div className={styles.boarding_area_grid}>
-                {unassignedAreas.map((area, index) => <BoardingArea key={index} area={area} eventTarget={eventTarget} relativePosition={relativePosition}/>)}
+                {unassignedAreas.map(area => <BoardingArea key={area} area={area} eventTarget={eventTarget} relativePosition={relativePosition}/>)}
             </div>
         </NoSSRComponent>
     );

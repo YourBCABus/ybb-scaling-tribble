@@ -101,7 +101,7 @@ export default function Drawer(
             if (dragHeld.dH) {
                 const clientY = event[1] ? event[0].clientY : event[0].touches[0].clientY;
                 momentum.m = (oldPos - clientY) * 0.5;
-                if (momentum.m > 1) {
+                if (Math.abs(momentum.m) > 1) {
                     dragHeld.isExtended = true;
                 }
                 pos.p = calculateSpringTension(

@@ -252,6 +252,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
         </Drawer>}
         <ReactModal isOpen={isResetting} style={{
             content: {
+                width: "80%",
                 maxWidth: "400px",
                 height: "200px",
                 top: "50%",
@@ -268,6 +269,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
         </ReactModal>
         <ReactModal isOpen={!!confirmBoardingAreaChange} style={{
             content: {
+                width: "80%",
                 maxWidth: "400px",
                 height: "230px",
                 top: "50%",

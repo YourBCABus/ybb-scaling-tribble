@@ -206,6 +206,7 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
             {(editMode && perms.bus.delete) && <button className={styles.delete_bus} onClick={() => setDeletingBus(true)}><FontAwesomeIcon icon={faTrash} /> Delete Bus</button>}
         </div>
         <ReactModal isOpen={isDeletingBus} style={{content: {
+            width: "80%",
             maxWidth: "400px",
             height: "140px",
             top: "50%",

@@ -144,11 +144,33 @@ export default function Bus(
             eventTarget.addEventListener(`leave:${id}`, leaveListener);
     
             const dropListener = (event: Event) => {
-                console.log(event);
                 if (event instanceof CustomEvent && saveBoardingAreaCallback) {
-                    setCurrBoardingAreaEdit(event.detail.boardingArea);
-                    saveBoardingAreaCallback(event.detail.boardingArea).then(() => setCurrBoardingAreaEdit(null)).then(() => console.log("Done."));
-                    setCurrBoardingAreaEditClearable(true);
+                    const doUpdate = () => {
+                        setCurrBoardingAreaEdit(event.detail.boardingArea);
+                        saveBoardingAreaCallback(event.detail.boardingArea).then(() => setCurrBoardingAreaEdit(null)).then(() => console.log("Done."));
+                        setCurrBoardingAreaEditClearable(true);
+                    };
+                    if (getBoardingArea(boardingArea, invalidateTime) == "?") {
+                        doUpdate();
+                    } else {
+                        (() => {
+                            const removeCallbacks = () => {
+                                eventTarget.removeEventListener("confirm", confirmCallback);
+                                eventTarget.removeEventListener("cancel", cancelCallback);
+                            };
+                            var confirmCallback = () => {
+                                doUpdate();
+                                removeCallbacks();
+                            };
+                            var cancelCallback = () => {
+                                removeCallbacks();
+                            };
+
+                            eventTarget.addEventListener("confirm", confirmCallback);
+                            eventTarget.addEventListener("cancel", cancelCallback);
+                        })();
+                        eventTarget.dispatchEvent(new CustomEvent("startConfirm", {detail: {bus, boardingArea: event.detail.boardingArea}}));
+                    }
                 }
             };
     

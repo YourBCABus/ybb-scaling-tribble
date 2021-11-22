@@ -192,3 +192,12 @@
 .reset_modal_confirm:focus, .reset_modal_confirm:active {
     background-color: darken(#C31A00, 20%);
 }
+
+
+.down_arrow_div {
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}

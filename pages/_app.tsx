@@ -9,7 +9,8 @@ config.autoAddCss = false;
 import { Provider } from 'next-auth/client';
 import { DefaultSeo } from 'next-seo';
 import ReactModal from 'react-modal';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
 
 export interface EditModeProps {
     editMode: boolean;
@@ -24,6 +25,23 @@ ReactModal.setAppElement("#__next");
 function MyApp({ Component, pageProps }: AppProps) {
     const [editMode, setEditMode] = useState<boolean>(false);
     const [editFreeze, setEditFreeze] = useState<boolean>(false);
+
+    const router = useRouter();
+    useEffect(() => {
+        const handleRouteError = (err: any) => {
+            if (err.message === "Could not connect to the server.") {
+                const newErr: any = new Error("Abort load");
+                newErr.cancelled = true;
+                throw newErr;
+            }
+        };
+
+        router.events.on("routeChangeError", handleRouteError);
+
+        return () => {
+            router.events.off("routeChangeError", handleRouteError);
+        };
+    }, [router]);
 
     return <Provider session={pageProps.session}>
         <DefaultSeo 

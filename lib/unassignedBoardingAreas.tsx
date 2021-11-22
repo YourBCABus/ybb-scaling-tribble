@@ -45,10 +45,7 @@ function BoardingArea({area, eventTarget, relativePosition, allowDragging}: {are
             document.addEventListener("touchmove", touchMove);
 
             const end = () => {
-                setHoveredBus(bus => {
-                    eventTarget.dispatchEvent(new CustomEvent(`drop:${bus}`, { detail: { boardingArea: area } }));
-                    return bus;
-                });
+                eventTarget.dispatchEvent(new CustomEvent(`drop:${hoveredBus}`, { detail: { boardingArea: area } }));
                 setPosition(null);
             };
 
@@ -78,7 +75,7 @@ function BoardingArea({area, eventTarget, relativePosition, allowDragging}: {are
             setPosition(null);
             setHoveredBus(null);
         }
-    }, [area, eventTarget, allowDragging]);
+    }, [area, eventTarget, allowDragging, hoveredBus]);
 
     useEffect(() => {
         if (position) {

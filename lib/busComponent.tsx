@@ -147,7 +147,7 @@ export default function Bus(
                 if (event instanceof CustomEvent && saveBoardingAreaCallback) {
                     const doUpdate = () => {
                         setCurrBoardingAreaEdit(event.detail.boardingArea);
-                        saveBoardingAreaCallback(event.detail.boardingArea).then(() => setCurrBoardingAreaEdit(null)).then(() => console.log("Done."));
+                        saveBoardingAreaCallback(event.detail.boardingArea).then(() => setCurrBoardingAreaEdit(null));
                         setCurrBoardingAreaEditClearable(true);
                     };
                     if (getBoardingArea(boardingArea, invalidateTime) == "?") {

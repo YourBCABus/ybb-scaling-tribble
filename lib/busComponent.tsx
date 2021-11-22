@@ -272,7 +272,7 @@ export default function Bus(
             <span className={styles.bus_status}>{available ? (boardingAreaText === "?" ? "Not on location" : "On location") : "Not running"}</span>
         </div>
         {size === BusComponentSizes.COMPACT ?
-            <Link href="/bus/[busId]" as={`/bus/${id}`}><a className={styles.bus_info_button}><FontAwesomeIcon icon={faInfoCircle} /></a></Link>
+            !noLink && <Link href="/bus/[busId]" as={`/bus/${id}`}><a className={styles.bus_info_button}><FontAwesomeIcon icon={faInfoCircle} /></a></Link>
             : <FontAwesomeIcon icon={faStar} className={styles.bus_star_indicator} style={{color: isStarred ? "#00b0ff" : "rgba(0,0,0,.2)"}} onClick={starCallback} size={fontAwesomeIconSizeParam}/>}
         <div className={`${styles.bus_boarding_area_background_div}${sizeClassName}`} style={busBoardingAreaBackgroundDivStyle}>{boardingAreaBackgroundDivContents}</div>
         

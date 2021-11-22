@@ -276,13 +276,14 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
             },
         }}>
             {confirmBoardingAreaChange && <>
-                <h3 className={styles.reset_modal_title}>Are you sure you change this bus&#39;s boarding area?</h3>
+                <h3 className={styles.reset_modal_title}>Are you sure you want to change this bus&#39;s boarding area?</h3>
                 <Bus
                     bus={confirmBoardingAreaChange.bus}
                     isStarred={false}
                     starCallback={() => {}}
                     editing={false}
                     editFreeze={true}
+                    noLink={true}
                     size={BusComponentSizes.COMPACT}
                 />
                 <div className={styles.down_arrow_div}><FontAwesomeIcon icon={faArrowDown} size="2x"></FontAwesomeIcon></div>
@@ -292,6 +293,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
                     starCallback={() => {}}
                     editing={false}
                     editFreeze={true}
+                    noLink={true}
                     size={BusComponentSizes.COMPACT}
                 />
                 <br/>

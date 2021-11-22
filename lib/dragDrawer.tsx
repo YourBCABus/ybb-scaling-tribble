@@ -71,13 +71,11 @@ export default function Drawer(
 
     const [position, setPosition] = useState({o: {p: 0}});
 
-    const [dragHeld] = useState({dH: false});
+    const [dragHeld] = useState({dH: false, isExtended: false});
 
     const [momentum] = useState({m: 0});
 
     const [dragTimeoutCounter] = useState({currDragReq: -1});
-
-
 
     const [target] = useState({t: 0});
 
@@ -91,6 +89,7 @@ export default function Drawer(
             const clientY = event[1] ? event[0].clientY : event[0].touches[0].clientY;
 
             dragHeld.dH = true;
+            dragHeld.isExtended = false;
             oldPos = clientY;
             event[0].stopPropagation();
             event[0].preventDefault();
@@ -102,6 +101,9 @@ export default function Drawer(
             if (dragHeld.dH) {
                 const clientY = event[1] ? event[0].clientY : event[0].touches[0].clientY;
                 momentum.m = (oldPos - clientY) * 0.5;
+                if (momentum.m > 1) {
+                    dragHeld.isExtended = true;
+                }
                 pos.p = calculateSpringTension(
                     window.innerHeight - clientY + (gripNode?.clientHeight ?? 0) / 2,
                     refToContainer.current?.clientHeight ?? 0,
@@ -117,7 +119,16 @@ export default function Drawer(
         const mouseMove = (event: MouseEvent) => move([event, true]);
 
         const end = (event: [TouchEvent, false] | [MouseEvent, true]) => {
-            target.t = calcNewTarget(refToContainer.current?.clientHeight ?? 0, pos.p, momentum.m, gripNode?.clientHeight ?? 0);
+            if (dragHeld.isExtended) {
+                target.t = calcNewTarget(refToContainer.current?.clientHeight ?? 0, pos.p, momentum.m, gripNode?.clientHeight ?? 0);
+            } else {
+                // If the user wasn't actively dragging the tray, open/close it
+                if (pos.p > (refToContainer.current?.clientHeight ?? 0) / 2) {
+                    target.t = calcNewTarget(refToContainer.current?.clientHeight ?? 0, 0, momentum.m, gripNode?.clientHeight ?? 0);
+                } else {
+                    target.t = calcNewTarget(refToContainer.current?.clientHeight ?? 0, refToContainer.current?.clientHeight ?? 0, momentum.m, gripNode?.clientHeight ?? 0);
+                }
+            }
             dragHeld.dH = false;
         };
         const touchEnd = (event: TouchEvent) => end([event, false]);

@@ -227,7 +227,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
             createBusCallback={() => createBusCallback(currentMutationQueue, handleConnQual, router, school.id)}
         />
         {(editMode && perms.bus.updateStatus) && <button className={styles.reset} onClick={() => setResetting(true)}>Reset All</button>}
-        <Drawer
+        {editMode && <Drawer
             location={{x: DragUpDrawerXLocation.RIGHT, y: DragUpDrawerYLocation.BOTTOM}}
             direction={DragDirection.UP}
             overTension={SpringTension.MEDIUM}
@@ -235,9 +235,9 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
             className={styles.pull_up_drawer}
         >
             {(relativePosition) => <div className={styles.drawer_contents}>
-                <UnassignedBoardingAreas boardingAreas={(school as any).mappingData.boardingAreas} buses={buses} eventTarget={eventTarget} relativePosition={relativePosition} />
+                <UnassignedBoardingAreas boardingAreas={(school as any).mappingData.boardingAreas} buses={buses} eventTarget={eventTarget} relativePosition={relativePosition} allowDragging={perms.bus.updateStatus} />
             </div>}
-        </Drawer>
+        </Drawer>}
         <ReactModal isOpen={isResetting} style={{
             content: {
                 maxWidth: "400px",

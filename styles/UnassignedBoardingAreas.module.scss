@@ -15,7 +15,6 @@
     margin-right: 0.3rem;
     text-align: center;
     white-space: nowrap;
-    cursor: grab;
 }
 
 .boarding_area_preview {
@@ -25,6 +24,15 @@
     cursor: grabbing;
 }
 
-.boarding_area:active {
-    cursor: grabbing;
+.draggable {
+    cursor: grab;
+
+    &:active {
+        cursor: grabbing;
+    }
+}
+
+.hint_text {
+    margin-bottom: 0.5rem;
+    color: rgba(0, 0, 0, 0.5);
 }

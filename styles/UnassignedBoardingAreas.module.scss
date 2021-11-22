@@ -15,4 +15,12 @@
     margin-right: 0.3rem;
     text-align: center;
     white-space: nowrap;
+    cursor: grab;
+}
+
+.boarding_area_preview {
+    @extend .boarding_area;
+    opacity: 0.4;
+    position: absolute;
+    cursor: grabbing;
 }

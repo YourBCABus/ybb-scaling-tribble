@@ -100,14 +100,11 @@ function BoardingArea({area, eventTarget, relativePosition}: {area: string, even
 
     return <div>
         <span className={styles.boarding_area} ref={drag}>{area}</span>
-        {position && <span className={styles.boarding_area} style={{
-            opacity: 0.4,
-            position: "absolute",
+        {position && <span className={styles.boarding_area_preview} style={{
             left: position.x - drag.current!.clientWidth / 2 - relativePosition.x,
             top: position.y - drag.current!.clientHeight / 2 - relativePosition.y,
             width: drag.current!.clientWidth,
             height: drag.current!.clientHeight,
-            pointerEvents: "none",
         }}>{area}</span>}
     </div>;
 }

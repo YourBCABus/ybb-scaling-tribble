@@ -33,6 +33,8 @@ export default function NavBar( { selectedPage, editSwitchOptions }: { selectedP
     useEffect(() => {
         const callback = () => setSideBySide(recalcSideBySide(spacerRef, refs, sideBySide));
 
+        callback();
+
         window.addEventListener("resize", callback);
 
         return () => window.removeEventListener("resize", callback);

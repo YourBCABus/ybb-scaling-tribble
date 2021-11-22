@@ -1,0 +1,41 @@
+.main_drawer {
+    position: fixed;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.horizontal_left_fixed {
+    left: 0%;
+}
+
+.horizontal_center_fixed {
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.horizontal_right_fixed {
+    right: 0%;
+}
+
+.vertical_center_fixed {
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.drawer_handle_div {
+    width: 100%;
+    padding-top: 7px;
+    padding-bottom: 7px;
+    height: auto;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: grab;
+
+    &:active {
+        cursor: grabbing;
+    }
+}

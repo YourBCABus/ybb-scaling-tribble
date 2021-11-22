@@ -37,6 +37,7 @@ interface BusProps {
 
     editing: false | ReturnType<typeof permParseFunc>;
     editFreeze: boolean;
+    eventTarget?: EventTarget;
     noLink?: boolean;
 
     saveBoardingAreaCallback?: (boardingArea: string | null) => Promise<void>;
@@ -82,6 +83,7 @@ export default function Bus(
         
         editing,
         editFreeze,
+        eventTarget,
         noLink = false,
 
         saveBoardingAreaCallback,
@@ -124,7 +126,64 @@ export default function Bus(
         const maxFontSize = (size === BusComponentSizes.COMPACT) ? 18 : (size * 24);
         setBusBoardingAreaFontSize(Math.floor(Math.min(textSizeToFitContainer(boardingAreaText, bus_view_boarding_area_font, width), maxFontSize)));
     }, [boardingAreaText, size]);
+
+    const [isHovered, setHovered] = useState<boolean>(false);
+
+    useEffect(() => {
+        if (eventTarget) {
+            const hoverListener = () => {
+                setHovered(true);
+            };
     
+            eventTarget.addEventListener(`hover:${id}`, hoverListener);
+    
+            const leaveListener = () => {
+                setHovered(false);
+            };
+    
+            eventTarget.addEventListener(`leave:${id}`, leaveListener);
+    
+            const dropListener = (event: Event) => {
+                if (event instanceof CustomEvent && saveBoardingAreaCallback) {
+                    const doUpdate = () => {
+                        setCurrBoardingAreaEdit(event.detail.boardingArea);
+                        saveBoardingAreaCallback(event.detail.boardingArea).then(() => setCurrBoardingAreaEdit(null));
+                        setCurrBoardingAreaEditClearable(true);
+                    };
+                    if (getBoardingArea(boardingArea, invalidateTime) == "?") {
+                        doUpdate();
+                    } else {
+                        (() => {
+                            const removeCallbacks = () => {
+                                eventTarget.removeEventListener("confirm", confirmCallback);
+                                eventTarget.removeEventListener("cancel", cancelCallback);
+                            };
+                            var confirmCallback = () => {
+                                doUpdate();
+                                removeCallbacks();
+                            };
+                            var cancelCallback = () => {
+                                removeCallbacks();
+                            };
+
+                            eventTarget.addEventListener("confirm", confirmCallback);
+                            eventTarget.addEventListener("cancel", cancelCallback);
+                        })();
+                        eventTarget.dispatchEvent(new CustomEvent("startConfirm", {detail: {bus, boardingArea: event.detail.boardingArea}}));
+                    }
+                }
+            };
+    
+            eventTarget.addEventListener(`drop:${id}`, dropListener);
+    
+            return () => {
+                eventTarget.removeEventListener(`hover:${id}`, hoverListener);
+                eventTarget.removeEventListener(`leave:${id}`, leaveListener);
+                eventTarget.removeEventListener(`drop:${id}`, dropListener);
+            };
+        }
+    }, [eventTarget, id, saveBoardingAreaCallback]);
+
     const busBoardingAreaBackgroundDivStyle = {
         ...(boardingAreaText === "?" ? {} : {color: "#e8edec", backgroundColor: "#00796b"}),
         font: bus_view_boarding_area_font,
@@ -206,14 +265,14 @@ export default function Bus(
     }
 
 
-    const inner = <div className={`${styles.bus_view}${sizeClassName}`}>
+    const inner = <div className={`${styles.bus_view}${sizeClassName}${isHovered ? ` ${styles.dnd_hover}` : ""}`} data-bus={editing ? bus.id : undefined}>
         <div className={`${styles.bus_name_and_status}${sizeClassName}`}>
             {busNameSpanOrInput}
             <br/>
             <span className={styles.bus_status}>{available ? (boardingAreaText === "?" ? "Not on location" : "On location") : "Not running"}</span>
         </div>
         {size === BusComponentSizes.COMPACT ?
-            <Link href="/bus/[busId]" as={`/bus/${id}`}><a className={styles.bus_info_button}><FontAwesomeIcon icon={faInfoCircle} /></a></Link>
+            !noLink && <Link href="/bus/[busId]" as={`/bus/${id}`}><a className={styles.bus_info_button}><FontAwesomeIcon icon={faInfoCircle} /></a></Link>
             : <FontAwesomeIcon icon={faStar} className={styles.bus_star_indicator} style={{color: isStarred ? "#00b0ff" : "rgba(0,0,0,.2)"}} onClick={starCallback} size={fontAwesomeIconSizeParam}/>}
         <div className={`${styles.bus_boarding_area_background_div}${sizeClassName}`} style={busBoardingAreaBackgroundDivStyle}>{boardingAreaBackgroundDivContents}</div>
         

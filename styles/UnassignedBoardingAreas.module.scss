@@ -1,0 +1,38 @@
+@import "variables";
+
+.boarding_area_grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
+}
+
+.boarding_area {
+    display: block;
+    background-color: $yourbcabus-teal;
+    color: white;
+    border-radius: 3px;
+    padding: 3px 4px;
+    margin-top: 5px;
+    margin-right: 0.3rem;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.boarding_area_preview {
+    @extend .boarding_area;
+    opacity: 0.4;
+    position: absolute;
+    cursor: grabbing;
+}
+
+.draggable {
+    cursor: grab;
+
+    &:active {
+        cursor: grabbing;
+    }
+}
+
+.hint_text {
+    margin-bottom: 0.5rem;
+    color: rgba(0, 0, 0, 0.5);
+}

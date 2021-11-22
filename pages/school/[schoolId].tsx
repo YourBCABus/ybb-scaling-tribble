@@ -13,8 +13,9 @@ import Bus, { BusComponentSizes } from "../../lib/busComponent";
 import ConnectionMonitor, { HandleConnQualContext } from "../../lib/connectionMonitorComponent";
 import Footer from "../../lib/footer";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlus, faSearch } from "@fortawesome/free-solid-svg-icons";
+import { faPlus, faSearch, faArrowDown } from "@fortawesome/free-solid-svg-icons";
 import ReactModal from "react-modal";
+import Drawer, { DragDirection, DragUpDrawerXLocation, DragUpDrawerYLocation, SpringTension } from "../../lib/dragDrawer";
 
 import styles from "../../styles/School.module.scss";
 
@@ -26,6 +27,7 @@ import MutationQueueContext from "../../lib/mutationQueue";
 import permParseFunc from "../../lib/perms";
 import { saveBoardingAreaCallback, createBusCallback, clearAllCallback} from "../../lib/editingCallbacks";
 import getBoardingArea from "../../lib/boardingAreas";
+import UnassignedBoardingAreas from "../../lib/unassignedBoardingAreas";
 import { NextSeo } from "next-seo";
 import { migrateOldStarredBuses } from "../../lib/utils";
 import { EditModeProps } from '../_app';
@@ -46,6 +48,11 @@ query GetSchoolAndPerms($id: ID!) {
             invalidateTime
             available
         }
+        mappingData {
+            boardingAreas {
+                name
+            }
+        }
     }
     currentSchoolScopes(schoolID: $id) 
 }
@@ -56,6 +63,7 @@ interface BusListProps {
  
     editing: false | ReturnType<typeof permParseFunc>;
     editFreeze: boolean;
+    eventTarget: EventTarget;
 
     isStarredList: boolean;
     starredBusIDs: Set<string>;
@@ -72,6 +80,7 @@ function BusList(
         buses,
         editing,
         editFreeze,
+        eventTarget,
         isStarredList,
         starredBusIDs,
         starCallback,
@@ -91,6 +100,7 @@ function BusList(
                         
                         editing={editing}
                         editFreeze={editFreeze}
+                        eventTarget={eventTarget}
                         
                         starCallback={(event) => starCallback(bus.id, event)}
                         isStarred={starredBusIDs.has(bus.id)}
@@ -152,6 +162,20 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
         setSearchTerm("");   
     };
 
+    const [eventTarget] = useState(() => new EventTarget());
+    const [confirmBoardingAreaChange, setConfirmBoardingAreaChange] = useState<null | {bus: GetSchoolAndPerms_school_buses, boardingArea: string}>(null);
+
+    useEffect(() => {
+        const setConfirmState = (event: Event) => {
+            if (event instanceof CustomEvent) {
+                setConfirmBoardingAreaChange(event.detail);
+            }
+        };
+        eventTarget.addEventListener("startConfirm", setConfirmState);
+
+        return () => eventTarget.removeEventListener("startConfirm", setConfirmState);
+    });
+
     const buses = Object.freeze(filterBuses(returnSortedBuses(school.buses), searchTerm));
     const starredBuses = Object.freeze(buses.filter(bus => starredBusIDs.has(bus.id)));
 
@@ -185,6 +209,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
                 
                 editing={editMode && perms}
                 editFreeze={editFreeze}
+                eventTarget={eventTarget}
 
                 isStarredList={true}
                 starredBusIDs={starredBusIDs}
@@ -196,12 +221,13 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
                 createBusCallback={() => createBusCallback(currentMutationQueue, handleConnQual, router, school.id)}
             />
         }
-        
+    
         <BusList
             buses={buses}
             
             editing={editMode && perms}
             editFreeze={editFreeze}
+            eventTarget={eventTarget}
 
             isStarredList={false}
             starredBusIDs={starredBusIDs}
@@ -213,6 +239,17 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
             createBusCallback={() => createBusCallback(currentMutationQueue, handleConnQual, router, school.id)}
         />
         {(editMode && perms.bus.updateStatus) && <button className={styles.reset} onClick={() => setResetting(true)}>Reset All</button>}
+        {editMode && <Drawer
+            location={{x: DragUpDrawerXLocation.RIGHT, y: DragUpDrawerYLocation.BOTTOM}}
+            direction={DragDirection.UP}
+            overTension={SpringTension.MEDIUM}
+            snapToTension={SpringTension.MEDIUM}
+            className={styles.pull_up_drawer}
+        >
+            {(relativePosition) => <div className={styles.drawer_contents}>
+                <UnassignedBoardingAreas boardingAreas={(school as any).mappingData.boardingAreas} buses={buses} eventTarget={eventTarget} relativePosition={relativePosition} allowDragging={perms.bus.updateStatus} />
+            </div>}
+        </Drawer>}
         <ReactModal isOpen={isResetting} style={{
             content: {
                 maxWidth: "400px",
@@ -228,6 +265,47 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
                 clearAllCallback(updateServerSidePropsFunction, currentMutationQueue, handleConnQual, school.id);
                 setResetting(false);
             }}>Reset</button>
+        </ReactModal>
+        <ReactModal isOpen={!!confirmBoardingAreaChange} style={{
+            content: {
+                maxWidth: "400px",
+                height: "230px",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+            },
+        }}>
+            {confirmBoardingAreaChange && <>
+                <h3 className={styles.reset_modal_title}>Are you sure you want to change this bus&#39;s boarding area?</h3>
+                <Bus
+                    bus={confirmBoardingAreaChange.bus}
+                    isStarred={false}
+                    starCallback={() => {}}
+                    editing={false}
+                    editFreeze={true}
+                    noLink={true}
+                    size={BusComponentSizes.COMPACT}
+                />
+                <div className={styles.down_arrow_div}><FontAwesomeIcon icon={faArrowDown} size="2x"></FontAwesomeIcon></div>
+                <Bus
+                    bus={{...confirmBoardingAreaChange.bus, boardingArea: confirmBoardingAreaChange.boardingArea}}
+                    isStarred={false}
+                    starCallback={() => {}}
+                    editing={false}
+                    editFreeze={true}
+                    noLink={true}
+                    size={BusComponentSizes.COMPACT}
+                />
+                <br/>
+                <button className={styles.reset_modal_cancel} onClick={() => {
+                    setConfirmBoardingAreaChange(null);
+                    eventTarget.dispatchEvent(new CustomEvent("cancel"));
+                }}>Cancel</button>
+                <button className={styles.reset_modal_confirm} onClick={() => {
+                    setConfirmBoardingAreaChange(null);
+                    eventTarget.dispatchEvent(new CustomEvent("confirm"));
+                }}>Change</button>
+            </>}
         </ReactModal>
         <Footer />
         <ConnectionMonitor editing={editMode}/>
@@ -263,7 +341,7 @@ function filterBuses(buses: readonly GetSchoolAndPerms_school_buses[], searchTer
     }) : buses;
 }
 
-export const getServerSideProps = async function<Q extends ParsedUrlQuery> (context: GetServerSidePropsContext<Q>) {
+export const getServerSideProps = async function<Q extends ParsedUrlQuery> (context: GetServerSidePropsContext<Q>) {    
     const client = createNewClient();
     
     let data: GetSchoolAndPerms | null = null;

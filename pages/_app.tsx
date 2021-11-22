@@ -9,7 +9,6 @@ config.autoAddCss = false;
 import { Provider } from 'next-auth/client';
 import { DefaultSeo } from 'next-seo';
 import ReactModal from 'react-modal';
-
 import { useState } from 'react';
 
 export interface EditModeProps {

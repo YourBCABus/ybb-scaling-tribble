@@ -75,7 +75,7 @@ function BoardingArea({area, eventTarget, relativePosition}: {area: string, even
     useEffect(() => {
         if (position) {
             const elements = document.elementsFromPoint(position.x, position.y).filter(el => el instanceof HTMLElement) as HTMLElement[];
-            const busEl = elements.find(el => el.dataset.bus);
+            const busEl = elements.find(el => el.dataset.noDrop) ? undefined : elements.find(el => el.dataset.bus);
             if (busEl) {
                 if (hoveredBus !== busEl.dataset.bus) {
                     if (hoveredBus) {

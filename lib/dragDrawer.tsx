@@ -180,6 +180,7 @@ export default function Drawer(
     return <NoSSRComponent>
         <div
             ref={refToContainer}
+            data-no-drop="true"
             className={`${className} ${styles.main_drawer} ${styles.horizontal_right_fixed}`}
             style={{
                 top: typeof window === "undefined" ? 0 : window.innerHeight - position.o.p,

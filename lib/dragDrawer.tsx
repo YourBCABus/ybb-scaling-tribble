@@ -119,17 +119,19 @@ export default function Drawer(
         const mouseMove = (event: MouseEvent) => move([event, true]);
 
         const end = (event: [TouchEvent, false] | [MouseEvent, true]) => {
-            if (dragHeld.isExtended) {
-                target.t = calcNewTarget(refToContainer.current?.clientHeight ?? 0, pos.p, momentum.m, gripNode?.clientHeight ?? 0);
-            } else {
-                // If the user wasn't actively dragging the tray, open/close it
-                if (pos.p > (refToContainer.current?.clientHeight ?? 0) / 2) {
-                    target.t = calcNewTarget(refToContainer.current?.clientHeight ?? 0, 0, momentum.m, gripNode?.clientHeight ?? 0);
+            if (dragHeld.dH) {
+                if (dragHeld.isExtended) {
+                    target.t = calcNewTarget(refToContainer.current?.clientHeight ?? 0, pos.p, momentum.m, gripNode?.clientHeight ?? 0);
                 } else {
-                    target.t = calcNewTarget(refToContainer.current?.clientHeight ?? 0, refToContainer.current?.clientHeight ?? 0, momentum.m, gripNode?.clientHeight ?? 0);
+                    // If the user wasn't actively dragging the tray, open/close it
+                    if (pos.p > (refToContainer.current?.clientHeight ?? 0) / 2) {
+                        target.t = calcNewTarget(refToContainer.current?.clientHeight ?? 0, 0, momentum.m, gripNode?.clientHeight ?? 0);
+                    } else {
+                        target.t = calcNewTarget(refToContainer.current?.clientHeight ?? 0, refToContainer.current?.clientHeight ?? 0, momentum.m, gripNode?.clientHeight ?? 0);
+                    }
                 }
+                dragHeld.dH = false;
             }
-            dragHeld.dH = false;
         };
         const touchEnd = (event: TouchEvent) => end([event, false]);
         const mouseEnd = (event: MouseEvent) => end([event, true]);

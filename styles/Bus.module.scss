@@ -89,9 +89,13 @@
     column-gap: 1em;
 }
 
+.phone_num_header {
+    margin-top: 2em;
+}
+
 .phone_num_list {
     list-style: disc;
-    padding: 2em 2em 1em 2em;
+    padding: 1em 2em 1em 2em;
 
     li div p a:link {
         color: #0000EE;

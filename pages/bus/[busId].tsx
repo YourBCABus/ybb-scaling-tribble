@@ -216,6 +216,7 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
                 </DragDropContext>
             </NoSSRComponent>
             <div>
+                <h3 className={styles.phone_num_header}>Phone Numbers</h3>
                 <ul className={`${styles.phone_num_list}`}>
                     {
                         bus.phone
@@ -302,8 +303,8 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
             transform: "translate(-50%, -50%)",
         }}}>
             <h3 className={styles.modal_title}>
-                Are you sure you want to this {deletingPhoneNumber?.deletingSingleNum
-                    ? <span>number?: <br/><code>{formatPhoneNumberString(bus.phone[deletingPhoneNumber.index ?? 0]).slice(deletingPhoneNumber.subIndex)[0]}</code></span>
+                Are you sure you want to delete this {deletingPhoneNumber?.deletingSingleNum
+                    ? <span>number?<br/><code>{formatPhoneNumberString(bus.phone[deletingPhoneNumber.index ?? 0]).slice(deletingPhoneNumber.subIndex)[0]}</code></span>
                     : <span>entry?: <br/><code>{bus.phone[deletingPhoneNumber?.index ?? 0]}</code></span>}</h3>
             <button className={styles.modal_cancel} onClick={() => setDeletingPhoneNumber(null)}>Cancel</button>
             <button className={styles.modal_confirm} onClick={

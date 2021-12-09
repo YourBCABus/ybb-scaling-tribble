@@ -276,7 +276,7 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
                 }
                 
                 {
-                    bus.phone.length !== 0 && <Collapsible className={`${styles.extra_phone_numbers_closed} ${styles.extra_phone_numbers_always}`} openedClassName={styles.extra_phone_numbers_always} trigger={<div>Click for raw phone numbers... <FontAwesomeIcon icon={faAngleUp}/></div>} transitionTime={100}>
+                    (editMode && bus.phone.length !== 0) && <Collapsible className={`${styles.extra_phone_numbers_closed} ${styles.extra_phone_numbers_always}`} openedClassName={styles.extra_phone_numbers_always} trigger={<div>Click for raw phone numbers... <FontAwesomeIcon icon={faAngleUp}/></div>} transitionTime={100}>
                         {
                             bus.phone.map(
                                 (phone_string, index) => <div className={styles.with_trash_can} key={index}>

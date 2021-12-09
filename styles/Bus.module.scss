@@ -83,7 +83,66 @@
     padding-top: 0;
 }
 
-.delete_bus, .delete_bus_modal_cancel, .delete_bus_modal_confirm {
+.side_by_side {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    column-gap: 1em;
+}
+
+.phone_num_header {
+    margin-top: 2em;
+}
+
+.phone_num_list {
+    list-style: disc;
+    padding: 1em 2em 1em 2em;
+
+    li div p a:link {
+        color: #0000EE;
+        text-decoration: underline;
+    }
+}
+
+.phone_num_input {
+    padding: 0em 2em 0em 2em;
+    line-height: 2em;
+    text-align: center;
+}
+
+.phone_number_error {
+    font-size: 0.75em;
+    color: #C31A00;
+}
+
+.with_trash_can {
+    display: grid;
+    grid-template-columns: 1fr 1em;
+    width: 100%;
+    svg {
+        color: #C31A00;
+    }
+}
+
+.extra_phone_numbers_always {
+    span div {
+        color: rgba(0, 0, 0, 0.6);
+        svg {
+            transition: transform 150ms;
+        }
+    }
+    div {
+        color:rgba(0, 0, 0, 0.8);
+        padding: 0.25em 0.675em 0 0.5em;
+    }
+    padding-bottom: 2em;
+}
+
+.extra_phone_numbers_closed span div svg {
+    transform: rotateX(180deg);
+}
+
+
+.delete_bus, .modal_cancel, .modal_confirm {
     border: none;
     border-radius: 3px;
     cursor: pointer;
@@ -111,32 +170,32 @@
     color: white;
 }
 
-.delete_bus_modal_title {
+.modal_title {
     margin-bottom: 15px;
 }
 
-.delete_bus_modal_cancel {
+.modal_cancel {
     background-color: rgba(0, 0, 0, 0.1);
     margin-right: 8px;
 }
 
-.delete_bus_modal_cancel:hover {
+.modal_cancel:hover {
     background-color: rgba(0, 0, 0, 0.2);
 }
 
-.delete_bus_modal_cancel:focus, .delete_bus_modal_cancel:active {
+.modal_cancel:focus, .modal_cancel:active {
     background-color: rgba(0, 0, 0, 0.3);
 }
 
-.delete_bus_modal_confirm {
+.modal_confirm {
     background-color: #C31A00;
     color: white;
 }
 
-.delete_bus_modal_confirm:hover {
+.modal_confirm:hover {
     background-color: darken(#C31A00, 10%);
 }
 
-.delete_bus_modal_confirm:focus, .delete_bus_modal_confirm:active {
+.modal_confirm:focus, .modal_confirm:active {
     background-color: darken(#C31A00, 20%);
 }

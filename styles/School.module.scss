@@ -23,6 +23,10 @@
         ". a a .";
     height: fit-content;
     background-color: #ECECEC;
+
+    @media (prefers-color-scheme: dark) {
+        background-color: rgba(255, 255, 255, 0.05);
+    }
 }
 
 .bus_container_starred_container {
@@ -114,6 +118,11 @@
     color: rgba(0, 0, 0, 0.5);
     text-align: center;
     line-height: 25px;
+
+    @media (prefers-color-scheme: dark) {
+        border-color: rgba(255, 255, 255, 0.3);
+        color: rgba(255, 255, 255, 0.3);
+    }
 }
 
 .pull_up_drawer {
@@ -122,6 +131,10 @@
     border-radius: 8px;
     width: min(500px, 100vw);
     backdrop-filter: blur(6px);
+
+    @media (prefers-color-scheme: dark) {
+        background-color: rgba(55, 55, 55, 0.5);
+    }
 }
 
 .drawer_contents {

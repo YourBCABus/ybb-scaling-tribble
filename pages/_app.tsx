@@ -1,5 +1,6 @@
 import '../styles/globals.scss';
 import type { AppProps } from 'next/app';
+import Head from 'next/head';
 
 import '@fortawesome/fontawesome-svg-core/styles.css';
 
@@ -54,6 +55,9 @@ function MyApp({ Component, pageProps }: AppProps) {
             titleTemplate="%s - YourBCABus"
             defaultTitle="YourBCABus"
         />
+        <Head>
+            <meta name="color-scheme" content="light dark" />
+        </Head>
         <Component {...pageProps} editMode={editMode} setEditMode={setEditMode} editFreeze={editFreeze} setEditFreeze={setEditFreeze} />
     </Provider>;
 }

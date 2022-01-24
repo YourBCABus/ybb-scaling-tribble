@@ -23,7 +23,7 @@ import NoSSRComponent from "../../lib/noSSRComponent";
 import { NextSeo } from "next-seo";
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBars, faChevronLeft, faTrash, faAngleUp } from '@fortawesome/free-solid-svg-icons';
+import { faBars, faCheckSquare, faChevronLeft, faPowerOff, faTrash, faAngleUp } from '@fortawesome/free-solid-svg-icons';
 import ReactModal from "react-modal";
 
 import permParseFunc from "../../lib/perms";
@@ -292,8 +292,27 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
             </div>
         </div>
 
-        <div className={styles.actions}>
-            {(editMode && perms.bus.delete) && <button className={styles.delete_bus} onClick={() => setDeletingBus(true)}><FontAwesomeIcon icon={faTrash} /> Delete Bus</button>}
+        <div className={styles.actions}>    
+            {
+                (editMode && perms.bus.delete) && <button
+                    className={`${styles.available_bus} ${bus.available ? styles.destructive_action : styles.green_action}`}
+                    onClick={
+                        (name) => saveBusCallback(updateServerSidePropsFunction, currentMutationQueue, handleConnQual)(bus.id)(
+                            {
+                                name: bus.name,
+                                company: bus.company,
+                                phone: bus.phone,
+                                available: !bus.available,
+                                otherNames: bus.otherNames,
+                            }
+                        )
+                    }
+                >
+                    <FontAwesomeIcon icon={faPowerOff} /> {bus.available ? "De-activate Bus" : "Activate Bus"}
+                </button>
+            }
+            <br/><br/>
+            {(editMode && perms.bus.delete) && <button className={`${styles.delete_bus} ${styles.destructive_action}`} onClick={() => setDeletingBus(true)}><FontAwesomeIcon icon={faTrash} /> Delete Bus</button>}
         </div>
         <ReactModal isOpen={!!deletingPhoneNumber} style={{content: {
             maxWidth: "400px",

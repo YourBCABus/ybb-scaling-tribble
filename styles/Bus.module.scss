@@ -137,12 +137,12 @@
     padding-bottom: 2em;
 }
 
-.extra_phone_numbers_closed span div svg {
+.extra_phone_numbers_always:not(.extra_phone_numbers_closed) span div svg {
     transform: rotateX(180deg);
 }
 
 
-.delete_bus, .modal_cancel, .modal_confirm {
+.available_bus, .delete_bus, .modal_cancel, .modal_confirm {
     border: none;
     border-radius: 3px;
     cursor: pointer;
@@ -156,18 +156,24 @@
     }
 }
 
-.delete_bus {
+@mixin button($color) {
     background-color: rgba(0, 0, 0, 0.1);
-    color: #C31A00;
+    color: $color;
+    &:hover {
+        background-color: rgba(0, 0, 0, 0.2);
+    }
+    &:focus, &:active {
+        background-color: $color;
+        color: white;
+    }
 }
 
-.delete_bus:hover {
-    background-color: rgba(0, 0, 0, 0.2);
+.green_action {
+    @include button(#008327);
 }
 
-.delete_bus:focus, .delete_bus:active {
-    background-color: #C31A00;
-    color: white;
+.destructive_action {
+    @include button(#C31A00);
 }
 
 .modal_title {

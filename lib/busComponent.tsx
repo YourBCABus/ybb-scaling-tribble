@@ -132,7 +132,7 @@ export default function Bus(
     useEffect(() => {
         if (eventTarget) {
             const hoverListener = () => {
-                setHovered(true);
+                if (available && saveBoardingAreaCallback) setHovered(true);
             };
     
             eventTarget.addEventListener(`hover:${id}`, hoverListener);
@@ -184,14 +184,22 @@ export default function Bus(
         }
     }, [eventTarget, id, saveBoardingAreaCallback]);
 
+    let backgroundDivColorChooserFunction = (available: boolean, boardingAreaText: string) => {
+        if (!available) return  {backgroundColor: "#f9aeae"};
+        else if (boardingAreaText === "?") return {};
+        else return {color: "#e8edec", backgroundColor: "#00796b"};
+    };
+    
     const busBoardingAreaBackgroundDivStyle = {
-        ...(boardingAreaText === "?" ? {} : {color: "#e8edec", backgroundColor: "#00796b"}),
+        ...backgroundDivColorChooserFunction(available, boardingAreaText),
         font: bus_view_boarding_area_font,
         fontSize: `${busBoardingAreaFontSize}px`,
     };
 
     let boardingAreaBackgroundDivContents: JSX.Element | string;
-    if (editing && editing.bus.updateStatus && saveBoardingAreaCallback) {
+    if (!available) {
+        boardingAreaBackgroundDivContents = <></>;
+    } else if (editing && editing.bus.updateStatus && saveBoardingAreaCallback) {
         boardingAreaBackgroundDivContents = <input
             className={styles.bus_boarding_area_input}
             onChange={
@@ -269,11 +277,11 @@ export default function Bus(
         <div className={`${styles.bus_name_and_status}${sizeClassName}`}>
             {busNameSpanOrInput}
             <br/>
-            <span className={styles.bus_status}>{available ? (boardingAreaText === "?" ? "Not on location" : "On location") : "Not running"}</span>
+            <span className={styles.bus_status} style={available ? {} : {color: "#b33a3a"}}>{available ? (boardingAreaText === "?" ? "Not on location" : "On location") : "De-activated"}</span>
         </div>
         {size === BusComponentSizes.COMPACT ?
             !noLink && <Link href="/bus/[busId]" as={`/bus/${id}`}><a className={styles.bus_info_button}><FontAwesomeIcon icon={faInfoCircle} /></a></Link>
-            : <FontAwesomeIcon icon={faStar} className={styles.bus_star_indicator} style={{color: isStarred ? "#00b0ff" : "rgba(0,0,0,.2)"}} onClick={starCallback} size={fontAwesomeIconSizeParam}/>}
+            : <FontAwesomeIcon icon={faStar} className={styles.bus_star_indicator} style={{color: isStarred && available ? "#00b0ff" : "rgba(0,0,0,.2)"}} onClick={available ? starCallback : undefined} size={fontAwesomeIconSizeParam}/>}
         <div className={`${styles.bus_boarding_area_background_div}${sizeClassName}`} style={busBoardingAreaBackgroundDivStyle}>{boardingAreaBackgroundDivContents}</div>
         
     </div>;

@@ -13,7 +13,7 @@ import Bus, { BusComponentSizes } from "../../lib/busComponent";
 import ConnectionMonitor, { HandleConnQualContext } from "../../lib/connectionMonitorComponent";
 import Footer from "../../lib/footer";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlus, faSearch, faArrowDown } from "@fortawesome/free-solid-svg-icons";
+import { faPlus, faSearch, faArrowDown, faAngleUp } from "@fortawesome/free-solid-svg-icons";
 import ReactModal from "react-modal";
 import Drawer, { DragDirection, DragUpDrawerXLocation, DragUpDrawerYLocation, SpringTension } from "../../lib/dragDrawer";
 
@@ -31,6 +31,7 @@ import UnassignedBoardingAreas from "../../lib/unassignedBoardingAreas";
 import { NextSeo } from "next-seo";
 import { migrateOldStarredBuses } from "../../lib/utils";
 import { EditModeProps } from '../_app';
+import Collapsible from "react-collapsible";
 
 export const GET_SCHOOL_AND_PERMS = gql`
 query GetSchoolAndPerms($id: ID!) {
@@ -69,7 +70,7 @@ interface BusListProps {
     starredBusIDs: Set<string>;
     starCallback: (id: string, event: MouseEvent<SVGSVGElement>) => void;
 
-    saveBoardingAreaCallback: (id: string) => (boardingArea: string | null) => Promise<void>;
+    saveBoardingAreaCallback?: (id: string) => (boardingArea: string | null) => Promise<void>;
 
     showCreate: boolean;
     createBusCallback: () => void;
@@ -105,7 +106,7 @@ function BusList(
                         starCallback={(event) => starCallback(bus.id, event)}
                         isStarred={starredBusIDs.has(bus.id)}
                         
-                        saveBoardingAreaCallback={saveBoardingAreaCallback(bus.id)}
+                        saveBoardingAreaCallback={saveBoardingAreaCallback?.(bus.id)}
                         size={editing ? BusComponentSizes.COMPACT : BusComponentSizes.NORMAL}
                     />
             )}
@@ -176,8 +177,11 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
         return () => eventTarget.removeEventListener("startConfirm", setConfirmState);
     });
 
-    const buses = Object.freeze(filterBuses(returnSortedBuses(school.buses), searchTerm));
-    const starredBuses = Object.freeze(buses.filter(bus => starredBusIDs.has(bus.id)));
+    const { active: activeUnfiltered, unactive: unactiveUnfiltered } = returnSortedBuses(school.buses);
+
+    const activeBuses = Object.freeze(filterBuses(activeUnfiltered, searchTerm));
+    const unactiveBuses = Object.freeze(filterBuses(unactiveUnfiltered, searchTerm));
+    const starredBuses = Object.freeze(activeBuses.filter(bus => starredBusIDs.has(bus.id)));
 
     const currentMutationQueue = useContext(MutationQueueContext);
     const { handleConnQual } = useContext(HandleConnQualContext);
@@ -223,7 +227,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
         }
     
         <BusList
-            buses={buses}
+            buses={activeBuses}
             
             editing={editMode && perms}
             editFreeze={editFreeze}
@@ -238,6 +242,22 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
             showCreate={editMode && perms?.bus.create}
             createBusCallback={() => createBusCallback(currentMutationQueue, handleConnQual, router, school.id)}
         />
+        {unactiveBuses.length > 0 && editing && <Collapsible className={`${styles.deactivated_buses_closed} ${styles.deactivated_buses_always}`} openedClassName={styles.deactivated_buses_always} trigger={<div>View deactivated buses <FontAwesomeIcon icon={faAngleUp} size="lg"/></div>} transitionTime={100}>
+            <BusList
+                buses={unactiveBuses}
+                
+                editing={editMode && perms}
+                editFreeze={editFreeze}
+                eventTarget={eventTarget}
+
+                isStarredList={false}
+                starredBusIDs={starredBusIDs}
+                starCallback={starCallback}
+
+                showCreate={editMode && perms?.bus.create}
+                createBusCallback={() => createBusCallback(currentMutationQueue, handleConnQual, router, school.id)}
+            />
+        </Collapsible>}
         {(editMode && perms.bus.updateStatus) && <button className={styles.reset} onClick={() => setResetting(true)}>Reset All</button>}
         {editMode && <Drawer
             location={{x: DragUpDrawerXLocation.RIGHT, y: DragUpDrawerYLocation.BOTTOM}}
@@ -247,7 +267,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
             className={styles.pull_up_drawer}
         >
             {(relativePosition) => <div className={styles.drawer_contents}>
-                <UnassignedBoardingAreas boardingAreas={(school as any).mappingData.boardingAreas} buses={buses} eventTarget={eventTarget} relativePosition={relativePosition} allowDragging={perms.bus.updateStatus} />
+                <UnassignedBoardingAreas boardingAreas={(school as any).mappingData.boardingAreas} buses={activeBuses} eventTarget={eventTarget} relativePosition={relativePosition} allowDragging={perms.bus.updateStatus} />
             </div>}
         </Drawer>}
         <ReactModal isOpen={isResetting} style={{
@@ -315,14 +335,17 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
 }
 
 
-function returnSortedBuses(buses: GetSchoolAndPerms_school_buses[]): GetSchoolAndPerms_school_buses[] {
+function returnSortedBuses(buses: GetSchoolAndPerms_school_buses[]): { active: GetSchoolAndPerms_school_buses[], unactive: GetSchoolAndPerms_school_buses[] } {
     const defaultVal = "\u{10FFFD}".repeat(100);
 
     let availableBuses:   GetSchoolAndPerms_school_buses[] = buses.filter((bus) =>  bus.available);
     availableBuses.sort((a, b) => (a.name || defaultVal).localeCompare(b.name || defaultVal));
     let unavailableBuses: GetSchoolAndPerms_school_buses[] = buses.filter((bus) => !bus.available);
     unavailableBuses.sort((a, b) => (a.name || defaultVal).localeCompare(b.name || defaultVal));
-    return [...availableBuses, ...unavailableBuses];
+    return {
+        active: availableBuses,
+        unactive: unavailableBuses,
+    };
 }
 
 function filterBuses(buses: readonly GetSchoolAndPerms_school_buses[], searchTerm: string): readonly GetSchoolAndPerms_school_buses[] {

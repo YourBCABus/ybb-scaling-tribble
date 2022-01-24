@@ -24,7 +24,7 @@ import Router, { useRouter } from 'next/router';
 
 import MutationQueueContext from "../../lib/mutationQueue";
 
-import permParseFunc from "../../lib/perms";
+import permParseFunc, { maskPerms } from "../../lib/perms";
 import { saveBoardingAreaCallback, createBusCallback, clearAllCallback} from "../../lib/editingCallbacks";
 import getBoardingArea from "../../lib/boardingAreas";
 import UnassignedBoardingAreas from "../../lib/unassignedBoardingAreas";
@@ -110,7 +110,7 @@ function BusList(
                         size={editing ? BusComponentSizes.COMPACT : BusComponentSizes.NORMAL}
                     />
             )}
-            {showCreate && <a href="#" className={styles.create_bus} onClick={event => {
+            {showCreate && editing && editing.bus.create && <a href="#" className={styles.create_bus} onClick={event => {
                 event.preventDefault();
                 createBusCallback();
             }}><FontAwesomeIcon icon={faPlus} /> Add Bus</a>}
@@ -211,7 +211,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
             starredBuses.length > 0 && !editMode && <BusList
                 buses={starredBuses}
                 
-                editing={editMode && perms}
+                editing={editMode && maskPerms(perms, { bus: { create: false } })}
                 editFreeze={editFreeze}
                 eventTarget={eventTarget}
 
@@ -242,22 +242,29 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
             showCreate={editMode && perms?.bus.create}
             createBusCallback={() => createBusCallback(currentMutationQueue, handleConnQual, router, school.id)}
         />
-        {unactiveBuses.length > 0 && editing && <Collapsible className={`${styles.deactivated_buses_closed} ${styles.deactivated_buses_always}`} openedClassName={styles.deactivated_buses_always} trigger={<div>View deactivated buses <FontAwesomeIcon icon={faAngleUp} size="lg"/></div>} transitionTime={100}>
-            <BusList
-                buses={unactiveBuses}
-                
-                editing={editMode && perms}
-                editFreeze={editFreeze}
-                eventTarget={eventTarget}
+        {
+            unactiveBuses.length > 0 && editing && <Collapsible
+                className={`${styles.deactivated_buses_closed} ${styles.deactivated_buses_always}`}
+                openedClassName={styles.deactivated_buses_always}
+                trigger={<div>View deactivated buses <FontAwesomeIcon icon={faAngleUp} size="lg"/></div>}
+                transitionTime={100}
+            >
+                <BusList
+                    buses={unactiveBuses}
+                    
+                    editing={editMode && maskPerms(perms, { bus: { create: false } })}
+                    editFreeze={editFreeze}
+                    eventTarget={eventTarget}
 
-                isStarredList={false}
-                starredBusIDs={starredBusIDs}
-                starCallback={starCallback}
+                    isStarredList={false}
+                    starredBusIDs={starredBusIDs}
+                    starCallback={starCallback}
 
-                showCreate={editMode && perms?.bus.create}
-                createBusCallback={() => createBusCallback(currentMutationQueue, handleConnQual, router, school.id)}
-            />
-        </Collapsible>}
+                    showCreate={false}
+                    createBusCallback={() => createBusCallback(currentMutationQueue, handleConnQual, router, school.id)}
+                />
+            </Collapsible>
+        }
         {(editMode && perms.bus.updateStatus) && <button className={styles.reset} onClick={() => setResetting(true)}>Reset All</button>}
         {editMode && <Drawer
             location={{x: DragUpDrawerXLocation.RIGHT, y: DragUpDrawerYLocation.BOTTOM}}

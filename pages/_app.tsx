@@ -12,11 +12,15 @@ import ReactModal from 'react-modal';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 
+type DrawerTab = "unassigned" | "notes";
+
 export interface EditModeProps {
     editMode: boolean;
     setEditMode: (editMode: boolean) => void;
     editFreeze: boolean;
     setEditFreeze: (editFreeze: boolean) => void;
+    drawerTab: DrawerTab;
+    setDrawerTab: (drawerTab: DrawerTab) => void;
 }
 
 // TODO: Find a better place to put this and use a better element
@@ -25,6 +29,7 @@ ReactModal.setAppElement("#__next");
 function MyApp({ Component, pageProps }: AppProps) {
     const [editMode, setEditMode] = useState<boolean>(false);
     const [editFreeze, setEditFreeze] = useState<boolean>(false);
+    const [drawerTab, setDrawerTab] = useState<DrawerTab>("unassigned");
 
     const router = useRouter();
     useEffect(() => {
@@ -54,7 +59,7 @@ function MyApp({ Component, pageProps }: AppProps) {
             titleTemplate="%s - YourBCABus"
             defaultTitle="YourBCABus"
         />
-        <Component {...pageProps} editMode={editMode} setEditMode={setEditMode} editFreeze={editFreeze} setEditFreeze={setEditFreeze} />
+        <Component {...pageProps} editMode={editMode} setEditMode={setEditMode} editFreeze={editFreeze} setEditFreeze={setEditFreeze} drawerTab={drawerTab} setDrawerTab={setDrawerTab} />
     </Provider>;
 }
 export default MyApp;

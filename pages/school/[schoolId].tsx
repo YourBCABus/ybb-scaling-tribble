@@ -32,6 +32,7 @@ import { NextSeo } from "next-seo";
 import { migrateOldStarredBuses } from "../../lib/utils";
 import { EditModeProps } from '../_app';
 import Collapsible from "react-collapsible";
+import { Notes } from "../../lib/Notes";
 
 export const GET_SCHOOL_AND_PERMS = gql`
 query GetSchoolAndPerms($id: ID!) {
@@ -120,7 +121,7 @@ function BusList(
 
 type SchoolProps = Props<typeof getServerSideProps> & EditModeProps;
 
-export default function School({ school: schoolOrUndef, currentSchoolScopes: permsOrUndef, editMode, setEditMode, editFreeze }: SchoolProps): JSX.Element {
+export default function School({ school: schoolOrUndef, currentSchoolScopes: permsOrUndef, editMode, setEditMode, editFreeze, drawerTab, setDrawerTab }: SchoolProps): JSX.Element {
     const school = Object.freeze(schoolOrUndef!);
     const perms = Object.freeze(permParseFunc(Object.freeze(permsOrUndef!)));
 
@@ -274,7 +275,11 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
             className={styles.pull_up_drawer}
         >
             {(relativePosition) => <div className={styles.drawer_contents}>
-                <UnassignedBoardingAreas boardingAreas={(school as any).mappingData.boardingAreas} buses={activeBuses} eventTarget={eventTarget} relativePosition={relativePosition} allowDragging={perms.bus.updateStatus} />
+                <div>
+                    Yaaay tabs
+                </div>
+                {drawerTab === "unassigned" && <UnassignedBoardingAreas boardingAreas={(school as any).mappingData.boardingAreas} buses={activeBuses} eventTarget={eventTarget} relativePosition={relativePosition} allowDragging={perms.bus.updateStatus} />}
+                {drawerTab === "notes" && <Notes schoolID={school.id} />}
             </div>}
         </Drawer>}
         <ReactModal isOpen={isResetting} style={{

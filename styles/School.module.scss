@@ -125,14 +125,74 @@
 }
 
 .drawer_contents {
-    height: min(200px, calc(50vmin - 90px));
+    height: max(100px, min(200px, calc(50vmin - 90px)));
     width: 100%;
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.25);
     padding: 1em 1em 1em 1em;
     margin-bottom: 2em;
     overflow-wrap: break-word;
     overflow-y: scroll;
+    background-color: rgba(255, 255, 255, 0.4);
+}
+
+.drawer_contents_notes {
+    padding: 0.8em;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.notes_hint_text {
+    padding-top: 4px;
+    font-size: 0.8rem;
+    color: rgba(0, 0, 0, 0.7);
+}
+
+.drawer_tab {
+    appearance: none;
+    border-top: 1px solid transparent;
+    border-left: none;
+    border-right: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+    background-color: transparent;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 6px 16px;
+    overflow: visible;
+    font-family: inherit;
+    transition: background-color 0.2s;
+
+    &:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    &:active {
+        background-color: rgba(0, 0, 0, 0.1);
+    }
+}
+
+.drawer_tab_active {
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-bottom: 0px solid transparent;
+    font-weight: bold;
+
+    &, &:hover, &:active {
+        background-color: rgba(255, 255, 255, 0.4);
+    }
+}
+
+.drawer_tab_bar {
+    display: flex;
+    width: 100%;
+    align-items: stretch;
+
+    &::before, &::after {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+        flex-grow: 1;
+        content: "";
+    }
 }
 
 // TODO: Create global button styling

@@ -12,7 +12,10 @@ import ReactModal from 'react-modal';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 
-type DrawerTab = "unassigned" | "notes";
+export enum DrawerTab {
+    UNASSIGNED,
+    NOTES,
+}
 
 export interface EditModeProps {
     editMode: boolean;
@@ -29,7 +32,7 @@ ReactModal.setAppElement("#__next");
 function MyApp({ Component, pageProps }: AppProps) {
     const [editMode, setEditMode] = useState<boolean>(false);
     const [editFreeze, setEditFreeze] = useState<boolean>(false);
-    const [drawerTab, setDrawerTab] = useState<DrawerTab>("unassigned");
+    const [drawerTab, setDrawerTab] = useState<DrawerTab>(DrawerTab.UNASSIGNED);
 
     const router = useRouter();
     useEffect(() => {

@@ -196,7 +196,7 @@ export default function Drawer(
             data-no-drop="true"
             className={`${className} ${styles.main_drawer} ${styles.horizontal_right_fixed}`}
             style={{
-                top: typeof window === "undefined" ? 0 : window.innerHeight - position.o.p,
+                bottom: typeof window === "undefined" ? 0 : (position.o.p - (refToContainer.current?.clientHeight ?? 0)),
             }}
         >
             <div ref={refToGrip} className={styles.drawer_handle_div}><FontAwesomeIcon icon={faGripLines} size="lg"/></div>

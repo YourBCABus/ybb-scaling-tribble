@@ -39,3 +39,10 @@
         cursor: grabbing;
     }
 }
+
+.scroll_detector {
+    pointer-events: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+}

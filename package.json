@@ -28,7 +28,8 @@
     "react-switch": "^6.0.0",
     "react-tooltip": "^4.2.21",
     "sass": "^1.37.0",
-    "sharp": "^0.29.1"
+    "sharp": "^0.29.1",
+    "use-debounce": "^7.0.1"
   },
   "devDependencies": {
     "@types/react": "17.0.15",

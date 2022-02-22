@@ -30,7 +30,7 @@ import getBoardingArea from "../../lib/boardingAreas";
 import UnassignedBoardingAreas from "../../lib/unassignedBoardingAreas";
 import { NextSeo } from "next-seo";
 import { migrateOldStarredBuses } from "../../lib/utils";
-import { EditModeProps } from '../_app';
+import { DrawerTab, EditModeProps } from '../_app';
 import Collapsible from "react-collapsible";
 import { Notes } from "../../lib/Notes";
 
@@ -274,13 +274,19 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
             snapToTension={SpringTension.MEDIUM}
             className={styles.pull_up_drawer}
         >
-            {(relativePosition) => <div className={styles.drawer_contents}>
-                <div>
-                    Yaaay tabs
+            {(relativePosition) => <>
+                <div className={styles.drawer_tab_bar}>
+                    <button className={`${styles.drawer_tab} ${drawerTab === DrawerTab.UNASSIGNED ? styles.drawer_tab_active : ""}`} onClick={() => setDrawerTab(DrawerTab.UNASSIGNED)}>Boarding Areas</button>
+                    <button className={`${styles.drawer_tab} ${drawerTab === DrawerTab.NOTES ? styles.drawer_tab_active : ""}`} onClick={() => setDrawerTab(DrawerTab.NOTES)}>Notes</button>
                 </div>
-                {drawerTab === "unassigned" && <UnassignedBoardingAreas boardingAreas={(school as any).mappingData.boardingAreas} buses={activeBuses} eventTarget={eventTarget} relativePosition={relativePosition} allowDragging={perms.bus.updateStatus} />}
-                {drawerTab === "notes" && <Notes schoolID={school.id} />}
-            </div>}
+                {drawerTab === DrawerTab.UNASSIGNED && <div className={styles.drawer_contents}>
+                    <UnassignedBoardingAreas boardingAreas={(school as any).mappingData.boardingAreas} buses={activeBuses} eventTarget={eventTarget} relativePosition={relativePosition} allowDragging={perms.bus.updateStatus} />
+                </div>}
+                {drawerTab === DrawerTab.NOTES && <div className={`${styles.drawer_contents} ${styles.drawer_contents_notes}`}>
+                    <Notes schoolID={school.id} />
+                    <div className={styles.notes_hint_text}>Notes are not synced across devices.</div>
+                </div>}
+            </>}
         </Drawer>}
         <ReactModal isOpen={isResetting} style={{
             content: {

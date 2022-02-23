@@ -37,6 +37,7 @@ interface DragDrawerProps {
     snapToTension: number,
     overTension: number,
     children?: (relativePosition: {x: number, y: number}) => JSX.Element | JSX.Element[],
+    drawerEventTarget?: EventTarget,
     className: string,
 }
 
@@ -58,6 +59,7 @@ export default function Drawer(
         snapToTension,
         overTension,
         children,
+        drawerEventTarget,
         className,
     }:  DragDrawerProps,
 ): JSX.Element {
@@ -113,24 +115,28 @@ export default function Drawer(
                 setPosition({...position});
                 event[0].stopPropagation();
                 event[0].preventDefault();
+                drawerEventTarget?.dispatchEvent(new Event('move'));
             }
         };
         const touchMove = (event: TouchEvent) => move([event, false]);
         const mouseMove = (event: MouseEvent) => move([event, true]);
 
         const end = (event: [TouchEvent, false] | [MouseEvent, true]) => {
+            const bottomTarget = gripNode?.clientHeight ?? 0;
+            const height = refToContainer.current?.clientHeight ?? 0;
             if (dragHeld.dH) {
                 if (dragHeld.isExtended) {
-                    target.t = calcNewTarget(refToContainer.current?.clientHeight ?? 0, pos.p, momentum.m, gripNode?.clientHeight ?? 0);
+                    target.t = calcNewTarget(height, pos.p, momentum.m, bottomTarget);
                 } else {
                     // If the user wasn't actively dragging the tray, open/close it
-                    if (pos.p > (refToContainer.current?.clientHeight ?? 0) / 2) {
-                        target.t = calcNewTarget(refToContainer.current?.clientHeight ?? 0, 0, momentum.m, gripNode?.clientHeight ?? 0);
+                    if (pos.p > height / 2) {
+                        target.t = calcNewTarget(height, 0, momentum.m, bottomTarget);
                     } else {
-                        target.t = calcNewTarget(refToContainer.current?.clientHeight ?? 0, refToContainer.current?.clientHeight ?? 0, momentum.m, gripNode?.clientHeight ?? 0);
+                        target.t = calcNewTarget(height, height, momentum.m, bottomTarget);
                     }
                 }
                 dragHeld.dH = false;
+                drawerEventTarget?.dispatchEvent(new Event(target.t === bottomTarget ? 'close' : 'open'));
             }
         };
         const touchEnd = (event: TouchEvent) => end([event, false]);
@@ -156,7 +162,7 @@ export default function Drawer(
             document.removeEventListener("touchend", touchEnd);
             document.removeEventListener("mouseup",  mouseEnd);
         };
-    }, [overTension, refToContainer.current, refToGrip.current]); // eslint-disable-line
+    }, [overTension, refToContainer.current, refToGrip.current, drawerEventTarget]); // eslint-disable-line
 
     useEffect(() => {
         const pos = position.o;

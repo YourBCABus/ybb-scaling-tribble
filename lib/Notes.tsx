@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import styles from "../styles/Notes.module.scss";
 
-export function Notes({schoolID}: {schoolID: string}) {
+export function Notes({ schoolID, focusBlurEventTarget }: { schoolID: string, focusBlurEventTarget?: EventTarget }) {
     // Save notes in localStorage under each school ID.
     const storageID = `ybb-note-${schoolID}`;
     const [note, setNote] = useState(() => localStorage.getItem(`ybb-note-${schoolID}`) || '');
@@ -43,6 +43,21 @@ export function Notes({schoolID}: {schoolID: string}) {
             return () => document.removeEventListener('scroll', handler);
         }
     }, [isTextareaFocusedOnLastScrollEvent]);
+
+    useEffect(() => {
+        const focusCallback = () => {
+            refToTextarea.current?.focus();
+        };
+        const blurCallback = () => {
+            refToTextarea.current?.blur();
+        };
+        focusBlurEventTarget?.addEventListener('focus', focusCallback);
+        focusBlurEventTarget?.addEventListener('blur', blurCallback);
+        return focusBlurEventTarget && (() => {
+            focusBlurEventTarget.removeEventListener('focus', focusCallback);
+            focusBlurEventTarget.removeEventListener('blur', blurCallback);
+        });
+    }, [focusBlurEventTarget]);
 
     // Display a textarea for this school's note. Save changes on blur and on change.
     return (<>

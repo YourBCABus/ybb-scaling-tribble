@@ -167,6 +167,20 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
     const [eventTarget] = useState(() => new EventTarget());
     const [confirmBoardingAreaChange, setConfirmBoardingAreaChange] = useState<null | {bus: GetSchoolAndPerms_school_buses, boardingArea: string}>(null);
 
+    const [drawerEventTarget] = useState(() => new EventTarget());
+
+    useEffect(() => {
+        let forwardToBlurCallback = () => {
+            drawerEventTarget.dispatchEvent(new Event('blur'));
+        };
+
+        let triggers = ['open', 'close', 'move'];
+
+        triggers.forEach(trigger => drawerEventTarget.addEventListener(trigger, forwardToBlurCallback));
+
+        return () => triggers.forEach(trigger => drawerEventTarget.removeEventListener(trigger, forwardToBlurCallback));
+    }, [drawerEventTarget]);
+
     useEffect(() => {
         const setConfirmState = (event: Event) => {
             if (event instanceof CustomEvent) {
@@ -272,6 +286,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
             direction={DragDirection.UP}
             overTension={SpringTension.MEDIUM}
             snapToTension={SpringTension.MEDIUM}
+            drawerEventTarget={drawerEventTarget}
             className={styles.pull_up_drawer}
         >
             {(relativePosition) => <>
@@ -283,7 +298,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
                     <UnassignedBoardingAreas boardingAreas={(school as any).mappingData.boardingAreas} buses={activeBuses} eventTarget={eventTarget} relativePosition={relativePosition} allowDragging={perms.bus.updateStatus} />
                 </div>}
                 {drawerTab === DrawerTab.NOTES && <div className={`${styles.drawer_contents} ${styles.drawer_contents_notes}`}>
-                    <Notes schoolID={school.id} />
+                    <Notes schoolID={school.id} focusBlurEventTarget={drawerEventTarget} />
                     <div className={styles.notes_hint_text}>Notes are not synced across devices.</div>
                 </div>}
             </>}

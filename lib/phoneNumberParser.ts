@@ -18,6 +18,5 @@ export function formatSinglePhoneNumber(phoneNumber: string): string | null {
 }
 
 export function directlyMatchesPhoneNumber(phoneNumber: string): boolean {
-    console.log("", phoneNumber, formatSinglePhoneNumber(phoneNumber));
     return formatSinglePhoneNumber(phoneNumber) === phoneNumber;
 }

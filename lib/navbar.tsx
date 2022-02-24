@@ -86,11 +86,9 @@ export default function NavBar( { selectedPage, editSwitchOptions }: { selectedP
 }
 
 function recalcSideBySide(spacerRef: RefObject<HTMLElement>, refs: RefObject<HTMLElement>[], currentSideBySide: boolean, ) {
-    console.time();
     const rightPartWidth = refs.map(ref => ref.current?.offsetWidth ?? 0).reduce((prev, curr) => prev + curr);
 
     const sideBySideWidth = (spacerRef.current?.clientWidth ?? 10) - (currentSideBySide ? 0 : rightPartWidth);
 
-    console.timeEnd();
     return sideBySideWidth > 10;
 }

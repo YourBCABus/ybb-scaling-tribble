@@ -13,6 +13,11 @@ export function Notes({ schoolID, focusBlurEventTarget }: { schoolID: string, fo
         localStorage.setItem(storageID, note);
     }, 1000);
 
+    // Save notes on unmount.
+    useEffect(() => () => {
+        saveNote.flush();
+    }, [saveNote]);
+
     const [scrollY, setScrollY] = useState(0);
     const refToTextarea = useRef<HTMLTextAreaElement>(null);
 

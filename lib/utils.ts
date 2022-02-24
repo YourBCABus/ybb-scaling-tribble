@@ -1,4 +1,5 @@
 import { GetServerSideProps, GetStaticProps } from "next";
+import { useCallback, useState } from "react";
 
 export type PromiseType<T> = T extends PromiseLike<infer U> ? PromiseType<U> : T;
 export type Props<T extends GetServerSideProps | GetStaticProps>
@@ -18,4 +19,14 @@ export function migrateOldStarredBuses(): string[] {
         }
     }
     return [];
+}
+
+export function useRefWithRerender<T extends HTMLElement>(): [T | null, (node: T) => void] {
+    const [el, setEl] = useState<T | null>(null);
+    const ref = useCallback((node: T) => {
+        if (node !== null) {
+            setEl(node);
+        }
+    }, []);
+    return [el, ref];
 }

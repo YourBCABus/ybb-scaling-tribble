@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import styles from "../styles/UnassignedBoardingAreas.module.scss";
 import { GetSchoolAndPerms_school_buses } from "../__generated__/GetSchoolAndPerms";
-import getBoardingArea from "./boardingAreas";
+import getBoardingArea from "./utils/boardingAreas";
 import NoSSRComponent from "./noSSRComponent";
 
 function BoardingArea({area, eventTarget, relativePosition, allowDragging}: {area: string, eventTarget: EventTarget, relativePosition: {x: number, y: number}, allowDragging: boolean}) {

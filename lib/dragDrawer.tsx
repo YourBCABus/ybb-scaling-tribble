@@ -1,11 +1,11 @@
 import styles from "../styles/Drawer.module.scss";
 
-import React, { useState, useEffect, useRef, useReducer } from 'react';
+import React, { useEffect, useReducer, useRef, useState } from 'react';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGripLines } from '@fortawesome/free-solid-svg-icons';
 import NoSSRComponent from "./noSSRComponent";
-import { useRefWithRerender } from "./utils";
+import { useRefWithRerender } from "./utils/utils";
 
 export enum DragUpDrawerXLocation {
     LEFT,

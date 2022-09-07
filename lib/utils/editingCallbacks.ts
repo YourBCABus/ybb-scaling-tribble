@@ -1,8 +1,8 @@
 import { MutationQueue } from "./mutationQueue";
 import { NextRouter } from "next/router";
 
-import { BusInput } from "../__generated__/globalTypes";
-import { GetBus_bus_stops } from "../__generated__/GetBus";
+import { BusInput } from "../../__generated__/globalTypes";
+import { GetBus_bus_stops } from "../../__generated__/GetBus";
 
 export const saveBoardingAreaCallback = 
     (updateServerSidePropsFunction: () => Promise<boolean>, mutationQueue: MutationQueue, handleConnQualFunction: (() => Promise<boolean>) | undefined) => 

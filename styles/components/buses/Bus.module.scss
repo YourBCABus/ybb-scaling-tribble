@@ -1,7 +1,7 @@
-@import 'variables';
+@import '../../variables';
 
 
-.bus_view {
+.bus-view {
     height: 90px;
 
     display: grid;
@@ -20,11 +20,11 @@
     overflow: hidden;
 }
 
-.bus_view.size_large {
+.bus-view.size-large {
     height: 130px;
 }
 
-.bus_view.size_compact {
+.bus-view.size-compact {
     padding: 0 0 0 8px;
     grid-template-areas:
         "a a a a a a b c"
@@ -37,31 +37,32 @@
     border: 1.5px solid rgba(0, 0, 0, 0.4);
 }
 
-.bus_name_and_status {
+.bus-name-and-status {
     grid-area: a;
     margin: auto 0px;
     line-height: 1.5;
-    .bus_name {
+    .bus-name {
         line-height: 0.6;
         font-size: 1.15rem;
         font-weight: 500;
     }
-    .bus_name.bus_name_input {
+    .bus-name.bus-name-input {
         width: 100%;
     }
-    .bus_status {
+    .bus-status {
         font-weight: 450;
         font-size: 1rem;
         color: #6c757d;
     }
 }
 
-.bus_name_and_status.size_compact {
+
+.bus-name-and-status.size-compact {
     height: 25px;
     line-height: 25px;
     margin: 0;
 
-    .bus_name {
+    .bus-name {
         font-size: 1rem;
         display: block;
         line-height: 25px;
@@ -70,36 +71,23 @@
         white-space: nowrap;
     }
 
-    .bus_status {
+    .bus-status {
         display: none;
     }
 }
 
-.bus_name_and_status.size_large {
-    .bus_name {
+.bus-name-and-status.size-large {
+    .bus-name {
         font-size: 1.5rem
     }
-    .bus_status {
+    .bus-status {
         font-size: 1.3rem;
     }
 }
 
 
-.bus_star_indicator {
-    grid-area: b;
-    cursor: pointer;
-    justify-self: center;
-    align-self: center;
-}
 
-.bus_info_button {
-    grid-area: b;
-    justify-self: center;
-    align-self: center;
-    color: #00b0ff;
-}
-
-.bus_boarding_area_background_div {
+.bus-boarding-area-background-div {
     grid-area: c;
     justify-self: center;
     align-self: center;
@@ -117,52 +105,35 @@
     
 }
 
-.bus_boarding_area_background_div.size_compact {
+.bus-boarding-area-background-div.size-compact {
     width: 48px;
     height: 25px;
     line-height: 25px;
     border-radius: 0;
 
-    .bus_boarding_area_input {
-        height: 25px;
-
-        border-radius: 0;
-        border: none;
-        border-left: 0.5px solid rgba(0, 0, 0, 0.3);
-    }
+    
 }
 
-.bus_boarding_area_background_div.size_large {
+.bus-boarding-area-background-div.size-large {
     width: 100px;
     height: 100px;
     line-height: 100px;
 }
 
-.bus_boarding_area_input {
-    font-size: inherit;
-    font: inherit;
-    margin: 0px;
-    padding: 0px;
-    border: 1px solid black;
-    border-radius: 10%;
-    
-    width: 100%;
-    height: 100%;
-    
-    text-align: center;
-    
-
-    color: inherit;
-    background-color: rgba(0, 0, 0, 0);
-
-}
-
-.dnd_hover {
+.dnd-hover {
     opacity: 0.5;
     background-color: #3ac1ff;
 
-    .bus_boarding_area_background_div {
+    .bus-boarding-area-background-div {
         background-color: #00b0ff;
         color: transparent;
     }
+}
+
+.unavail-status {
+    color: #b33a3a !important;
+}
+
+.bus-stat-avail {
+    color: #b33a3a;
 }

@@ -1,6 +1,7 @@
 {
     "extends": ["next", "next/core-web-vitals"],
     "rules": {
+        // "quotes": ["error", "single"],
         "indent": ["error", 4],
         "comma-dangle": ["error", "always-multiline"],
         "semi": ["error", "always"],

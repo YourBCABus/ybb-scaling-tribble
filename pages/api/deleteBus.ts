@@ -1,7 +1,7 @@
 import { gql } from '@apollo/client';
 import type { NextApiRequest, NextApiResponse } from 'next';
-import createNewClient from '../../lib/apollo-client';
-import { DeleteBus } from '../../__generated__/DeleteBus';
+import createNewClient from 'lib/utils/apollo-client';
+import { DeleteBus } from '__generated__/DeleteBus';
 
 export const DELETE_BUS = gql`
 mutation DeleteBus($busID: ID!) {

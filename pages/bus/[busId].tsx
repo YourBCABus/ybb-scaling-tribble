@@ -1,38 +1,38 @@
-import createNewClient from "../../lib/apollo-client";
 import gql from "graphql-tag";
-import { GetBus, GetBus_bus_stops } from "../../__generated__/GetBus";
-import { GetPerms } from "../../__generated__/GetPerms";
+import createNewClient from "lib/utils/apollo-client";
+import { GetBus, GetBus_bus_stops } from "__generated__/GetBus";
+import { GetPerms } from "__generated__/GetPerms";
 
 import { GetServerSidePropsContext } from "next";
 import { ParsedUrlQuery } from "node:querystring";
 import { MouseEvent } from "react";
-import { DroppableProvided, DraggableProvided, resetServerContext } from "react-beautiful-dnd";
+import { DraggableProvided, DroppableProvided, resetServerContext } from "react-beautiful-dnd";
 
-import styles from "../../styles/Bus.module.scss";
+import styles from "styles/Bus.module.scss";
 
-import { useState, useEffect, useCallback, useContext } from "react";
 import Router, { useRouter } from 'next/router';
+import { useCallback, useContext, useEffect, useState } from "react";
 
-import MutationQueueContext from "../../lib/mutationQueue";
+import MutationQueueContext from 'lib/utils/mutationQueue';
 
+import { faAngleUp, faBars, faCheckSquare, faChevronLeft, faPowerOff, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import BusComponent, { BusComponentSizes } from 'lib/components/buses/Bus';
+import NavBar, { PagesInNavbar } from 'lib/navbar';
+import NoSSRComponent from 'lib/noSSRComponent';
+import { NextSeo } from 'next-seo';
 import Head from 'next/head';
-import Link from "next/link";
-import BusComponent, { BusComponentSizes } from "../../lib/busComponent";
-import NavBar, { PagesInNavbar } from "../../lib/navbar";
-import NoSSRComponent from "../../lib/noSSRComponent";
-import { NextSeo } from "next-seo";
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBars, faCheckSquare, faChevronLeft, faPowerOff, faTrash, faAngleUp } from '@fortawesome/free-solid-svg-icons';
-import ReactModal from "react-modal";
+import Link from 'next/link';
+import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
+import ReactModal from 'react-modal';
 
-import permParseFunc from "../../lib/perms";
-import formatPhoneNumberString, { directlyMatchesPhoneNumber, formatSinglePhoneNumber } from "../../lib/phoneNumberParser";
-import { deleteBusCallback, saveBoardingAreaCallback, saveBusCallback, saveStopOrderCallback } from "../../lib/editingCallbacks";
-import ConnectionMonitor, { HandleConnQualContext } from "../../lib/connectionMonitorComponent";
-import { migrateOldStarredBuses, Props } from "../../lib/utils";
-import { EditModeProps } from "../_app";
-import Collapsible from "react-collapsible";
+import ConnectionMonitor, { HandleConnQualContext } from 'lib/connectionMonitorComponent';
+import formatPhoneNumberString, { directlyMatchesPhoneNumber, formatSinglePhoneNumber } from 'lib/phoneNumberParser';
+import { deleteBusCallback, saveBoardingAreaCallback, saveBusCallback, saveStopOrderCallback } from 'lib/utils/editingCallbacks';
+import permParseFunc from 'lib/utils/perms';
+import { Props, migrateOldStarredBuses } from 'lib/utils/utils';
+import { EditModeProps } from 'pages/_app';
+import Collapsible from 'react-collapsible';
 
 export const GET_BUS = gql`
 query GetBus($id: ID!) {

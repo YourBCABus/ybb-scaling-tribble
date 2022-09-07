@@ -1,7 +1,7 @@
-import createNewClient from "../lib/apollo-client";
+import createNewClient from "../lib/utils/apollo-client";
 import gql from "graphql-tag";
 import { GetSchools } from "../__generated__/GetSchools";
-import { Props } from "../lib/utils";
+import { Props } from "../lib/utils/utils";
 import { NextSeo } from "next-seo";
 
 export const GET_SCHOOLS = gql`

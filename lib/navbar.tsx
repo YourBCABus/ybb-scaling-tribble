@@ -1,4 +1,4 @@
-import { useSession, signIn, signOut } from 'next-auth/client';
+import { signIn, signOut, useSession } from 'next-auth/client';
 
 import Image from 'next/image';
 import Link from 'next/link';

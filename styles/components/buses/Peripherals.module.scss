@@ -1,0 +1,63 @@
+.bus-star-indicator {
+    grid-area: b;
+    cursor: pointer;
+    justify-self: center;
+    align-self: center;
+}
+
+.bus-info-button {
+    grid-area: b;
+    justify-self: center;
+    align-self: center;
+    color: #00b0ff;
+}
+
+.bus-boarding-area-input {
+    font-size: inherit;
+    font: inherit;
+    margin: 0px;
+    padding: 0px;
+    border: 1px solid black;
+    border-radius: 10%;
+    
+    width: 100%;
+    height: 100%;
+    
+    text-align: center;
+    
+
+    color: inherit;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.bus-boarding-area-input-compact {
+    height: 25px;
+
+    border-radius: 0;
+    border: none;
+    border-left: 0.5px solid rgba(0, 0, 0, 0.3);
+}
+
+
+.bus-name {
+    line-height: 0.6;
+    font-size: 1.15rem;
+    font-weight: 500;
+}
+.bus-name.bus-name-input {
+    width: 100%;
+}
+
+.bus-name-compact {
+    font-size: 1rem;
+    display: block;
+    line-height: 25px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bus-name-large {
+    font-size: 1.5rem
+}
+

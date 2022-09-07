@@ -1,38 +1,41 @@
-import createNewClient from "../../lib/apollo-client";
+import createNewClient from "../../../lib/utils/apollo-client";
 import gql from "graphql-tag";
-import { GetSchoolAndPerms, GetSchoolAndPerms_school_buses } from "../../__generated__/GetSchoolAndPerms";
+import { GetSchoolAndPerms, GetSchoolAndPerms_school_buses } from "../../../__generated__/GetSchoolAndPerms";
 
-import { Props } from "../../lib/utils";
+import { Props } from "../../../lib/utils/utils";
 import { GetServerSidePropsContext } from "next";
 import { ParsedUrlQuery } from "node:querystring";
 import { MouseEvent } from "react";
 
 import Head from 'next/head';
-import NavBar, { PagesInNavbar } from "../../lib/navbar";
-import Bus, { BusComponentSizes } from "../../lib/busComponent";
-import ConnectionMonitor, { HandleConnQualContext } from "../../lib/connectionMonitorComponent";
-import Footer from "../../lib/footer";
+import NavBar, { PagesInNavbar } from "../../../lib/navbar";
+import Bus, { BusComponentSizes } from "../../../lib/components/buses/Bus";
+import ConnectionMonitor, { HandleConnQualContext } from "../../../lib/connectionMonitorComponent";
+import Footer from "../../../lib/footer";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlus, faSearch, faArrowDown, faAngleUp } from "@fortawesome/free-solid-svg-icons";
+import { faAngleUp, faArrowDown, faPlus, faSearch } from "@fortawesome/free-solid-svg-icons";
 import ReactModal from "react-modal";
-import Drawer, { DragDirection, DragUpDrawerXLocation, DragUpDrawerYLocation, SpringTension } from "../../lib/dragDrawer";
+import Drawer, { DragDirection, DragUpDrawerXLocation, DragUpDrawerYLocation, SpringTension } from "../../../lib/dragDrawer";
 
-import styles from "../../styles/School.module.scss";
+import styles from "styles/School.module.scss";
 
-import { useState, useEffect, useCallback, useContext } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import Router, { useRouter } from 'next/router';
 
-import MutationQueueContext from "../../lib/mutationQueue";
+import MutationQueueContext from "../../../lib/utils/mutationQueue";
 
-import permParseFunc, { maskPerms } from "../../lib/perms";
-import { saveBoardingAreaCallback, createBusCallback, clearAllCallback} from "../../lib/editingCallbacks";
-import getBoardingArea from "../../lib/boardingAreas";
-import UnassignedBoardingAreas from "../../lib/unassignedBoardingAreas";
+import permParseFunc, { maskPerms } from "../../../lib/utils/perms";
+import { clearAllCallback, createBusCallback, saveBoardingAreaCallback} from "../../../lib/utils/editingCallbacks";
+import getBoardingArea from "../../../lib/utils/boardingAreas";
+import UnassignedBoardingAreas from "../../../lib/unassignedBoardingAreas";
 import { NextSeo } from "next-seo";
-import { migrateOldStarredBuses } from "../../lib/utils";
-import { DrawerTab, EditModeProps } from '../_app';
+import { migrateOldStarredBuses } from "../../../lib/utils/utils";
+import { DrawerTab, EditModeProps } from '../../_app';
 import Collapsible from "react-collapsible";
-import { Notes } from "../../lib/Notes";
+import { Notes } from "../../../lib/Notes";
+import BusList from "../../../lib/components/buses/BusList";
+import { ApolloError } from "@apollo/client";
+import useInterval from "lib/utils/hooks/useInterval";
 
 export const GET_SCHOOL_AND_PERMS = gql`
 query GetSchoolAndPerms($id: ID!) {
@@ -60,65 +63,6 @@ query GetSchoolAndPerms($id: ID!) {
 }
 `;
 
-interface BusListProps {
-    buses: readonly GetSchoolAndPerms_school_buses[];
- 
-    editing: false | ReturnType<typeof permParseFunc>;
-    editFreeze: boolean;
-    eventTarget: EventTarget;
-
-    isStarredList: boolean;
-    starredBusIDs: Set<string>;
-    starCallback: (id: string, event: MouseEvent<SVGSVGElement>) => void;
-
-    saveBoardingAreaCallback?: (id: string) => (boardingArea: string | null) => Promise<void>;
-
-    showCreate: boolean;
-    createBusCallback: () => void;
-}
-
-function BusList(
-    {
-        buses,
-        editing,
-        editFreeze,
-        eventTarget,
-        isStarredList,
-        starredBusIDs,
-        starCallback,
-        saveBoardingAreaCallback,
-        showCreate,
-        createBusCallback,
-    }: BusListProps
-): JSX.Element {
-    return <div className={styles.bus_container_container + (isStarredList ? ` ${styles.bus_container_starred_container}` : ``)}>
-        <div className={editing ? `${styles.bus_container} ${styles.bus_container_compact}` : styles.bus_container}>
-            {buses.map(
-                bus => 
-                    <Bus
-                        key={bus.id}
-                                
-                        bus={bus}
-                        
-                        editing={editing}
-                        editFreeze={editFreeze}
-                        eventTarget={eventTarget}
-                        
-                        starCallback={(event) => starCallback(bus.id, event)}
-                        isStarred={starredBusIDs.has(bus.id)}
-                        
-                        saveBoardingAreaCallback={saveBoardingAreaCallback?.(bus.id)}
-                        size={editing ? BusComponentSizes.COMPACT : BusComponentSizes.NORMAL}
-                    />
-            )}
-            {showCreate && editing && editing.bus.create && <a href="#" className={styles.create_bus} onClick={event => {
-                event.preventDefault();
-                createBusCallback();
-            }}><FontAwesomeIcon icon={faPlus} /> Add Bus</a>}
-        </div>
-    </div>;
-}
-
 type SchoolProps = Props<typeof getServerSideProps> & EditModeProps;
 
 export default function School({ school: schoolOrUndef, currentSchoolScopes: permsOrUndef, editMode, setEditMode, editFreeze, drawerTab, setDrawerTab }: SchoolProps): JSX.Element {
@@ -138,10 +82,9 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
         const currRouter = Router;
         return currRouter.replace(currRouter.asPath, undefined, {scroll: false});
     }, []);
-    useEffect(() => {
-        const interval = setInterval(updateServerSidePropsFunction, editMode ? 5000 : 15000);
-        return () => clearInterval(interval);
-    }, [editMode, updateServerSidePropsFunction]);
+    
+    useInterval(editMode ? 5000 : 15000, updateServerSidePropsFunction);
+    
 
 
     const starCallback = (id: string, event: MouseEvent<SVGSVGElement>): void => {
@@ -226,7 +169,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
             starredBuses.length > 0 && !editMode && <BusList
                 buses={starredBuses}
                 
-                editing={editMode && maskPerms(perms, { bus: { create: false } })}
+                editing={editMode ? maskPerms(perms, { bus: { create: false } }) : undefined}
                 editFreeze={editFreeze}
                 eventTarget={eventTarget}
 
@@ -244,7 +187,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
         <BusList
             buses={activeBuses}
             
-            editing={editMode && perms}
+            editing={editMode ? perms : undefined}
             editFreeze={editFreeze}
             eventTarget={eventTarget}
 
@@ -336,7 +279,6 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
                     bus={confirmBoardingAreaChange.bus}
                     isStarred={false}
                     starCallback={() => {}}
-                    editing={false}
                     editFreeze={true}
                     noLink={true}
                     size={BusComponentSizes.COMPACT}
@@ -346,7 +288,6 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
                     bus={{...confirmBoardingAreaChange.bus, boardingArea: confirmBoardingAreaChange.boardingArea}}
                     isStarred={false}
                     starCallback={() => {}}
-                    editing={false}
                     editFreeze={true}
                     noLink={true}
                     size={BusComponentSizes.COMPACT}
@@ -401,14 +342,21 @@ function filterBuses(buses: readonly GetSchoolAndPerms_school_buses[], searchTer
 
 export const getServerSideProps = async function<Q extends ParsedUrlQuery> (context: GetServerSidePropsContext<Q>) {    
     const client = createNewClient();
-    
-    let data: GetSchoolAndPerms | null = null;
+    console.log(context.params);
     try {
-        const { data: scopedData } = await client.query<GetSchoolAndPerms>({query: GET_SCHOOL_AND_PERMS, variables: {id: context.params!.schoolId}, context: {req: context.req}});
-        data = scopedData;
+        const { data } = await client.query<GetSchoolAndPerms>({query: GET_SCHOOL_AND_PERMS, variables: {id: context.params!.schoolId}, context: {req: context.req}});
+        return { props: data };
     } catch (e) {
-        console.log(e);
-    }
+        console.error(e);
 
-    return data?.school == null ? { notFound: true, props: { school: null, currentSchoolScopes: null } } : { props: data };
+        if (typeof e === 'object' && e !== null) {
+            if (e instanceof ApolloError) {
+                const networkError = e.networkError;
+                if (networkError) {
+                    console.log(e.networkError);
+                }
+            }
+        }
+        return { notFound: true, props: { school: null, currentSchoolScopes: null } };
+    }
 };

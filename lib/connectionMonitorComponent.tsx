@@ -1,12 +1,12 @@
 import styles from '../styles/ConnectionMonitor.module.scss';
 
-import React, { useState, useEffect, useContext, useCallback } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import Switch from "react-switch";
 
-import MutationQueueContext from "./mutationQueue";
+import MutationQueueContext from "./utils/mutationQueue";
 
 interface ConnectionMonitorProps {
     editing: boolean;

@@ -1,4 +1,4 @@
-interface PermStructure<T> {
+export interface PermStructure<T> {
     read: T;
     bus: {
         create: T;
@@ -30,6 +30,8 @@ interface PermStructure<T> {
 type OptionalPermStructure<T> = {
     [key in keyof Partial<PermStructure<T>>]: Partial<PermStructure<T>[key]>;
 }
+
+export interface BasicPerms extends PermStructure<boolean> {}
 
 export default function permParseFunc(permList: readonly string[]): PermStructure<boolean> {
     return {

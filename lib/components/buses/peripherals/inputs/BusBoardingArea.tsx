@@ -5,10 +5,10 @@ import { BusComponentSizes } from "../../Bus";
 
 import { CamelCase } from "lib/utils/style/styleProxy";
 import styles from 'styles/components/buses/Peripherals.module.scss';
-import BusNameInput from "./BusNameInput";
+import BusBoardingAreaInput from "./BusBoardingAreaInput";
 const [classes] = CamelCase.wrapCamelCase(styles);
 
-export interface BusNameInterface {
+export interface BusBoardingAreaInterface {
     /** 
      * The {@link BusComponentSizes size} for which the parent bus
      * components will be rendered at. For visual reasons, this value
@@ -18,10 +18,10 @@ export interface BusNameInterface {
     size: BusComponentSizes;
 
     /** 
-     * The {@link EditField editable field} intended as a bus name
-     * target.
+     * The {@link EditField editable field} intended as a boarding
+     * area target.
      */
-    name: EditField<string, void>;
+    boardingArea: EditField<string, void>;
 
     /**
      * A boolean which indicates whether or not editing is frozen due
@@ -30,15 +30,19 @@ export interface BusNameInterface {
     editFreeze: boolean;
 }
 
-export default function BusName({
+/** 
+ * @returns A boarding area element, editable or not, depending on
+ * the permissions and state of the page.
+ */
+export default function BusBoardingArea({
     size,
-    name,
+    boardingArea,
     editFreeze,
-}: BusNameInterface): JSX.Element {
-    if (name.edit) {
-        return <BusNameInput name={name} size={size} editFreeze={editFreeze} />;
+}: BusBoardingAreaInterface): JSX.Element {
+    if (boardingArea.edit) {
+        return <BusBoardingAreaInput boardingArea={boardingArea} size={size} editFreeze={editFreeze} />;
     } else {
-        return <span className={classes.busName}>{name.value}</span>;
+        return <span className={classes.busName}>{boardingArea.value}</span>;
     }
 }
 

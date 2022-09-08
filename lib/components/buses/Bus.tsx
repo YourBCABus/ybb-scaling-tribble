@@ -17,6 +17,7 @@ import BusBoardingAreaInput from './peripherals/inputs/BusBoardingAreaInput';
 import BusName from './peripherals/inputs/BusName';
 import Status from './peripherals/other/Status';
 import useSavableEditField from 'lib/utils/hooks/useSavableEditField';
+import BusBoardingArea from './peripherals/inputs/BusBoardingArea';
 
 export interface BusObj {
     __typename: "Bus";
@@ -270,20 +271,6 @@ export default function Bus(
         busViewBoardingAreaFont,
     );
 
-    let boardingAreaBackgroundDivContents: JSX.Element;
-    if (!editing.available) {
-        boardingAreaBackgroundDivContents = <></>;
-    } else if (editing.updateStatusPerms && boardingArea.edit) {
-        boardingAreaBackgroundDivContents = (
-            <BusBoardingAreaInput
-                boardingArea={boardingArea}
-                size={display.size}
-                editFreeze={editing.editFreeze} />
-        );
-    } else {
-        boardingAreaBackgroundDivContents = <>{boardingArea.value}</>;
-    }
-
     const sizeClassBldr = styleBuilder
         .IF(display.size === BusComponentSizes.COMPACT).sizeCompact
         .IF(display.size === BusComponentSizes.LARGE).sizeLarge;
@@ -309,7 +296,12 @@ export default function Bus(
                     text={getStatusText({ available: display.available, boardingAreaText: boardingArea.value })} />
             </div>
             <BusIcon {...icon}/>
-            <div className={sizeClassBldr.busBoardingAreaBackgroundDiv()} style={boardingAreaBackgroundStyle}>{boardingAreaBackgroundDivContents}</div>
+            <div className={sizeClassBldr.busBoardingAreaBackgroundDiv()} style={boardingAreaBackgroundStyle}>
+                <BusBoardingArea
+                    boardingArea={boardingArea}
+                    size={display.size}
+                    editFreeze={editing.editFreeze} />
+            </div>
         </div>
     );
     

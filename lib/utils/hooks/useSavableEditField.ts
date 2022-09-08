@@ -15,8 +15,9 @@ export interface ReadonlyEditField<T> {
     edit: undefined;
 }
 
-const useSavableEditField = <T, O>(saved: T, saveFunction?: (input: T) => Promise<O>): SavableEditField<T, O> | ReadonlyEditField<T> => {
+export type EditField<T, O> = SavableEditField<T, O> | ReadonlyEditField<T>;
 
+const useSavableEditField = <T, O>(saved: T, saveFunction?: (input: T) => Promise<O>): EditField<T, O> => {
     const [edited, setEdited] = useState<Optional<T>>({ isSome: false });
     const [savedSinceEdit, setSavedSinceEdit] = useState(true);
 

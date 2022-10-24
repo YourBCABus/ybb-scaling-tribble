@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import Switch from "react-switch";
 
-import styles from "../styles/Navbar.module.scss";
+import styles from "styles/Navbar.module.scss";
 
 export enum PagesInNavbar {
     HOME,

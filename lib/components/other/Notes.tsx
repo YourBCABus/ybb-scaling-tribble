@@ -1,7 +1,7 @@
 import Head from "next/head";
 import { useEffect, useRef, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
-import styles from "../styles/Notes.module.scss";
+import styles from "styles/Notes.module.scss";
 
 export function Notes({ schoolID, focusBlurEventTarget }: { schoolID: string, focusBlurEventTarget?: EventTarget }) {
     // Save notes in localStorage under each school ID.

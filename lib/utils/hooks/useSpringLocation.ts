@@ -1,5 +1,5 @@
-import React, { MouseEventHandler, useCallback, useEffect, useMemo, useReducer } from "react";
-import { stopAndPrevent } from "lib/utils/general/commonCallbacks";
+import React, { useEffect, useMemo, useReducer } from "react";
+import { mouseTouch, stopAndPrevent } from "lib/utils/general/commonCallbacks";
 import { sortDist, useRefWithRerender } from "lib/utils/general/utils";
 import useInterval from "./useInterval";
 
@@ -17,6 +17,7 @@ namespace Actions {
         DRAG_MOVE,
         DRAG_END,
         __SET_POS,
+        __MOVE,
     }
     
     export type Physics = {
@@ -32,6 +33,11 @@ namespace Actions {
         domComponents,
         springTensionCalculator,
     });
+
+    export type Move = {
+        __tag: ActionEnum.__MOVE;
+        domComponents: DomComponents;
+    };
 
     export namespace Dragging {
         export type DragStart = {
@@ -90,6 +96,7 @@ namespace Actions {
 type Action = 
     | Actions.Physics
     | Actions.DragActions
+    | Actions.Move
     | { __tag: Actions.ActionEnum.__SET_POS };
 
 namespace StateComponents {
@@ -111,27 +118,10 @@ interface DrawerState {
 }
 
 const stateActionApplicator = (oldState: DrawerState, action: Action): DrawerState => {
-    // {
-    //     console.group("oldState");
-    //     for (let [key, value] of Object.entries(oldState)) {
-    //         console.group(key);
-    //         if (value instanceof Object) {
-    //             for (let [innerKey, innerVal] of Object.entries(value)) {
-    //                 console.log(innerKey, innerVal);
-    //             }
-    //         } else {
-    //             console.log(value);
-    //         }
-    //         console.groupEnd();
-    //     }
-    //     console.groupEnd();
-    // }
-
-
-    const { PHYSICS, DRAG_START, DRAG_MOVE, DRAG_END, __SET_POS } = Actions.ActionEnum;
+    const { PHYSICS, DRAG_START, DRAG_MOVE, DRAG_END, __SET_POS, __MOVE } = Actions.ActionEnum;
+    
     switch (action.__tag) {
     case DRAG_START: {
-        console.log("started");
         const oldHeldState: DrawerState = {
             ...oldState,
             mainState: StateComponents.Moving.HELD,
@@ -144,11 +134,11 @@ const stateActionApplicator = (oldState: DrawerState, action: Action): DrawerSta
             ...action,
             __tag: Actions.ActionEnum.DRAG_MOVE,
             firstTime: true,
-        };
+        } as const;
         return stateActionApplicator(oldHeldState, moveAction);
     }
+
     case DRAG_MOVE: {
-        console.log("moved");
         const container = action.domComponents.container;
         const grip = action.domComponents.grip;
         if (container === null || grip === null) return oldState;
@@ -186,12 +176,12 @@ const stateActionApplicator = (oldState: DrawerState, action: Action): DrawerSta
             };
         }
     }
+
     case DRAG_END: {
         const {
             CLOSED,
             OPEN,
         } = StateComponents.Target;
-        // console.log("ended");
 
         const container = action.domComponents.container;
         const grip = action.domComponents.grip;
@@ -201,8 +191,6 @@ const stateActionApplicator = (oldState: DrawerState, action: Action): DrawerSta
         const targetClosed = window.innerHeight - (container.clientHeight - grip.clientHeight);
 
         if (!oldState.misc.hasBeenMoved) {
-            // console.log("run");
-
             const targetEnum = oldState.target.targetEnum === CLOSED ? OPEN : CLOSED;
             const targetPos = targetEnum === CLOSED ? targetClosed : targetOpen;
 
@@ -235,7 +223,8 @@ const stateActionApplicator = (oldState: DrawerState, action: Action): DrawerSta
             },
         };
     }
-    case PHYSICS:
+
+    case PHYSICS: {
         const physics = doPhysicsStep(
             oldState.target.yPos,
             oldState.physics.position,
@@ -252,11 +241,33 @@ const stateActionApplicator = (oldState: DrawerState, action: Action): DrawerSta
             ...oldState,
             physics,
         };
-    
-    case __SET_POS:
+    }
+
+    case __SET_POS: {
         return {
             ...oldState,
         };
+    }
+
+    case __MOVE: {
+        const container = action.domComponents.container;
+        const grip = action.domComponents.grip;
+        if (container === null || grip === null) return oldState;
+
+        const targetOpen = window.innerHeight - grip.clientHeight - 15;
+        const targetClosed = window.innerHeight - (container.clientHeight - grip.clientHeight);
+
+        const targetPos = oldState.target.targetEnum === StateComponents.Target.CLOSED ? targetClosed : targetOpen;
+
+        return {
+            ...oldState,
+            mainState: StateComponents.Moving.MOVING,
+            target: {
+                yPos: targetPos,
+                targetEnum: oldState.target.targetEnum,
+            },
+        };
+    }
     }
 };
 
@@ -315,13 +326,17 @@ const useSpringLocation = (updatesPerSec: number, springTensionCallback: SpringT
     const isGrabbable = state.mainState !== StateComponents.Moving.HELD;
     useEffect(() => {
         if (isGrabbable && domComponents.grip) {
-            const startHandler: (event: MouseEvent) => void = stopAndPrevent(
-                (event) => changeState(dragStart(event.clientY))
-            );
+            const startHandler = ({ y }: { y: number }) => changeState(dragStart(y));
+            const mouseStartHandler = stopAndPrevent(mouseTouch("mouse")(startHandler));
+            const touchStartHandler = stopAndPrevent(mouseTouch("touch")(startHandler));
 
-            domComponents.grip.addEventListener("mousedown", startHandler);
+            const grip = domComponents.grip;
+
+            grip.addEventListener("mousedown", mouseStartHandler);
+            grip.addEventListener("touchstart", touchStartHandler);
             return () => {
-                window.removeEventListener("mousedown", startHandler);
+                grip.removeEventListener("mousedown", mouseStartHandler);
+                grip.removeEventListener("touchstart", touchStartHandler);
             };
         } else return () => void 0;
     }, [dragStart, domComponents.grip, isGrabbable]);
@@ -329,21 +344,36 @@ const useSpringLocation = (updatesPerSec: number, springTensionCallback: SpringT
     const isHeld = state.mainState === StateComponents.Moving.HELD;
     useEffect(() => {
         if (isHeld) {
-            const moveHandler = stopAndPrevent(
-                (event: MouseEvent) => changeState(dragMove(event.clientY)),
-            );
-            const endHandler = stopAndPrevent(
-                () => changeState(dragEnd()),
-            );
+            const moveHandler = ({ y }: { y: number }) => changeState(dragMove(y));
+            const mouseMoveHandler = stopAndPrevent(mouseTouch("mouse")(moveHandler));
+            const touchMoveHandler = stopAndPrevent(mouseTouch("touch")(moveHandler));
 
-            window.addEventListener("mousemove", moveHandler);
-            window.addEventListener("mouseup", endHandler);
+            const endHandler = () => changeState(dragEnd());
+            const mouseEndHandler = stopAndPrevent(mouseTouch("mouse")(endHandler));
+            const touchEndHandler = stopAndPrevent(mouseTouch("touch")(endHandler));
+
+            window.addEventListener("mousemove", mouseMoveHandler);
+            window.addEventListener("touchmove", touchMoveHandler);
+
+            window.addEventListener("mouseup", mouseEndHandler);
+            window.addEventListener("touchend", touchEndHandler);
+            
             return () => {
-                window.removeEventListener("mousemove", moveHandler);
-                window.removeEventListener("mouseup", endHandler);
+                window.removeEventListener("mousemove", mouseMoveHandler);
+                window.removeEventListener("touchmove", touchMoveHandler);
+
+                window.removeEventListener("mouseup", mouseEndHandler);
+                window.removeEventListener("touchend", touchEndHandler);
             };
         } else return () => void 0;
     }, [dragMove, dragEnd, isHeld]);
+
+    useEffect(() => {
+        const listener = () => changeState({ __tag: Actions.ActionEnum.__MOVE, domComponents });
+        window.addEventListener("resize", listener);
+        return () => window.removeEventListener("resize", listener);
+    }, [domComponents]);
+
 
     useEffect(() => changeState(dragEnd()), [dragEnd]);
 

@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 
 export const measureTextWidth = (text: string, font: string, size: number): number => {
     if (typeof document !== "undefined") {
-        let canvas = document.createElement("canvas");
+        const canvas = document.createElement("canvas");
         
-        let context = canvas.getContext("2d")!;
+        const context = canvas.getContext("2d");
+        if (!context) return 0;
+
         context.font = `${size}px ${font}`;
-        let width = context.measureText(text).width;
+        const width = context.measureText(text).width;
     
         canvas.remove();
         
@@ -14,9 +16,7 @@ export const measureTextWidth = (text: string, font: string, size: number): numb
     } else return 0;
 };
 
-export const textSizeToFitContainer = (text: string, font: string, containerWidth: number, startingSize?: number): number => {
-    const startingFontSizeNumber = 100;
-
+export const textSizeToFitContainer = (text: string, font: string, containerWidth: number): number => {
     const resolution = 5;
 
     let currNumber = 100;
@@ -32,7 +32,7 @@ const useTextSizeFit = (text: string, width: number, maxFontSize: number, font: 
         setFontSize(
             Math.floor(
                 Math.min(
-                    textSizeToFitContainer(text, font, width, maxFontSize),
+                    textSizeToFitContainer(text, font, width),
                     maxFontSize,
                 )
             )

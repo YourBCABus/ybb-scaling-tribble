@@ -9,3 +9,10 @@ export const focusOnClick = (event: MouseEvent<HTMLInputElement>) => {
     event.stopPropagation();
     event.currentTarget.focus();
 };
+
+export const stopAndPrevent = <E extends Event, O>(callback: (thing: E) => O) => 
+    (e: E) => {
+        e.stopPropagation();
+        e.preventDefault();
+        callback(e);
+    };

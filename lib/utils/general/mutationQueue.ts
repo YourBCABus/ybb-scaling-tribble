@@ -21,13 +21,13 @@ export class MutationQueue {
     }
 
     private generatePromise(): Promise<void> {
-        return new Promise((resolve, _) => { this.resolve = resolve; })
+        return new Promise((resolve) => { this.resolve = resolve; })
             .then(async () => {
                 while (this.queue.length > 0) {
-                    let currMutation = this.queue.shift();
+                    const currMutation = this.queue.shift();
                     if (currMutation) {
                         this.queue.unshift(currMutation);
-                        for (const _ of Array(3).fill(undefined)) {
+                        for (let i = 0; i < 3; i++) {
                             try {
                                 await currMutation();
                                 break;

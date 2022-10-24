@@ -2,7 +2,7 @@ import { ApolloError, gql } from '@apollo/client';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import type { UpdateStopOrder_GetBus, UpdateStopOrder_GetBus_bus_stops } from '__generated__/UpdateStopOrder_GetBus';
 import type { UpdateStopOrder_SetStop } from '__generated__/UpdateStopOrder_SetStop';
-import createNewClient from 'lib/utils/apollo-client';
+import createNewClient from 'lib/utils/librarystuff/apollo-client';
 
 export const UPDATE_STOP_ORDER_GET_BUS = gql`
 query UpdateStopOrder_GetBus($busID: ID!) {
@@ -55,14 +55,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             let currentBusStops: UpdateStopOrder_GetBus_bus_stops[];
             try {
                 const { data: { bus } } = await client.query<UpdateStopOrder_GetBus>({query: UPDATE_STOP_ORDER_GET_BUS, variables: {busID: req.query.busId}, context: {req}});
-                currentBusStops = bus!.stops;
+                if (!bus) throw new Error("query failed successfully");
+                currentBusStops = bus.stops;
             } catch (e) {
                 console.log(e);
                 res.status(403).send("403 FORBIDDEN");
                 return;
             }
 
-            let currentBusStopIds = currentBusStops.map((stop) => stop.id);
+            const currentBusStopIds = currentBusStops.map((stop) => stop.id);
             try {
                 stopOrderData.map((id) => {if (!currentBusStopIds.includes(id)) throw new Error("Stop ID found that does not exist within bus's stops.");});
             } catch (e) {
@@ -92,7 +93,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 );
             } catch (e) {
                 if (e instanceof ApolloError) {
-                    console.log((e.networkError as any).result);
+                    if (e.networkError) {
+                        const networkError = e.networkError;
+
+                        Object
+                            .values(networkError)
+                            .forEach(([key, val]) => {
+                                if (key === "result") {
+                                    console.log(val);
+                                }
+                            });
+                    }
                 }
                 res.status(403).send("403 FORBIDDEN");
             }

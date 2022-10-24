@@ -1,15 +1,15 @@
-import React, { MouseEvent, useCallback, useMemo } from "react";
+import React, { MouseEvent } from "react";
 import { GetSchoolAndPerms_school_buses } from "__generated__/GetSchoolAndPerms";
-import permParseFunc from "lib/utils/perms";
+import permParseFunc from "lib/utils/general/perms";
 import Bus, { BusComponentSizes } from "./Bus";
 
 import styles from 'styles/components/buses/BusList.module.scss';
 import CreateBus from "./CreateBus";
-import { CamelCase } from "lib/utils/style/styleProxy";
+import { CamelCase } from "lib/utils/style/styleproxy";
 import useMemoMap from "lib/utils/hooks/useMemoMap";
 import useMemoizedBuilder from "lib/utils/hooks/useMemoizedBuilder";
 
-const [classes, styleBuilder] = CamelCase.wrapCamelCase(styles);
+const [, styleBuilder] = CamelCase.wrapCamelCase(styles);
 
 const busContContBldr = styleBuilder.busContCont;
 const busContBldr = styleBuilder.busCont;
@@ -32,46 +32,32 @@ export interface BusListProps {
     createBusCallback: () => void;
 }
 
-namespace __BusListTypeSepPropsNamespace {
 
-    type Buses = BusListProps["buses"];
-    type Editing = BusListProps["editing"];
-    type EditFreeze = BusListProps["editFreeze"];
-    type IsStarredList = BusListProps["isStarredList"];
-    type StarredBusIDs = BusListProps["starredBusIDs"];
-    type StarCallback = BusListProps["starCallback"];
-    type SaveBoardingAreaCallback = BusListProps["saveBoardingAreaCallback"];
-    type ShowCreate = BusListProps["showCreate"];
-    type CreateBusCallback = BusListProps["createBusCallback"];
+interface BusListTypeSepProps {
+    buses: BusListProps["buses"],
 
+    creatable: {
+        editing: BusListProps["editing"],
+        showCreate: BusListProps["showCreate"],
+    },
+    create: {
+        createBusCallback: BusListProps["createBusCallback"]
+    },
 
-    export interface BusListTypeSepProps {
-        buses: Buses,
+    display: {
+        editing: BusListProps["editing"],
+        isStarredList: BusListProps["isStarredList"],
+    },
 
-        creatable: {
-            editing: Editing,
-            showCreate: ShowCreate,
-        },
-        create: {
-            createBusCallback: CreateBusCallback
-        },
-
-        display: {
-            editing: Editing,
-            isStarredList: IsStarredList,
-        },
-
-        busFactoryProps: {
-            editing: Editing,
-            editFreeze: EditFreeze,
-            eventTarget: EventTarget,
-            starCallback: StarCallback,
-            starredBusIDs: StarredBusIDs,
-            saveBoardingAreaCallback: SaveBoardingAreaCallback,
-        },
-    };
+    busFactoryProps: {
+        editing: BusListProps["editing"],
+        editFreeze: BusListProps["editFreeze"],
+        eventTarget: EventTarget,
+        starCallback: BusListProps["starCallback"],
+        starredBusIDs: BusListProps["starredBusIDs"],
+        saveBoardingAreaCallback: BusListProps["saveBoardingAreaCallback"],
+    },
 }
-type BusListTypeSepProps = __BusListTypeSepPropsNamespace.BusListTypeSepProps;
 
 const BusComponentWrapperFactory = ({
     editing,

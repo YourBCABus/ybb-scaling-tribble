@@ -1,11 +1,10 @@
-import createNewClient from "../../../lib/utils/apollo-client";
+import createNewClient from "../../../lib/utils/librarystuff/apollo-client";
 import gql from "graphql-tag";
-import { GetSchoolAndPerms, GetSchoolAndPerms_school_buses } from "../../../__generated__/GetSchoolAndPerms";
+import { GetSchoolAndPerms } from "../../../__generated__/GetSchoolAndPerms";
 
-import { Props } from "../../../lib/utils/utils";
+import { Props } from "lib/utils/general/utils";
 import { GetServerSidePropsContext } from "next";
 import { ParsedUrlQuery } from "node:querystring";
-import { MouseEvent } from "react";
 
 import Head from 'next/head';
 import { NextSeo } from "next-seo";
@@ -54,7 +53,9 @@ export const getServerSideProps = async function<Q extends ParsedUrlQuery> (cont
     
     let data: GetSchoolAndPerms | null = null;
     try {
-        const { data: scopedData } = await client.query<GetSchoolAndPerms>({query: GET_SCHOOL_AND_PERMS, variables: {id: context.params!.schoolId}, context: {req: context.req}});
+        const params = context.params;
+        if (params === undefined) throw new Error("Null context params!");
+        const { data: scopedData } = await client.query<GetSchoolAndPerms>({query: GET_SCHOOL_AND_PERMS, variables: {id: params.schoolId}, context: {req: context.req}});
         data = scopedData;
     } catch (e) {
         console.log(e);

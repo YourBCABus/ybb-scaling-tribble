@@ -36,9 +36,9 @@ function MyApp({ Component, pageProps }: AppProps) {
 
     const router = useRouter();
     useEffect(() => {
-        const handleRouteError = (err: any) => {
+        const handleRouteError = (err: Error) => {
             if (err.message === "Could not connect to the server.") {
-                const newErr: any = new Error("Abort load");
+                const newErr: Error & { cancelled?: boolean } = new Error("Abort load");
                 newErr.cancelled = true;
                 throw newErr;
             }

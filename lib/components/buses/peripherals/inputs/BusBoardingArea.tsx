@@ -3,7 +3,7 @@ import { EditField } from "lib/utils/hooks/useSavableEditField";
 // Style-related imports and setup functions.
 import { BusComponentSizes } from "../../Bus";
 
-import { CamelCase } from "lib/utils/style/styleProxy";
+import { CamelCase } from "lib/utils/style/styleproxy";
 import styles from 'styles/components/buses/Peripherals.module.scss';
 import BusBoardingAreaInput from "./BusBoardingAreaInput";
 const [classes] = CamelCase.wrapCamelCase(styles);
@@ -16,6 +16,11 @@ export interface BusBoardingAreaInterface {
      * bus component.
      */
     size: BusComponentSizes;
+
+    /**
+     * Should this be in edit mode?
+     */
+    editing: boolean;
 
     /** 
      * The {@link EditField editable field} intended as a boarding
@@ -36,13 +41,14 @@ export interface BusBoardingAreaInterface {
  */
 export default function BusBoardingArea({
     size,
+    editing,
     boardingArea,
     editFreeze,
 }: BusBoardingAreaInterface): JSX.Element {
-    if (boardingArea.edit) {
+    if (editing && boardingArea.edit) {
         return <BusBoardingAreaInput boardingArea={boardingArea} size={size} editFreeze={editFreeze} />;
     } else {
-        return <span className={classes.busName}>{boardingArea.value}</span>;
+        return <span className={classes.boardingArea}>{boardingArea.value}</span>;
     }
 }
 

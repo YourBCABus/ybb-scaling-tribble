@@ -23,4 +23,4 @@ export default function createNewClient() {
         link: authLink.concat(httpLink),
         cache: new InMemoryCache(),
     });
-};
+}

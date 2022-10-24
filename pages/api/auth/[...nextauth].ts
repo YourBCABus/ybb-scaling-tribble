@@ -41,7 +41,7 @@ export default NextAuth({
             profileUrl: `${url}/me`,
             profile(profile) {
                 return {
-                    id: profile.sub!,
+                    id: profile.sub ?? "invalid",
                 };
             },
             clientId: process.env.YBB_CLIENT_ID || "changeme",
@@ -53,7 +53,7 @@ export default NextAuth({
         async jwt(token, user, account) {
             if (account && user) {
                 token.accessToken = account.accessToken;
-                token.accessTokenExpires = Date.now() + account.expires_in! * 1000;
+                token.accessTokenExpires = Date.now() + (account.expires_in ?? -1) * 1000;
                 token.refreshToken = account.refreshToken;
             } else if (typeof token.refreshToken === "string" && (!token.accessToken || (typeof token.accessTokenExpires === "number" && Date.now() >= token.accessTokenExpires))) {
                 // Refresh the access token.

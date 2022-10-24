@@ -1,30 +1,33 @@
 import styles from 'styles/components/buses/Bus.module.scss';
 
-import { KeyboardEvent, MouseEventHandler, useContext, useEffect, useState } from 'react';
+import { MouseEventHandler, useState } from 'react';
 
-import getBoardingArea from "lib/utils/boardingAreas";
+import getBoardingArea from "lib/utils/general/boardingAreas";
 
 import { SizeProp } from '@fortawesome/fontawesome-svg-core';
 
-import Link from "next/link";
-
-import { BasicPerms } from 'lib/utils/perms';
+import { BasicPerms } from 'lib/utils/general/perms';
 import useTextSizeFit from 'lib/utils/hooks/useTextSizeFit';
 import busBoardingAreaBackgroundDivStyle from 'lib/utils/style/forBus';
-import { CamelCase } from 'lib/utils/style/styleProxy';
+import { CamelCase } from 'lib/utils/style/styleproxy';
 import BusIcon from './peripherals/icon/BusIcon';
-import BusBoardingAreaInput from './peripherals/inputs/BusBoardingAreaInput';
-import BusName from './peripherals/inputs/BusName';
-import Status from './peripherals/other/Status';
 import useSavableEditField from 'lib/utils/hooks/useSavableEditField';
 import BusBoardingArea from './peripherals/inputs/BusBoardingArea';
+import LinkWrapIf from '../other/LinkWrapIf';
+import NameAndStatus from './peripherals/macroParts/NameAndStatus';
+import mapObject from 'lib/utils/general/propTypeSep';
+
+
+
+// const x: InputType<BusProps> =  as const;
+
 
 export interface BusObj {
     __typename: "Bus";
     id: string;
     name: string | null;
     boardingArea: string | null;
-    invalidateTime: any | null;
+    invalidateTime: string | number | Date | null;
     available: boolean;
 }
 
@@ -34,7 +37,8 @@ export enum BusComponentSizes {
     LARGE = 2,
 }
 
-interface BusProps {
+
+export interface BusProps {
     bus: BusObj;
 
     size?: BusComponentSizes;
@@ -51,141 +55,57 @@ interface BusProps {
     saveBusNameCallback?: (busName: string | null) => Promise<void>;
 }
 
+const propTypeSep = (props: BusProps) => {
+    const data = {
+        ...props,
+        size: props.size ?? BusComponentSizes.NORMAL,
+        fontAwesomeIconSizeParam: sizeMap[props.size ?? BusComponentSizes.NORMAL],
+        updateStatusPerms: props.editing ? props.editing.bus.updateStatus : false,
+        updateNamePerms: props.editing ? props.editing.bus.update : false,
+        noLink: props.noLink ?? false,
+    } as const;
 
-namespace __BusListTypeSepPropsNamespace {
-
-    type Bus = BusProps["bus"];
-    type IsStarred = BusProps["isStarred"];
-    type StarCallback = BusProps["starCallback"];
-    type Editing = BusProps["editing"];
-    type EditFreeze = BusProps["editFreeze"];
-    type EventTarget = BusProps["eventTarget"];
-    type NoLink = BusProps["noLink"];
-    type SaveBoardingAreaCallback = BusProps["saveBoardingAreaCallback"];
-    type SaveBusNameCallback = BusProps["saveBusNameCallback"];
-
-
-    export interface BusTypeSepProps {
-        bus: Bus;
-
+    const mapObj = {
+        bus: "bus",
         text: {
-            name: Bus["name"];
-            boardingArea: Bus["boardingArea"];
-            invalidateTime: Bus["invalidateTime"];
-        };
-        display: {
-            size: BusComponentSizes;
-            available: Bus["available"];
-        };
-        icon: {
-            size: BusComponentSizes;
-            noLink: boolean;
-            info: {
-                id: Bus["id"];
-            };
-            star: {
-                available: Bus["available"];
-                isStarred: IsStarred;
-                starCallback: StarCallback;
-                fontAwesomeIconSizeParam: SizeProp,
-            };
-        };
-        editing: {
-            available: Bus["available"];
-            editing: Editing;
-            editFreeze: boolean;
-            saveBoardingAreaCallback: SaveBoardingAreaCallback;
-            saveBusNameCallback: SaveBusNameCallback;
-            updateStatusPerms: boolean;
-            updateNamePerms: boolean;
-        };
-    };
-}
-type BusTypeSepProps = __BusListTypeSepPropsNamespace.BusTypeSepProps;
-
-const propTypeSep = (props: BusProps): BusTypeSepProps => {
-    const {
-        bus,
-        editing,
-        editFreeze,
-        isStarred,
-        noLink,
-        starCallback,
-        saveBoardingAreaCallback,
-        saveBusNameCallback,
-        size: sizeOrUndef,
-    } = props;
-
-    const size = sizeOrUndef ?? BusComponentSizes.NORMAL;
-
-    const {
-        available,
-
-        name,
-        boardingArea, invalidateTime,
-
-        id,
-    } = bus;
-
-    return {
-        bus,
-        
-        text: {
-            name,
-            boardingArea, invalidateTime,
+            name: "bus.name",
+            boardingArea: "bus.boardingArea",
+            invalidateTime: "bus.invalidateTime",
         },
-
         display: {
-            available,
-            size,
+            size: "size",
+            available: "bus.available",
         },
-
         icon: {
-            size: size ?? BusComponentSizes.NORMAL,
-            noLink: noLink ?? false,
+            size: "size",
+            noLink: "noLink",
             info: {
-                id,
+                id: "bus.id",
             },
             star: {
-                available,
-                isStarred,
-                starCallback,
-                fontAwesomeIconSizeParam: sizeMap[size ?? BusComponentSizes.NORMAL],
+                available: "bus.available",
+                isStarred: "isStarred",
+                starCallback: "starCallback",
+                fontAwesomeIconSizeParam: "fontAwesomeIconSizeParam",
             },
         },
-
         editing: {
-            available,
-            editing,
-            editFreeze,
-            saveBoardingAreaCallback,
-            saveBusNameCallback,
-            updateStatusPerms: editing ? editing.bus.updateStatus : false,
-            updateNamePerms: editing ? editing.bus.update : false,
+            available: "bus.available",
+            editing: "editing",
+            editFreeze: "editFreeze",
+            saveBoardingAreaCallback: "saveBoardingAreaCallback",
+            saveBusNameCallback: "saveBusNameCallback",
+            updateStatusPerms: "updateStatusPerms",
+            updateNamePerms: "updateNamePerms",
         },
-    };
+    } as const;
+
+    return mapObject(data, mapObj);
 };
 
-const getStatusText = ({
-    available,
-    boardingAreaText,
-}: { available: boolean, boardingAreaText: string }) => {
-    if (available) {
-        if (boardingAreaText === "?") {
-            return "Not on location";
-        } else {
-            return "On location";
-        }
-    } else {
-        return "De-activated";
-    }
-};
+const [, styleBuilder] = CamelCase.wrapCamelCase(styles);
 
-const [classes, styleBuilder] = CamelCase.wrapCamelCase(styles);
-
-const stBlBusStat = styleBuilder.busStatus;
-
-const busViewBoardingAreaFont: string = "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif";
+const busViewBoardingAreaFont = "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif";
 
 const sizeMap: Readonly<Record<BusComponentSizes, SizeProp>> = Object.freeze({
     [BusComponentSizes.COMPACT]: "1x",
@@ -208,7 +128,8 @@ export default function Bus(
     const boardingArea = useSavableEditField(savedBoardingAreaText, editing.saveBoardingAreaCallback);
     const busName = useSavableEditField(text.name ?? "", editing.saveBusNameCallback);
 
-    const [isHovered, setHovered] = useState<boolean>(false);
+    // TODO: fix this.
+    const [isHovered] = useState<boolean>(false);
 
     // useEffect(() => {
     //     if (eventTarget) {
@@ -282,38 +203,33 @@ export default function Bus(
         busBoardingAreaFontSize
     );
 
-
     const inner = (
         <div className={sizeClassBldr.IF(isHovered).dndHover.busView()} data-bus={props.editing ? bus.id : undefined}>
-            <div className={sizeClassBldr.busNameAndStatus()}>
-                <BusName
-                    name={busName}
-                    editFreeze={editing.editFreeze}
-                    size={display.size}/>
-                <br/>
-                <Status
-                    available={display.available}
-                    text={getStatusText({ available: display.available, boardingAreaText: boardingArea.value })} />
-            </div>
+            <NameAndStatus {...{
+                name: busName,
+                boardingAreaText: boardingArea.value,
+                sizeClassBuilder: sizeClassBldr,
+                display,
+                editing,
+            }}/>
             <BusIcon {...icon}/>
             <div className={sizeClassBldr.busBoardingAreaBackgroundDiv()} style={boardingAreaBackgroundStyle}>
                 <BusBoardingArea
+                    editing={!!editing.editing}
                     boardingArea={boardingArea}
                     size={display.size}
                     editFreeze={editing.editFreeze} />
             </div>
         </div>
     );
-    
-    if (editing.editing || icon.noLink) {
-        return inner;
-    } else {
-        return (
-            <Link href={`/bus/${bus.id}`} passHref={true}>
-                <a>
-                    {inner}
-                </a>
-            </Link>
-        );
-    }
+    return (
+        <LinkWrapIf show={!(editing.editing || icon.noLink)} href={`/bus/${bus.id}`}>
+            {inner}
+        </LinkWrapIf>
+    );
 }
+
+
+
+
+

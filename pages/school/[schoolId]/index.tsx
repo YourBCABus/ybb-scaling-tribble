@@ -1,39 +1,38 @@
-import createNewClient from "../../../lib/utils/apollo-client";
+import createNewClient from "lib/utils/librarystuff/apollo-client";
 import gql from "graphql-tag";
-import { GetSchoolAndPerms, GetSchoolAndPerms_school_buses } from "../../../__generated__/GetSchoolAndPerms";
+import { GetSchoolAndPerms, GetSchoolAndPerms_school_buses } from "__generated__/GetSchoolAndPerms";
 
-import { Props } from "../../../lib/utils/utils";
+import { Props } from "lib/utils/general/utils";
 import { GetServerSidePropsContext } from "next";
 import { ParsedUrlQuery } from "node:querystring";
 import { MouseEvent } from "react";
 
 import Head from 'next/head';
-import NavBar, { PagesInNavbar } from "../../../lib/navbar";
-import Bus, { BusComponentSizes } from "../../../lib/components/buses/Bus";
-import ConnectionMonitor, { HandleConnQualContext } from "../../../lib/connectionMonitorComponent";
-import Footer from "../../../lib/footer";
+import NavBar, { PagesInNavbar } from "lib/components/other/navbar";
+import Bus, { BusComponentSizes } from "lib/components/buses/Bus";
+import ConnectionMonitor, { HandleConnQualContext } from "lib/components/other/connectionMonitorComponent";
+import Footer from "lib/components/other/footer";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faAngleUp, faArrowDown, faPlus, faSearch } from "@fortawesome/free-solid-svg-icons";
+import { faAngleUp, faArrowDown, faSearch } from "@fortawesome/free-solid-svg-icons";
 import ReactModal from "react-modal";
-import Drawer, { DragDirection, DragUpDrawerXLocation, DragUpDrawerYLocation, SpringTension } from "../../../lib/dragDrawer";
+import Drawer, { DragDirection, DragUpDrawerXLocation, DragUpDrawerYLocation, SpringTension } from "lib/components/drawer/dragDrawer";
 
 import styles from "styles/School.module.scss";
 
 import { useCallback, useContext, useEffect, useState } from "react";
 import Router, { useRouter } from 'next/router';
 
-import MutationQueueContext from "../../../lib/utils/mutationQueue";
+import MutationQueueContext from "lib/utils/general/mutationQueue";
 
-import permParseFunc, { maskPerms } from "../../../lib/utils/perms";
-import { clearAllCallback, createBusCallback, saveBoardingAreaCallback} from "../../../lib/utils/editingCallbacks";
-import getBoardingArea from "../../../lib/utils/boardingAreas";
-import UnassignedBoardingAreas from "../../../lib/unassignedBoardingAreas";
+import permParseFunc, { maskPerms } from "lib/utils/general/perms";
+import { clearAllCallback, createBusCallback, saveBoardingAreaCallback} from "lib/utils/general/editingCallbacks";
+import getBoardingArea from "lib/utils/general/boardingAreas";
 import { NextSeo } from "next-seo";
-import { migrateOldStarredBuses } from "../../../lib/utils/utils";
-import { DrawerTab, EditModeProps } from '../../_app';
+import { migrateOldStarredBuses } from "lib/utils/general/utils";
+import { DrawerTab, EditModeProps } from 'pages/_app';
 import Collapsible from "react-collapsible";
-import { Notes } from "../../../lib/Notes";
-import BusList from "../../../lib/components/buses/BusList";
+import { Notes } from "lib/components/other/Notes";
+import BusList from "lib/components/buses/BusList";
 import { ApolloError } from "@apollo/client";
 import useInterval from "lib/utils/hooks/useInterval";
 
@@ -65,11 +64,18 @@ query GetSchoolAndPerms($id: ID!) {
 
 type SchoolProps = Props<typeof getServerSideProps> & EditModeProps;
 
-export default function School({ school: schoolOrUndef, currentSchoolScopes: permsOrUndef, editMode, setEditMode, editFreeze, drawerTab, setDrawerTab }: SchoolProps): JSX.Element {
-    const school = Object.freeze(schoolOrUndef!);
-    const perms = Object.freeze(permParseFunc(Object.freeze(permsOrUndef!)));
+export default function School({
+    school: schoolMut,
+    currentSchoolScopes: permsMut,
+    editMode, setEditMode, editFreeze,
+    drawerTab, setDrawerTab,
+}: SchoolProps): JSX.Element {
+    if (!schoolMut || !permsMut) throw new Error("School and/or scopes are not defined");
 
-    let [starredBusIDs, setStarredBusIDs] = useState<Set<string>>(new Set());
+    const school = Object.freeze(schoolMut);
+    const perms = Object.freeze(permParseFunc(Object.freeze(permsMut)));
+
+    const [starredBusIDs, setStarredBusIDs] = useState<Set<string>>(new Set());
     useEffect(() => {
         setStarredBusIDs(new Set((JSON.parse(localStorage.getItem("starred") ?? "[]") as string[]).concat(migrateOldStarredBuses())));
     }, []);
@@ -102,7 +108,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
     const editing = editMode && perms;
     const [searchTerm, setSearchTerm] = useState("");
 
-    let setEditModePlusClearSearch = (editMode: boolean) => {
+    const setEditModePlusClearSearch = (editMode: boolean) => {
         setEditMode(editMode);
         setSearchTerm("");   
     };
@@ -113,11 +119,11 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
     const [drawerEventTarget] = useState(() => new EventTarget());
 
     useEffect(() => {
-        let forwardToBlurCallback = () => {
+        const forwardToBlurCallback = () => {
             drawerEventTarget.dispatchEvent(new Event('blur'));
         };
 
-        let triggers = ['open', 'close', 'move'];
+        const triggers = ['open', 'close', 'move'];
 
         triggers.forEach(trigger => drawerEventTarget.addEventListener(trigger, forwardToBlurCallback));
 
@@ -232,19 +238,17 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
             drawerEventTarget={drawerEventTarget}
             className={styles.pull_up_drawer}
         >
-            {(relativePosition) => <>
-                <div className={styles.drawer_tab_bar}>
-                    <button className={`${styles.drawer_tab} ${drawerTab === DrawerTab.UNASSIGNED ? styles.drawer_tab_active : ""}`} onClick={() => setDrawerTab(DrawerTab.UNASSIGNED)}>Boarding Areas</button>
-                    <button className={`${styles.drawer_tab} ${drawerTab === DrawerTab.NOTES ? styles.drawer_tab_active : ""}`} onClick={() => setDrawerTab(DrawerTab.NOTES)}>Notes</button>
-                </div>
-                {drawerTab === DrawerTab.UNASSIGNED && <div className={styles.drawer_contents}>
-                    <UnassignedBoardingAreas boardingAreas={(school as any).mappingData.boardingAreas} buses={activeBuses} eventTarget={eventTarget} relativePosition={relativePosition} allowDragging={perms.bus.updateStatus} />
-                </div>}
-                {drawerTab === DrawerTab.NOTES && <div className={`${styles.drawer_contents} ${styles.drawer_contents_notes}`}>
-                    <Notes schoolID={school.id} focusBlurEventTarget={drawerEventTarget} />
-                    <div className={styles.notes_hint_text}>Notes are not synced across devices.</div>
-                </div>}
-            </>}
+            <div className={styles.drawer_tab_bar}>
+                <button className={`${styles.drawer_tab} ${drawerTab === DrawerTab.UNASSIGNED ? styles.drawer_tab_active : ""}`} onClick={() => setDrawerTab(DrawerTab.UNASSIGNED)}>Boarding Areas</button>
+                <button className={`${styles.drawer_tab} ${drawerTab === DrawerTab.NOTES ? styles.drawer_tab_active : ""}`} onClick={() => setDrawerTab(DrawerTab.NOTES)}>Notes</button>
+            </div>
+            {/* {drawerTab === DrawerTab.UNASSIGNED && <div className={styles.drawer_contents}>
+                <UnassignedBoardingAreas boardingAreas={(school as any).mappingData.boardingAreas} buses={activeBuses} eventTarget={eventTarget} relativePosition={relativePosition} allowDragging={perms.bus.updateStatus} />
+            </div>} */}
+            {drawerTab === DrawerTab.NOTES ? <div className={`${styles.drawer_contents} ${styles.drawer_contents_notes}`}>
+                <Notes schoolID={school.id} focusBlurEventTarget={drawerEventTarget} />
+                <div className={styles.notes_hint_text}>Notes are not synced across devices.</div>
+            </div> : <></>}
         </Drawer>}
         <ReactModal isOpen={isResetting} style={{
             content: {
@@ -278,7 +282,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
                 <Bus
                     bus={confirmBoardingAreaChange.bus}
                     isStarred={false}
-                    starCallback={() => {}}
+                    starCallback={() => void 0}
                     editFreeze={true}
                     noLink={true}
                     size={BusComponentSizes.COMPACT}
@@ -287,7 +291,7 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
                 <Bus
                     bus={{...confirmBoardingAreaChange.bus, boardingArea: confirmBoardingAreaChange.boardingArea}}
                     isStarred={false}
-                    starCallback={() => {}}
+                    starCallback={() => void 0}
                     editFreeze={true}
                     noLink={true}
                     size={BusComponentSizes.COMPACT}
@@ -312,9 +316,9 @@ export default function School({ school: schoolOrUndef, currentSchoolScopes: per
 function returnSortedBuses(buses: GetSchoolAndPerms_school_buses[]): { active: GetSchoolAndPerms_school_buses[], unactive: GetSchoolAndPerms_school_buses[] } {
     const defaultVal = "\u{10FFFD}".repeat(100);
 
-    let availableBuses:   GetSchoolAndPerms_school_buses[] = buses.filter((bus) =>  bus.available);
+    const availableBuses:   GetSchoolAndPerms_school_buses[] = buses.filter((bus) =>  bus.available);
     availableBuses.sort((a, b) => (a.name || defaultVal).localeCompare(b.name || defaultVal));
-    let unavailableBuses: GetSchoolAndPerms_school_buses[] = buses.filter((bus) => !bus.available);
+    const unavailableBuses: GetSchoolAndPerms_school_buses[] = buses.filter((bus) => !bus.available);
     unavailableBuses.sort((a, b) => (a.name || defaultVal).localeCompare(b.name || defaultVal));
     return {
         active: availableBuses,
@@ -344,8 +348,14 @@ export const getServerSideProps = async function<Q extends ParsedUrlQuery> (cont
     const client = createNewClient();
     console.log(context.params);
     try {
-        const { data } = await client.query<GetSchoolAndPerms>({query: GET_SCHOOL_AND_PERMS, variables: {id: context.params!.schoolId}, context: {req: context.req}});
-        return { props: data };
+        const params = context.params;
+        if (params === undefined) throw new Error("Null context params!");
+        
+        const { data } = await client.query<GetSchoolAndPerms>({query: GET_SCHOOL_AND_PERMS, variables: {id: params.schoolId}, context: {req: context.req}});
+        
+        return {
+            props: data,
+        };
     } catch (e) {
         console.error(e);
 
@@ -357,6 +367,10 @@ export const getServerSideProps = async function<Q extends ParsedUrlQuery> (cont
                 }
             }
         }
-        return { notFound: true, props: { school: null, currentSchoolScopes: null } };
+
+        return {
+            notFound: true,
+            props: { school: null, currentSchoolScopes: null },
+        };
     }
 };

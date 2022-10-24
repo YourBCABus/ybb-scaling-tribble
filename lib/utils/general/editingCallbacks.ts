@@ -1,14 +1,14 @@
 import { MutationQueue } from "./mutationQueue";
 import { NextRouter } from "next/router";
 
-import { BusInput } from "../../__generated__/globalTypes";
-import { GetBus_bus_stops } from "../../__generated__/GetBus";
+import { BusInput } from "__generated__/globalTypes";
+import { GetBus_bus_stops } from "__generated__/GetBus";
 
 export const saveBoardingAreaCallback = 
     (updateServerSidePropsFunction: () => Promise<boolean>, mutationQueue: MutationQueue, handleConnQualFunction: (() => Promise<boolean>) | undefined) => 
         (id: string) => 
             (boardingArea: string | null) => {
-                let returnVal = mutationQueue.addToQueue(
+                const returnVal = mutationQueue.addToQueue(
                     async () => {
                         if (!boardingArea) {
                             boardingArea = "?";
@@ -27,7 +27,7 @@ export const saveBusCallback =
     (updateServerSidePropsFunction: () => Promise<boolean>, mutationQueue: MutationQueue, handleConnQualFunction: (() => Promise<boolean>) | undefined) => 
         (id: string) => 
             (busInput: BusInput) => {
-                let returnVal = mutationQueue.addToQueue(
+                const returnVal = mutationQueue.addToQueue(
                     async () => {
                         await fetch(`/api/updateBus?id=${encodeURIComponent(id)}&busData=${encodeURIComponent(JSON.stringify(busInput))}`);
                         await updateServerSidePropsFunction();
@@ -43,9 +43,9 @@ export const saveStopOrderCallback =
     (updateServerSidePropsFunction: () => Promise<boolean>, mutationQueue: MutationQueue, handleConnQualFunction: (() => Promise<boolean>) | undefined) =>
         (busId: string) => 
             (orderedStops: GetBus_bus_stops[]) => {
-                let returnVal = mutationQueue.addToQueue(
+                const returnVal = mutationQueue.addToQueue(
                     async () => {
-                        let orderedStopIds = orderedStops.map((stop) => stop.id);
+                        const orderedStopIds = orderedStops.map((stop) => stop.id);
                         await fetch(`/api/updateStopOrder?busId=${encodeURIComponent(busId)}&stopOrderData=${encodeURIComponent(JSON.stringify(orderedStopIds))}`);
                         await updateServerSidePropsFunction();
                     }
@@ -58,7 +58,7 @@ export const saveStopOrderCallback =
 
 export const createBusCallback = 
     (mutationQueue: MutationQueue, handleConnQualFunction: (() => Promise<boolean>) | undefined, router: NextRouter, id: string) => {
-        let returnVal = mutationQueue.addToQueue(
+        const returnVal = mutationQueue.addToQueue(
             async () => {
                 const response = await fetch(`/api/createBus?schoolId=${encodeURIComponent(id)}`);
                 const json = await response.json();
@@ -79,7 +79,7 @@ export const deleteBusCallback =
 
 export const clearAllCallback =
     (updateServerSidePropsFunction: () => Promise<boolean>, mutationQueue: MutationQueue, handleConnQualFunction: (() => Promise<boolean>) | undefined, id: string) => {
-        let returnVal = mutationQueue.addToQueue(
+        const returnVal = mutationQueue.addToQueue(
             async () => {
                 await fetch(`/api/clearAll?schoolId=${encodeURIComponent(id)}`);
                 await updateServerSidePropsFunction();

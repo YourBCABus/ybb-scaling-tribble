@@ -1,6 +1,7 @@
 export const backgroundDivColorChooserFunction = (available: boolean, boardingAreaText: string) => {
     if (!available) return  {backgroundColor: "#f9aeae"};
     else if (boardingAreaText === "?") return {};
+    else if (boardingAreaText === "") return {};
     else return {color: "#e8edec", backgroundColor: "#00796b"};
 };
     

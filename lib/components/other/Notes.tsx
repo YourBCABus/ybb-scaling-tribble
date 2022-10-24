@@ -81,7 +81,7 @@ export function Notes({ schoolID, focusBlurEventTarget }: { schoolID: string, fo
             onScroll={e => {
                 setScrollY(e.currentTarget.scrollTop);
             }}
-            onBlur={_ => {
+            onBlur={() => {
                 setTextareaFocusedOnLastScrollEvent(false);
             }}
             placeholder="Enter notes here..." />

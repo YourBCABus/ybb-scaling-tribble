@@ -3,7 +3,7 @@ import { EditField } from "lib/utils/hooks/useSavableEditField";
 // Style-related imports and setup functions.
 import { BusComponentSizes } from "../../Bus";
 
-import { CamelCase } from "lib/utils/style/styleProxy";
+import { CamelCase } from "lib/utils/style/styleproxy";
 import styles from 'styles/components/buses/Peripherals.module.scss';
 import BusNameInput from "./BusNameInput";
 const [classes] = CamelCase.wrapCamelCase(styles);
@@ -16,6 +16,11 @@ export interface BusNameInterface {
      * bus component.
      */
     size: BusComponentSizes;
+
+    /**
+     * Should this be in edit mode?
+     */
+    editing: boolean;
 
     /** 
      * The {@link EditField editable field} intended as a bus name
@@ -32,10 +37,11 @@ export interface BusNameInterface {
 
 export default function BusName({
     size,
+    editing,
     name,
     editFreeze,
 }: BusNameInterface): JSX.Element {
-    if (name.edit) {
+    if (editing && name.edit) {
         return <BusNameInput name={name} size={size} editFreeze={editFreeze} />;
     } else {
         return <span className={classes.busName}>{name.value}</span>;

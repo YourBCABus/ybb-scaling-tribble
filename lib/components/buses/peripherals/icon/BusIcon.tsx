@@ -1,6 +1,3 @@
-import { faStar } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { CamelCase } from "lib/utils/style/styleProxy";
 import IconInfoLink, { IconInfoLinkInterface } from "./IconInfoLink";
 import StarIndicator, { StarIndicatorInterface } from "./StarIndicator";
 

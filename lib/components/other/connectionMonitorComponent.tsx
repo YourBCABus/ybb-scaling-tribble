@@ -1,4 +1,4 @@
-import styles from '../styles/ConnectionMonitor.module.scss';
+import styles from 'styles/ConnectionMonitor.module.scss';
 
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 
@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import Switch from "react-switch";
 
-import MutationQueueContext from "./utils/mutationQueue";
+import MutationQueueContext from "../../utils/general/mutationQueue";
 
 interface ConnectionMonitorProps {
     editing: boolean;
@@ -37,10 +37,10 @@ export async function handleConnQualCallback(setConnQual: (state: ConnectionStat
     }
 
 
-    let controller = new AbortController();
-    let signal = controller.signal;
+    const controller = new AbortController();
+    const signal = controller.signal;
 
-    let newQuality = await Promise.race([
+    const newQuality = await Promise.race([
         fetch(checkUrl, {signal}).then(() => ConnectionStates.GOOD).catch(() => ConnectionStates.NONE),
         sleep(8000, ConnectionStates.SLOW),
     ]);
@@ -87,7 +87,7 @@ export default function ConnectionMonitor(
     );
     useEffect(
         () => {
-            let interval = setInterval(() => handleConnQual().then((value) => value || mutationQueue.resolvePromise()), 10000);
+            const interval = setInterval(() => handleConnQual().then((value) => value || mutationQueue.resolvePromise()), 10000);
             return () => clearInterval(interval);
         },
         [handleConnQual, mutationQueue],

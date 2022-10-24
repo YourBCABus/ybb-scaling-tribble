@@ -1,6 +1,6 @@
 import { gql } from '@apollo/client';
 import type { NextApiRequest, NextApiResponse } from 'next';
-import createNewClient from 'lib/utils/apollo-client';
+import createNewClient from 'lib/utils/librarystuff/apollo-client';
 import { UpdateBusStatus } from '__generated__/UpdateBusStatus';
 
 export const UPDATE_BUS_STATUS = gql`
@@ -27,7 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === "GET") {
         if (req.query.id && req.query.boardingArea && typeof req.query.id === 'string' && typeof req.query.boardingArea === 'string') {
 
-            var invalidateTime = new Date();
+            let invalidateTime = new Date();
             invalidateTime.setUTCHours(24,0,0,0);
 
             let boardingArea: string | null = req.query.boardingArea;

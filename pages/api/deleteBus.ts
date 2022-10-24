@@ -1,6 +1,6 @@
 import { gql } from '@apollo/client';
 import type { NextApiRequest, NextApiResponse } from 'next';
-import createNewClient from 'lib/utils/apollo-client';
+import createNewClient from 'lib/utils/librarystuff/apollo-client';
 import { DeleteBus } from '__generated__/DeleteBus';
 
 export const DELETE_BUS = gql`

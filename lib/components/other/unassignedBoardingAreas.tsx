@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 
 import styles from "../styles/UnassignedBoardingAreas.module.scss";
-import { GetSchoolAndPerms_school_buses } from "../__generated__/GetSchoolAndPerms";
-import getBoardingArea from "./utils/boardingAreas";
-import NoSSRComponent from "./noSSRComponent";
+import { GetSchoolAndPerms_school_buses } from "__generated__/GetSchoolAndPerms";
+import getBoardingArea from "lib/utils/general/boardingAreas";
 
 function BoardingArea({area, eventTarget, relativePosition, allowDragging}: {area: string, eventTarget: EventTarget, relativePosition: {x: number, y: number}, allowDragging: boolean}) {
     const drag = useRef<HTMLSpanElement>(null);
@@ -49,11 +48,11 @@ function BoardingArea({area, eventTarget, relativePosition, allowDragging}: {are
                 setPosition(null);
             };
 
-            const mouseEnd = (event: MouseEvent) => {
+            const mouseEnd = () => {
                 end();
             };
 
-            const touchEnd = (event: TouchEvent) => {
+            const touchEnd = () => {
                 end();
             };
 
@@ -103,13 +102,15 @@ function BoardingArea({area, eventTarget, relativePosition, allowDragging}: {are
         }
     }, [position, eventTarget,  hoveredBus]);
 
+    const currentDrag = drag.current;
+
     return <div>
         <span className={allowDragging ? `${styles.boarding_area} ${styles.draggable}` : styles.boarding_area} ref={drag}>{area}</span>
-        {position && <span className={styles.boarding_area_preview} style={{
-            left: position.x - drag.current!.clientWidth / 2 - relativePosition.x,
-            top: position.y - drag.current!.clientHeight / 2 - relativePosition.y,
-            width: drag.current!.clientWidth,
-            height: drag.current!.clientHeight,
+        {position && currentDrag && <span className={styles.boarding_area_preview} style={{
+            left: position.x - currentDrag.clientWidth / 2 - relativePosition.x,
+            top: position.y - currentDrag.clientHeight / 2 - relativePosition.y,
+            width: currentDrag.clientWidth,
+            height: currentDrag.clientHeight,
         }}>{area}</span>}
     </div>;
 }
@@ -135,4 +136,4 @@ export default function UnassignedBoardingAreas({boardingAreas, buses, allowDrag
             </div>
         </>
     );
-};
+}

@@ -1,6 +1,6 @@
 import { faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { CamelCase } from "lib/utils/style/styleProxy";
+import { CamelCase } from "lib/utils/style/styleproxy";
 import Link from "next/link";
 
 import styles from 'styles/components/buses/Peripherals.module.scss';

@@ -1,36 +1,36 @@
 import gql from "graphql-tag";
-import createNewClient from "lib/utils/apollo-client";
+import createNewClient from "lib/utils/librarystuff/apollo-client";
 import { GetBus, GetBus_bus_stops } from "__generated__/GetBus";
 import { GetPerms } from "__generated__/GetPerms";
 
 import { GetServerSidePropsContext } from "next";
 import { ParsedUrlQuery } from "node:querystring";
 import { MouseEvent } from "react";
-import { DraggableProvided, DroppableProvided, resetServerContext } from "react-beautiful-dnd";
+import { DraggableProvided, DroppableProvided } from "react-beautiful-dnd";
 
 import styles from "styles/Bus.module.scss";
 
 import Router, { useRouter } from 'next/router';
 import { useCallback, useContext, useEffect, useState } from "react";
 
-import MutationQueueContext from 'lib/utils/mutationQueue';
+import MutationQueueContext from 'lib/utils/general/mutationQueue';
 
-import { faAngleUp, faBars, faCheckSquare, faChevronLeft, faPowerOff, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faAngleUp, faBars, faChevronLeft, faPowerOff, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import BusComponent, { BusComponentSizes } from 'lib/components/buses/Bus';
-import NavBar, { PagesInNavbar } from 'lib/navbar';
-import NoSSRComponent from 'lib/noSSRComponent';
+import NavBar, { PagesInNavbar } from 'lib/components/other/navbar';
+import NoSSRComponent from 'lib/components/other/noSSRComponent';
 import { NextSeo } from 'next-seo';
 import Head from 'next/head';
 import Link from 'next/link';
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 import ReactModal from 'react-modal';
 
-import ConnectionMonitor, { HandleConnQualContext } from 'lib/connectionMonitorComponent';
-import formatPhoneNumberString, { directlyMatchesPhoneNumber, formatSinglePhoneNumber } from 'lib/phoneNumberParser';
-import { deleteBusCallback, saveBoardingAreaCallback, saveBusCallback, saveStopOrderCallback } from 'lib/utils/editingCallbacks';
-import permParseFunc from 'lib/utils/perms';
-import { Props, migrateOldStarredBuses } from 'lib/utils/utils';
+import ConnectionMonitor, { HandleConnQualContext } from 'lib/components/other/connectionMonitorComponent';
+import formatPhoneNumberString, { directlyMatchesPhoneNumber, formatSinglePhoneNumber } from 'lib/components/other/phoneNumberParser';
+import { deleteBusCallback, saveBoardingAreaCallback, saveBusCallback, saveStopOrderCallback } from 'lib/utils/general/editingCallbacks';
+import permParseFunc from 'lib/utils/general/perms';
+import { Props, migrateOldStarredBuses, ifOrUndef } from 'lib/utils/general/utils';
 import { EditModeProps } from 'pages/_app';
 import Collapsible from 'react-collapsible';
 
@@ -73,14 +73,17 @@ function reorder<T>(list: readonly T[], startIndex: number, endIndex: number): T
     result.splice(endIndex, 0, removed);
   
     return result;
-};
+}
 
 type BusProps = Props<typeof getServerSideProps> & EditModeProps;
 
-export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef, editMode, setEditMode, editFreeze }: BusProps): JSX.Element {
-    const bus = Object.freeze(busOrUndef!);
+export default function Bus({ bus: busMut, currentSchoolScopes: permsMut, editMode, setEditMode, editFreeze }: BusProps): JSX.Element {
+    if (!busMut || !permsMut) throw new Error("School and/or scopes are not defined");
 
-    const perms = Object.freeze(permParseFunc(Object.freeze(permsOrUndef!)));
+
+    const bus = Object.freeze(busMut);
+
+    const perms = Object.freeze(permParseFunc(Object.freeze(permsMut)));
     const stops = Object.freeze(returnSortedStops(bus.stops));
 
     const [currStopsEdit, setCurrStopsEdit] = useState<null | GetBus_bus_stops[]>(null);
@@ -88,7 +91,7 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
     const [addPhoneNumberEdit, setAddPhoneNumberEdit] = useState<null | string>(null);
     const [phoneNumberError, setPhoneNumberError] = useState(false);
 
-    let [starredBusIDs, setStarredBusIDs] = useState<Set<string>>(new Set());
+    const [starredBusIDs, setStarredBusIDs] = useState<Set<string>>(new Set());
     useEffect(() => {
         setStarredBusIDs(new Set((JSON.parse(localStorage.getItem("starred") ?? "[]") as string[]).concat(migrateOldStarredBuses())));
     }, []);
@@ -159,7 +162,7 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
             bus={bus}
             starCallback={(event) => starCallback(bus.id, event)}
             isStarred={starredBusIDs.has(bus.id)}
-            editing={editMode && perms}
+            editing={ifOrUndef(editMode, perms)}
             editFreeze={editFreeze}
             size={BusComponentSizes.LARGE}
             noLink={true}
@@ -181,7 +184,7 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
                 <DragDropContext onDragEnd={(result) => {
                     if (!result.destination) return;
                     if (result.destination.index === result.source.index) return;
-                    let newStopOrder = reorder(currStopsEdit || stops, result.source.index, result.destination.index);
+                    const newStopOrder = reorder(currStopsEdit || stops, result.source.index, result.destination.index);
                     setCurrStopsEdit(newStopOrder);
                     saveStopOrderCallback(updateServerSidePropsFunction, currentMutationQueue, handleConnQual)(bus.id)(newStopOrder).then(() => setCurrStopsEdit(null));
                 }}>
@@ -251,7 +254,7 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
                         readOnly={editFreeze}
                         onBlur={() => { 
                             if (addPhoneNumberEdit === null) return;
-                            let formatted = formatSinglePhoneNumber(addPhoneNumberEdit.trim());
+                            const formatted = formatSinglePhoneNumber(addPhoneNumberEdit.trim());
                             if (formatted === null) {
                                 setPhoneNumberError(true);
                                 return;
@@ -297,7 +300,7 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
                 (editMode && perms.bus.delete) && <button
                     className={`${styles.available_bus} ${bus.available ? styles.destructive_action : styles.green_action}`}
                     onClick={
-                        (name) => saveBusCallback(updateServerSidePropsFunction, currentMutationQueue, handleConnQual)(bus.id)(
+                        () => saveBusCallback(updateServerSidePropsFunction, currentMutationQueue, handleConnQual)(bus.id)(
                             {
                                 name: bus.name,
                                 company: bus.company,
@@ -343,7 +346,7 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
                         {
                             name: bus.name,
                             company: bus.company,
-                            phone: removeInd(bus.phone, deletingPhoneNumber!.index),
+                            phone: deletingPhoneNumber ? removeInd(bus.phone, deletingPhoneNumber.index) : bus.phone,
                             available: bus.available,
                             otherNames: bus.otherNames,
                         }
@@ -371,7 +374,7 @@ export default function Bus({ bus: busOrUndef, currentSchoolScopes: permsOrUndef
 }
 
 function removeInd(phones: string[], ind: number) {
-    let outPhones = [...phones];
+    const outPhones = [...phones];
 
     outPhones.splice(
         ind,
@@ -381,7 +384,7 @@ function removeInd(phones: string[], ind: number) {
     return outPhones;
 }
 function removeIndPlusSubInd(phones: string[], ind: number, subInd: number) {
-    let outPhones = [...phones];
+    const outPhones = [...phones];
 
     if (directlyMatchesPhoneNumber(outPhones[ind])) return removeInd(phones, ind);
 
@@ -400,7 +403,10 @@ export const getServerSideProps = async function<Q extends ParsedUrlQuery> (cont
     let data: GetBus | null = null;
     let currentSchoolScopes: string[] | null = null;
     try {
-        const { data: scopedData } = await client.query<GetBus>({query: GET_BUS, variables: {id: context.params!.busId}, context: {req: context.req}});
+        const params = context.params;
+        if (params === undefined) throw new Error("Null context params!");
+
+        const { data: scopedData } = await client.query<GetBus>({query: GET_BUS, variables: {id: params.busId}, context: {req: context.req}});
         data = scopedData;
 
         const {data: { currentSchoolScopes: scopedCurrentSchoolScopes }} = await client.query<GetPerms>({query: GET_PERMS, variables: {schoolID: data.bus?.schoolID}, context: {req: context.req}});

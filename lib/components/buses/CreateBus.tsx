@@ -1,6 +1,6 @@
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { CamelCase } from "lib/utils/style/styleProxy";
+import { CamelCase } from "lib/utils/style/styleproxy";
 import { MouseEventHandler } from "react";
 
 import styles from 'styles/components/buses/CreateBus.module.scss';

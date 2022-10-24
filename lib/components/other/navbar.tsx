@@ -19,7 +19,7 @@ interface EditSwitchOptions {
     onChange: (newState: boolean) => void,
 }
 
-export default function NavBar( { selectedPage, editSwitchOptions }: { selectedPage: PagesInNavbar, editSwitchOptions?: EditSwitchOptions } ) {
+export default function NavBar( { editSwitchOptions }: { selectedPage: PagesInNavbar, editSwitchOptions?: EditSwitchOptions } ) {
     const [session, loading] = useSession();
 
     const spacerRef = useRef<HTMLDivElement>(null);

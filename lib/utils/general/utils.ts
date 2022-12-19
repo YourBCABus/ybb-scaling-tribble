@@ -6,22 +6,6 @@ export type PromiseType<T> = T extends PromiseLike<infer U> ? PromiseType<U> : T
 export type Props<T extends GetServerSideProps | GetStaticProps>
   = T extends GetServerSideProps<infer P, NextParsedUrlQuery> ? P : (T extends GetStaticProps<infer P, NextParsedUrlQuery> ? P : never);
 
-export const migrateOldStarredBuses = (): string[] => {
-    const oldBusJSON = localStorage.getItem("ngx-webstorage|ybbstarredbuses");
-    if (oldBusJSON) {
-        try {
-            const parsed = JSON.parse(oldBusJSON);
-            if (!(parsed instanceof Array)) throw new Error("Old starred buses is not an array");
-            localStorage.removeItem("ngx-webstorage|ybbstarredbuses");
-            return parsed;
-        } catch (e) {
-            console.log("Unable to parse old starred buses");
-            console.error(e);
-        }
-    }
-    return [];
-};
-
 export const useRefWithRerender = <T extends HTMLElement>(): [T | null, (node: T) => void] => {
     const [el, setEl] = useState<T | null>(null);
     const ref = useCallback((node: T) => {
@@ -52,3 +36,8 @@ export const inBounds = (
     upperBound: number,
 ) => lowerBound <= testNum && upperBound >= testNum;
 
+export type Immutable<T> = {
+    readonly [K in keyof T]: Immutable<T[K]>;
+}
+
+export const makeImmut = <T>(input: T): Immutable<T> => input;

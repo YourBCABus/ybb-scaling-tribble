@@ -1,0 +1,65 @@
+// TODO: Create global button styling
+
+.confirm, .confirm-modal-cancel, .confirm-modal-confirm {
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    transition: background-color 0.2s, color 0.2s;
+    margin: 0;
+}
+
+.confirm {
+    background-color: rgba(0, 0, 0, 0.1);
+    color: #006edb;
+    margin: 15px auto 0 auto;
+    display: block;
+}
+
+.confirm:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.confirm:focus, .confirm:active {
+    background-color: #006edb;
+    color: white;
+}
+
+.confirm-modal-title {
+    margin-bottom: 15px;
+}
+
+.confirm-modal-cancel {
+    background-color: rgba(0, 0, 0, 0.1);
+    margin-right: 8px;
+}
+
+.confirm-modal-cancel:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.confirm-modal-cancel:focus, .confirm-modal-cancel:active {
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+.confirm-modal-confirm {
+    background-color: #C31A00;
+    color: white;
+}
+
+.confirm-modal-confirm:hover {
+    background-color: darken(#C31A00, 10%);
+}
+
+.confirm-modal-confirm:focus, .confirm-modal-confirm:active {
+    background-color: darken(#C31A00, 20%);
+}
+
+.down-arrow-div {
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}

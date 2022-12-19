@@ -7,12 +7,12 @@
     padding-bottom: 15px;
 }
 
-.school_name {
+.school-name {
     padding: 15px 15px 0 15px;
     text-align: center;
 }
 
-.search_box {
+.search-box {
     position: relative;
     margin-top: 15px;
     margin-left: auto;
@@ -21,7 +21,7 @@
     max-width: 640px;
 }
 
-.search_input {
+.search-input {
     border: none;
     background-color: rgba(255, 255, 255, 0.2);
     color: white;
@@ -42,7 +42,7 @@
     }
 }
 
-.search_icon {
+.search-icon {
     position: absolute;
     top: 50%;
     left: 1em;
@@ -51,7 +51,7 @@
 }
 
 
-.pull_up_drawer {
+.pull-up-drawer {
     background-color: rgba(220, 220, 220, 0.4);
     box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
     border-radius: 8px;
@@ -59,7 +59,7 @@
     backdrop-filter: blur(6px);
 }
 
-.drawer_contents {
+.drawer-contents {
     height: max(100px, min(200px, calc(50vmin - 90px)));
     width: 100%;
     border-bottom: 1px solid rgba(0, 0, 0, 0.25);
@@ -70,20 +70,20 @@
     background-color: rgba(255, 255, 255, 0.4);
 }
 
-.drawer_contents_notes {
+.drawer-contents-notes {
     padding: 0.8em;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
 }
 
-.notes_hint_text {
+.notes-hint-text {
     padding-top: 4px;
     font-size: 0.8rem;
     color: rgba(0, 0, 0, 0.7);
 }
 
-.drawer_tab {
+.drawer-tab {
     appearance: none;
     border-top: 1px solid transparent;
     border-left: none;
@@ -108,7 +108,7 @@
     }
 }
 
-.drawer_tab_active {
+.drawer-tab-active {
     border: 1px solid rgba(0, 0, 0, 0.15);
     border-bottom: 0px solid transparent;
     font-weight: bold;
@@ -118,7 +118,7 @@
     }
 }
 
-.drawer_tab_bar {
+.drawer-tab-bar {
     display: flex;
     width: 100%;
     align-items: stretch;
@@ -132,7 +132,7 @@
 
 // TODO: Create global button styling
 
-.reset, .reset_modal_cancel, .reset_modal_confirm {
+.reset, .reset-modal-cancel, .reset-modal-confirm {
     border: none;
     border-radius: 3px;
     cursor: pointer;
@@ -158,38 +158,38 @@
     color: white;
 }
 
-.reset_modal_title {
+.reset-modal-title {
     margin-bottom: 15px;
 }
 
-.reset_modal_cancel {
+.reset-modal-cancel {
     background-color: rgba(0, 0, 0, 0.1);
     margin-right: 8px;
 }
 
-.reset_modal_cancel:hover {
+.reset-modal-cancel:hover {
     background-color: rgba(0, 0, 0, 0.2);
 }
 
-.reset_modal_cancel:focus, .reset_modal_cancel:active {
+.reset-modal-cancel:focus, .reset-modal-cancel:active {
     background-color: rgba(0, 0, 0, 0.3);
 }
 
-.reset_modal_confirm {
+.reset-modal-confirm {
     background-color: #C31A00;
     color: white;
 }
 
-.reset_modal_confirm:hover {
+.reset-modal-confirm:hover {
     background-color: darken(#C31A00, 10%);
 }
 
-.reset_modal_confirm:focus, .reset_modal_confirm:active {
+.reset-modal-confirm:focus, .reset-modal-confirm:active {
     background-color: darken(#C31A00, 20%);
 }
 
 
-.down_arrow_div {
+.down-arrow-div {
     width: 100%;
 
     display: flex;
@@ -197,7 +197,7 @@
     align-items: center;
 }
 
-.deactivated_buses_always {
+.deactivated-buses-always {
     & > span {
         padding: 1rem 1rem;
         background-color: #ECECEC;
@@ -236,6 +236,6 @@
     }
 }
 
-.deactivated_buses_always:not(.deactivated_buses_closed) span div svg {
+.deactivated-buses-always:not(.deactivated-buses-closed) span div svg {
     transform: rotateX(180deg);
 }

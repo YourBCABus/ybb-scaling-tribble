@@ -1,40 +1,68 @@
-import createNewClient from "lib/utils/librarystuff/apollo-client";
+// GraphQL
 import gql from "graphql-tag";
-import { GetSchoolAndPerms, GetSchoolAndPerms_school_buses } from "__generated__/GetSchoolAndPerms";
+import createNewClient from "lib/utils/librarystuff/apollo-client";
 
-import { Props } from "lib/utils/general/utils";
+// Types
 import { GetServerSidePropsContext } from "next";
 import { ParsedUrlQuery } from "node:querystring";
+
+import { Immutable, makeImmut, Props } from "lib/utils/general/utils";
+import { GetSchoolAndPerms, GetSchoolAndPerms_school_buses } from "__generated__/GetSchoolAndPerms";
+
 import { MouseEvent } from "react";
 
+
+// Meta components
 import Head from 'next/head';
-import NavBar, { PagesInNavbar } from "lib/components/other/navbar";
-import Bus, { BusComponentSizes } from "lib/components/buses/Bus";
-import ConnectionMonitor, { HandleConnQualContext } from "lib/components/other/connectionMonitorComponent";
+import { NextSeo } from "next-seo";
+import NoSsr from "lib/components/other/noSSRComponent";
+
+import PageHeader from "lib/components/schools/PageHeader";
 import Footer from "lib/components/other/footer";
+
+import ConnectionMonitor, { HandleConnQualContext } from "lib/components/other/connectionMonitorComponent";
+
+
+// Drawer Components
+import Drawer, { SpringTension } from "lib/components/drawer/Drawer";
+import { DrawerTab, EditModeProps } from 'pages/_app';
+import { Notes } from "lib/components/drawer/tabs/Notes";
+
+// Bus Components
+import BusList from "lib/components/buses/BusList";
+
+// Control/Visibility Flow Components
+import Collapsible from "react-collapsible";
+import ResetModal from "lib/components/modals/ResetModal";
+
+// Icons
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faAngleUp, faArrowDown, faSearch } from "@fortawesome/free-solid-svg-icons";
-import ReactModal from "react-modal";
-import Drawer, { DragDirection, DragUpDrawerXLocation, DragUpDrawerYLocation, SpringTension } from "lib/components/drawer/dragDrawer";
+import { faAngleUp } from "@fortawesome/free-solid-svg-icons";
 
-import styles from "styles/School.module.scss";
-
-import { useCallback, useContext, useEffect, useState } from "react";
+// Hooks
+import useInterval from "lib/utils/hooks/useInterval";
 import Router, { useRouter } from 'next/router';
 
+import { useContext, useEffect, useState, useCallback } from "react";
 import MutationQueueContext from "lib/utils/general/mutationQueue";
 
-import permParseFunc, { maskPerms } from "lib/utils/general/perms";
+import { useStateChangeClientSide } from "lib/utils/hooks/useStateChange";
+import useSearch from "lib/utils/hooks/useSearch";
+
+// Styles and style handlers
+import styles from "styles/School.module.scss";
+import { CamelCase } from "lib/utils/style/styleproxy";
+const [style, builder] = CamelCase.wrapCamelCase(styles);
+
+// Editing utility functions
 import { clearAllCallback, createBusCallback, saveBoardingAreaCallback} from "lib/utils/general/editingCallbacks";
+import permParseFunc, { maskPerms } from "lib/utils/general/perms";
+
+// Misc boarding area functions
 import getBoardingArea from "lib/utils/general/boardingAreas";
-import { NextSeo } from "next-seo";
-import { migrateOldStarredBuses } from "lib/utils/general/utils";
-import { DrawerTab, EditModeProps } from 'pages/_app';
-import Collapsible from "react-collapsible";
-import { Notes } from "lib/components/other/Notes";
-import BusList from "lib/components/buses/BusList";
-import { ApolloError } from "@apollo/client";
-import useInterval from "lib/utils/hooks/useInterval";
+import { getInitialStars } from "lib/utils/setup/school.id.index";
+import ConfirmAreaChangeModal from "lib/components/modals/ConfirmAreaChangeModal";
+import { BusObj } from "lib/components/buses/Bus";
 
 export const GET_SCHOOL_AND_PERMS = gql`
 query GetSchoolAndPerms($id: ID!) {
@@ -64,59 +92,140 @@ query GetSchoolAndPerms($id: ID!) {
 
 type SchoolProps = Props<typeof getServerSideProps> & EditModeProps;
 
+const defaultBusNameCmpVal = "\u{10FFFD}".repeat(100);
+const busNameCmpFn = (a: Immutable<BusObj>, b: Immutable<BusObj>) => (a.name || defaultBusNameCmpVal).localeCompare(b.name || defaultBusNameCmpVal);
+
+
+const updateServerSidePropsFunction = () => {
+    const currRouter = Router;
+    return currRouter.replace(currRouter.asPath, undefined, {scroll: false});
+};
+
+
+const makeStarCallback = (
+    setStarredSet: (newStarred: Set<string>) => void,
+    currStarred: Set<string>,
+) => (id: string, event: MouseEvent) => {
+    event.stopPropagation();
+    event.preventDefault();
+
+    const newStarred = new Set(currStarred);
+    if (newStarred.has(id)) newStarred.delete(id);
+    else newStarred.add(id);
+
+    setStarredSet(newStarred);
+};
+// (
+//     starredSet: Set<string>,
+// ) => (
+//     id: string,
+//     event: MouseEvent<SVGSVGElement>,
+// ) => {
+//     event.stopPropagation();
+//     event.preventDefault();
+
+//     const starred = new Set(starredSet);
+//     starred.has(id)
+//         ? starred.delete(id)
+//         : starred.add(id);
+    
+//     setStarredSet(starred);
+// };
+
 export default function School({
     school: schoolMut,
     currentSchoolScopes: permsMut,
     editMode, setEditMode, editFreeze,
     drawerTab, setDrawerTab,
 }: SchoolProps): JSX.Element {
+    // TODO: Make an "Unreachable" error type for self-documentation?
+    // This should never happen, as school and perms should only ever be null when notFound is true.
     if (!schoolMut || !permsMut) throw new Error("School and/or scopes are not defined");
 
-    const school = Object.freeze(schoolMut);
-    const perms = Object.freeze(permParseFunc(Object.freeze(permsMut)));
 
-    const [starredBusIDs, setStarredBusIDs] = useState<Set<string>>(new Set());
-    useEffect(() => {
-        setStarredBusIDs(new Set((JSON.parse(localStorage.getItem("starred") ?? "[]") as string[]).concat(migrateOldStarredBuses())));
-    }, []);
-    useEffect(() => {
-        localStorage.setItem("starred", JSON.stringify([...starredBusIDs]));
-    }, [starredBusIDs]);
-
-    const router = useRouter();
-    const updateServerSidePropsFunction = useCallback(() => {
-        const currRouter = Router;
-        return currRouter.replace(currRouter.asPath, undefined, {scroll: false});
-    }, []);
     
-    useInterval(editMode ? 5000 : 15000, updateServerSidePropsFunction);
-    
+    // These are just for prevention of accidental mutation.
+    const { buses: s_buses, id: s_id, name: s_name } = makeImmut(schoolMut);
+    const s_perms = makeImmut(permParseFunc(permsMut));
 
 
-    const starCallback = (id: string, event: MouseEvent<SVGSVGElement>): void => {
-        event.stopPropagation();
-        event.preventDefault();
-        const starred = new Set(starredBusIDs);
-        if (starred.has(id)) {
-            starred.delete(id);
-        } else {
-            starred.add(id);
-        }
-        setStarredBusIDs(starred);
-    };
-    
-    const editing = editMode && perms;
-    const [searchTerm, setSearchTerm] = useState("");
+    /**
+     * ALL state variables *should* go here, at the top of the function.
+     * 
+     * `starredBusIDs` is a set of all of the bus IDs that are starred.
+     * Any changes passed to `setStarredBusIDs` will replicate to localstorage and to `starredBusIDs.
+     * 
+     * 
+     * `searchTerm` is a filter object that can be used to search for buses by name, boarding area, or id.
+     * `setSearchTerm` can be used to remake the filtering object.
+     */
 
-    const setEditModePlusClearSearch = (editMode: boolean) => {
-        setEditMode(editMode);
-        setSearchTerm("");   
-    };
+    // Load and store the IDs of the starred buses.
+    const [starred, setStarred] = useStateChangeClientSide(
+        getInitialStars,
+        (_, newStarIDs) => localStorage.setItem(
+            "starred",
+            JSON.stringify([...newStarIDs]),
+        ),
+        new Set(),
+    );
+    const starCallback = useCallback(
+        (id, event) => makeStarCallback(setStarred, starred)(id, event),
+        [setStarred, starred],
+    );
 
+    const searchTerm = useSearch(filterBuses, "");
+    const [isResetting, setResetting] = useState<boolean>(false);
+
+    const editing = editMode && s_perms;
+
+    /**
+     * TECHNICALLY these are also states, but they're planned to be phased out.
+     * The way they function is riddled with mutability and callback hell.
+     * 
+     * FIXME: Come up with SOME alternative to this event target mess.
+     */
     const [eventTarget] = useState(() => new EventTarget());
     const [confirmBoardingAreaChange, setConfirmBoardingAreaChange] = useState<null | {bus: GetSchoolAndPerms_school_buses, boardingArea: string}>(null);
 
     const [drawerEventTarget] = useState(() => new EventTarget());
+    
+    /**
+     * These are contexts, (or routers, which are essentially contexts,) that handle global mutable data.
+     * This data persists across pages, but not across reloads or sessions.
+     * 
+     * TODO
+     * FIXME: PHASE THESE OUT.
+     * We should be using a localStorage stack instead of a `mutation queue` for more robustness in case of a website crash.
+     * HandlConnQual is also kind of a hacky workaround for actually checking the connection quality.
+     */
+    const currentMutationQueue = useContext(MutationQueueContext);
+    const { handleConnQual } = useContext(HandleConnQualContext);
+
+    const router = useRouter();
+
+
+
+    useInterval(editing ? 5000 : 15000, updateServerSidePropsFunction);
+    
+
+    
+    
+
+    const b_active   = searchTerm.filter(s_buses.filter(bus =>  bus.available).sort(busNameCmpFn));
+    const b_inactive = searchTerm.filter(s_buses.filter(bus => !bus.available).sort(busNameCmpFn));
+    const b_starred  = b_active.filter(bus => starred.has(bus.id));
+
+
+    const showInactive = b_inactive.length > 0 && editing;
+    const showStarred = b_starred.length > 0 && !editMode;
+
+
+    const setEditModePlusClearSearch = (mode: boolean) => {
+        setEditMode(mode);
+        searchTerm.setTerm("");   
+    };
+
 
     useEffect(() => {
         const forwardToBlurCallback = () => {
@@ -141,232 +250,194 @@ export default function School({
         return () => eventTarget.removeEventListener("startConfirm", setConfirmState);
     });
 
-    const { active: activeUnfiltered, unactive: unactiveUnfiltered } = returnSortedBuses(school.buses);
-
-    const activeBuses = Object.freeze(filterBuses(activeUnfiltered, searchTerm));
-    const unactiveBuses = Object.freeze(filterBuses(unactiveUnfiltered, searchTerm));
-    const starredBuses = Object.freeze(activeBuses.filter(bus => starredBusIDs.has(bus.id)));
-
-    const currentMutationQueue = useContext(MutationQueueContext);
-    const { handleConnQual } = useContext(HandleConnQualContext);
-
-    const [isResetting, setResetting] = useState<boolean>(false);
-
-    return <div>
+    const top = <>
         <Head>
             <link rel="stylesheet" href="https://use.typekit.net/qjo5whp.css"/>
         </Head>
-        <NextSeo title={school.name ?? "School"} />
-        <header className={styles.header}>
-            <NavBar selectedPage={PagesInNavbar.NONE} editSwitchOptions={perms.bus.create || perms.bus.updateStatus ? {state: editMode, onChange: setEditModePlusClearSearch} : undefined}/>
-            <h1 className={styles.school_name}>{school.name}</h1>
-            <div className={styles.search_box}>
-                <FontAwesomeIcon className={styles.search_icon} icon={faSearch}></FontAwesomeIcon>
-                <input
-                    className={styles.search_input}
-                    type="search"
-                    value={searchTerm}
-                    onChange={event => setSearchTerm(event.target.value)}
-                    placeholder="Search for a bus..."
-                />
+        <NextSeo title={s_name ?? "School"} />
+        
+        <PageHeader
+            search={searchTerm}
+            schoolName={s_name ?? "School"}
+            editing={!!editing}
+            setEditing={setEditModePlusClearSearch}
+            canEdit={s_perms.bus.updateStatus} />
+    </>;
+
+    const floatingComponents = <NoSsr>
+        <Drawer
+            overTension={SpringTension.MEDIUM}
+            snapToTension={SpringTension.MEDIUM}
+            drawerEventTarget={drawerEventTarget}
+            className={style.pullUpDrawer ?? ""}>
+            <div className={style.drawerTabBar} >
+                <button
+                    className={builder.drawerTab.IF(drawerTab === DrawerTab.UNASSIGNED).drawerTabActive()}
+                    onClick={() => setDrawerTab(DrawerTab.UNASSIGNED)}>
+                        Boarding Areas
+                </button>
+
+                <button
+                    className={builder.drawerTab.IF(drawerTab === DrawerTab.NOTES).drawerTabActive()}
+                    onClick={() => setDrawerTab(DrawerTab.NOTES)}>
+                        Notes
+                </button>
             </div>
-        </header>
+            {/* {drawerTab === DrawerTab.UNASSIGNED && <div className={styles.drawer_contents}>
+                <UnassignedBoardingAreas boardingAreas={(school as any).mappingData.boardingAreas} buses={activeBuses} eventTarget={eventTarget} relativePosition={relativePosition} allowDragging={perms.bus.updateStatus} />
+            </div>} */}
+            {drawerTab === DrawerTab.NOTES ? <div className={builder.drawerContents.drawerContentsNotes()}>
+                <Notes schoolID={s_id} focusBlurEventTarget={drawerEventTarget} />
+                <div className={style.notesHintText}>Notes are not synced across devices.</div>
+            </div> : <></>}
+        </Drawer>
+        
+        {/**
+         * Modal that pops up and confirms that you really do want to clear all of the boarding areas on all of the buses.
+         */}
+        <ResetModal
+            showing={isResetting}
+            hide={useCallback(() => setResetting(false), [])}
+            resetCallback={() => clearAllCallback(updateServerSidePropsFunction, currentMutationQueue, handleConnQual, s_id)}/>
+
+        {/**
+         * Modal that pops up and confirms that you really do want to overwrite a bus's boarding area.
+         */}
+        <ConfirmAreaChangeModal
+            showing={!!confirmBoardingAreaChange}
+            cancel={() => {
+                setConfirmBoardingAreaChange(null);
+                eventTarget.dispatchEvent(new CustomEvent("cancel"));
+            }}
+            confirm={() => {
+                setConfirmBoardingAreaChange(null);
+                eventTarget.dispatchEvent(new CustomEvent("confirm"));
+            }}
+            bus={confirmBoardingAreaChange?.bus}
+            newBoardingArea={confirmBoardingAreaChange?.boardingArea}/>
+        
+        <ConnectionMonitor editing={editMode}/>
+
+    </NoSsr>;
+
+    return <div>
+        {top}
+
+        {/**
+         * Starred buses, only visible if NOT editing.
+         */}
         {
-            starredBuses.length > 0 && !editMode && <BusList
-                buses={starredBuses}
+            showStarred && <BusList
+                buses={b_starred}
                 
-                editing={editMode ? maskPerms(perms, { bus: { create: false } }) : undefined}
+                editing={undefined}
                 editFreeze={editFreeze}
                 eventTarget={eventTarget}
 
                 isStarredList={true}
-                starredBusIDs={starredBusIDs}
+                starredBusIDs={starred}
                 starCallback={starCallback}
                 
                 saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction, currentMutationQueue, handleConnQual)}
 
                 showCreate={false}
-                createBusCallback={() => createBusCallback(currentMutationQueue, handleConnQual, router, school.id)}
+                createBusCallback={() => createBusCallback(currentMutationQueue, handleConnQual, router, s_id)}
             />
         }
     
+        {/**
+         * Active buses, always visible.
+         */}
         <BusList
-            buses={activeBuses}
+            buses={b_active}
             
-            editing={editMode ? perms : undefined}
+            editing={editMode ? s_perms : undefined}
             editFreeze={editFreeze}
             eventTarget={eventTarget}
 
             isStarredList={false}
-            starredBusIDs={starredBusIDs}
+            starredBusIDs={starred}
             starCallback={starCallback}
 
             saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction, currentMutationQueue, handleConnQual)}
 
-            showCreate={editMode && perms?.bus.create}
-            createBusCallback={() => createBusCallback(currentMutationQueue, handleConnQual, router, school.id)}
+            showCreate={editMode && s_perms?.bus.create}
+            createBusCallback={() => createBusCallback(currentMutationQueue, handleConnQual, router, s_id)}
         />
+
+        {/**
+         * Inactive buses, only visible if editing.
+         */}
         {
-            unactiveBuses.length > 0 && editing && <Collapsible
-                className={`${styles.deactivated_buses_closed} ${styles.deactivated_buses_always}`}
-                openedClassName={styles.deactivated_buses_always}
+            showInactive && <Collapsible
+                className={builder.deactivatedBusesAlways.deactivatedBusesClosed()}
+                openedClassName={builder.deactivatedBusesAlways()}
                 trigger={<div>View deactivated buses <FontAwesomeIcon icon={faAngleUp} size="lg"/></div>}
                 transitionTime={100}
             >
                 <BusList
-                    buses={unactiveBuses}
+                    buses={b_inactive}
                     
-                    editing={editMode && maskPerms(perms, { bus: { create: false } })}
+                    editing={editMode && maskPerms(s_perms, { bus: { create: false } })}
                     editFreeze={editFreeze}
                     eventTarget={eventTarget}
 
                     isStarredList={false}
-                    starredBusIDs={starredBusIDs}
+                    starredBusIDs={starred}
                     starCallback={starCallback}
 
                     showCreate={false}
-                    createBusCallback={() => createBusCallback(currentMutationQueue, handleConnQual, router, school.id)}
+                    createBusCallback={() => createBusCallback(currentMutationQueue, handleConnQual, router, s_id)}
                 />
             </Collapsible>
         }
-        {(editMode && perms.bus.updateStatus) && <button className={styles.reset} onClick={() => setResetting(true)}>Reset All</button>}
-        {editMode && <Drawer
-            location={{x: DragUpDrawerXLocation.RIGHT, y: DragUpDrawerYLocation.BOTTOM}}
-            direction={DragDirection.UP}
-            overTension={SpringTension.MEDIUM}
-            snapToTension={SpringTension.MEDIUM}
-            drawerEventTarget={drawerEventTarget}
-            className={styles.pull_up_drawer}
-        >
-            <div className={styles.drawer_tab_bar}>
-                <button className={`${styles.drawer_tab} ${drawerTab === DrawerTab.UNASSIGNED ? styles.drawer_tab_active : ""}`} onClick={() => setDrawerTab(DrawerTab.UNASSIGNED)}>Boarding Areas</button>
-                <button className={`${styles.drawer_tab} ${drawerTab === DrawerTab.NOTES ? styles.drawer_tab_active : ""}`} onClick={() => setDrawerTab(DrawerTab.NOTES)}>Notes</button>
-            </div>
-            {/* {drawerTab === DrawerTab.UNASSIGNED && <div className={styles.drawer_contents}>
-                <UnassignedBoardingAreas boardingAreas={(school as any).mappingData.boardingAreas} buses={activeBuses} eventTarget={eventTarget} relativePosition={relativePosition} allowDragging={perms.bus.updateStatus} />
-            </div>} */}
-            {drawerTab === DrawerTab.NOTES ? <div className={`${styles.drawer_contents} ${styles.drawer_contents_notes}`}>
-                <Notes schoolID={school.id} focusBlurEventTarget={drawerEventTarget} />
-                <div className={styles.notes_hint_text}>Notes are not synced across devices.</div>
-            </div> : <></>}
-        </Drawer>}
-        <ReactModal isOpen={isResetting} style={{
-            content: {
-                width: "80%",
-                maxWidth: "400px",
-                height: "200px",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-            },
-        }}>
-            <h3 className={styles.reset_modal_title}>Are you sure you want to reset all buses?</h3>
-            <button className={styles.reset_modal_cancel} onClick={() => setResetting(false)}>Cancel</button>
-            <button className={styles.reset_modal_confirm} onClick={() => {
-                clearAllCallback(updateServerSidePropsFunction, currentMutationQueue, handleConnQual, school.id);
-                setResetting(false);
-            }}>Reset</button>
-        </ReactModal>
-        <ReactModal isOpen={!!confirmBoardingAreaChange} style={{
-            content: {
-                width: "80%",
-                maxWidth: "400px",
-                height: "230px",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-            },
-        }}>
-            {confirmBoardingAreaChange && <>
-                <h3 className={styles.reset_modal_title}>Are you sure you want to change this bus&#39;s boarding area?</h3>
-                <Bus
-                    bus={confirmBoardingAreaChange.bus}
-                    isStarred={false}
-                    starCallback={() => void 0}
-                    editFreeze={true}
-                    noLink={true}
-                    size={BusComponentSizes.COMPACT}
-                />
-                <div className={styles.down_arrow_div}><FontAwesomeIcon icon={faArrowDown} size="2x"></FontAwesomeIcon></div>
-                <Bus
-                    bus={{...confirmBoardingAreaChange.bus, boardingArea: confirmBoardingAreaChange.boardingArea}}
-                    isStarred={false}
-                    starCallback={() => void 0}
-                    editFreeze={true}
-                    noLink={true}
-                    size={BusComponentSizes.COMPACT}
-                />
-                <br/>
-                <button className={styles.reset_modal_cancel} onClick={() => {
-                    setConfirmBoardingAreaChange(null);
-                    eventTarget.dispatchEvent(new CustomEvent("cancel"));
-                }}>Cancel</button>
-                <button className={styles.reset_modal_confirm} onClick={() => {
-                    setConfirmBoardingAreaChange(null);
-                    eventTarget.dispatchEvent(new CustomEvent("confirm"));
-                }}>Change</button>
-            </>}
-        </ReactModal>
+
+        {(editMode && s_perms.bus.updateStatus) && <button className={styles.reset} onClick={() => setResetting(true)}>Reset All</button>}
+
+        {floatingComponents}
         <Footer />
-        <ConnectionMonitor editing={editMode}/>
     </div>;
 }
 
-
-function returnSortedBuses(buses: GetSchoolAndPerms_school_buses[]): { active: GetSchoolAndPerms_school_buses[], unactive: GetSchoolAndPerms_school_buses[] } {
-    const defaultVal = "\u{10FFFD}".repeat(100);
-
-    const availableBuses:   GetSchoolAndPerms_school_buses[] = buses.filter((bus) =>  bus.available);
-    availableBuses.sort((a, b) => (a.name || defaultVal).localeCompare(b.name || defaultVal));
-    const unavailableBuses: GetSchoolAndPerms_school_buses[] = buses.filter((bus) => !bus.available);
-    unavailableBuses.sort((a, b) => (a.name || defaultVal).localeCompare(b.name || defaultVal));
-    return {
-        active: availableBuses,
-        unactive: unavailableBuses,
-    };
-}
-
-function filterBuses(buses: readonly GetSchoolAndPerms_school_buses[], searchTerm: string): readonly GetSchoolAndPerms_school_buses[] {
+const filterBuses = (bus: Immutable<GetSchoolAndPerms_school_buses>, searchTerm: string): boolean => {
     const term = searchTerm.trim().toLowerCase();
+    const { name, invalidateTime } = bus;
 
-    // Allow users to search by name, boarding area, or exact ID
-    return term.length > 0 ? buses.filter(bus => {
-        if (bus.name?.toLowerCase().includes(term)) return true;
-        if (bus.invalidateTime) {
-            if (getBoardingArea(bus.boardingArea, new Date(bus.invalidateTime)).toLowerCase().includes(term)) return true;
-        } else if (bus.boardingArea) {
-            if (bus.boardingArea.toLowerCase().includes(term)) return true;
-        } else {
-            if (term === "?") return true;
-        }
-        if (bus.id.toLowerCase() === term) return true;
-        return false;
-    }) : buses;
-}
+    // By bus name
+    if (name?.toLowerCase().includes(term)) return true;
+    // By bus boarding area
+    if (invalidateTime) if (
+        typeof invalidateTime === "number" ||
+        typeof invalidateTime === "string" ||
+        typeof invalidateTime === "object" && invalidateTime instanceof Date
+    ) {
+        const lowercaseBoardingArea = getBoardingArea(bus.boardingArea, new Date(invalidateTime)).toLowerCase();
+        if (lowercaseBoardingArea.includes(term)) return true;
+    }
+    // By bus ID (must EXACTLY && COMPLETELY match)
+    if (bus.id.toLowerCase() === term) return true;
+    // If the search term is `?` it matches
+    if (term === "?") return true;
+    
+    return false;
+};
+
 
 export const getServerSideProps = async function<Q extends ParsedUrlQuery> (context: GetServerSidePropsContext<Q>) {    
     const client = createNewClient();
-    console.log(context.params);
     try {
         const params = context.params;
         if (params === undefined) throw new Error("Null context params!");
         
-        const { data } = await client.query<GetSchoolAndPerms>({query: GET_SCHOOL_AND_PERMS, variables: {id: params.schoolId}, context: {req: context.req}});
+        const { data } = await client.query<GetSchoolAndPerms>({
+            query: GET_SCHOOL_AND_PERMS,
+            variables: {id: params.schoolId},
+            context: {req: context.req},
+        });
         
-        return {
-            props: data,
-        };
+        return { props: data };
     } catch (e) {
         console.error(e);
-
-        if (typeof e === 'object' && e !== null) {
-            if (e instanceof ApolloError) {
-                const networkError = e.networkError;
-                if (networkError) {
-                    console.log(e.networkError);
-                }
-            }
-        }
 
         return {
             notFound: true,

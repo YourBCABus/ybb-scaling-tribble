@@ -30,9 +30,11 @@ import ConnectionMonitor, { HandleConnQualContext } from 'lib/components/other/c
 import formatPhoneNumberString, { directlyMatchesPhoneNumber, formatSinglePhoneNumber } from 'lib/components/other/phoneNumberParser';
 import { deleteBusCallback, saveBoardingAreaCallback, saveBusCallback, saveStopOrderCallback } from 'lib/utils/general/editingCallbacks';
 import permParseFunc from 'lib/utils/general/perms';
-import { Props, migrateOldStarredBuses, ifOrUndef } from 'lib/utils/general/utils';
+import { Props, ifOrUndef } from 'lib/utils/general/utils';
 import { EditModeProps } from 'pages/_app';
 import Collapsible from 'react-collapsible';
+import { useStateChangeClientSide } from "lib/utils/hooks/useStateChange";
+import { getInitialStars } from "lib/utils/setup/school.id.index";
 
 export const GET_BUS = gql`
 query GetBus($id: ID!) {
@@ -91,13 +93,25 @@ export default function Bus({ bus: busMut, currentSchoolScopes: permsMut, editMo
     const [addPhoneNumberEdit, setAddPhoneNumberEdit] = useState<null | string>(null);
     const [phoneNumberError, setPhoneNumberError] = useState(false);
 
-    const [starredBusIDs, setStarredBusIDs] = useState<Set<string>>(new Set());
-    useEffect(() => {
-        setStarredBusIDs(new Set((JSON.parse(localStorage.getItem("starred") ?? "[]") as string[]).concat(migrateOldStarredBuses())));
-    }, []);
-    useEffect(() => {
-        localStorage.setItem("starred", JSON.stringify([...starredBusIDs]));
-    }, [starredBusIDs]);
+    const [starredBusIDs, setStarredBusIDs] = useStateChangeClientSide(
+        getInitialStars,
+        (_, newStarIDs) => localStorage.setItem(
+            "starred",
+            JSON.stringify([...newStarIDs]),
+        ),
+        new Set(),
+    );
+    const starCallback = (id: string, event: MouseEvent<SVGSVGElement>): void => {
+        event.stopPropagation();
+        event.preventDefault();
+
+        const starred = new Set(starredBusIDs);
+        starred.has(id)
+            ? starred.delete(id)
+            : starred.add(id);
+        
+        setStarredBusIDs(starred);
+    };
 
     const router = useRouter();
     const updateServerSidePropsFunction = useCallback(() => {
@@ -109,17 +123,6 @@ export default function Bus({ bus: busMut, currentSchoolScopes: permsMut, editMo
         return () => clearInterval(interval);
     }, [editMode, updateServerSidePropsFunction]);
 
-    const starCallback = (id: string, event: MouseEvent<SVGSVGElement>): void => {
-        event.stopPropagation();
-        event.preventDefault();
-        const starred = new Set(starredBusIDs);
-        if (starred.has(id)) {
-            starred.delete(id);
-        } else {
-            starred.add(id);
-        }
-        setStarredBusIDs(starred);
-    };
   
     const [deletingPhoneNumber, setDeletingPhoneNumber] = useState<{
         deletingSingleNum: true, index: number, subIndex: number

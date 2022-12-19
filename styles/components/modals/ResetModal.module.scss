@@ -1,0 +1,57 @@
+// TODO: Create global button styling
+
+.reset, .reset-modal-cancel, .reset-modal-confirm {
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    transition: background-color 0.2s, color 0.2s;
+    margin: 0;
+}
+
+.reset {
+    background-color: rgba(0, 0, 0, 0.1);
+    color: #006edb;
+    margin: 15px auto 0 auto;
+    display: block;
+}
+
+.reset:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.reset:focus, .reset:active {
+    background-color: #006edb;
+    color: white;
+}
+
+.reset-modal-title {
+    margin-bottom: 15px;
+}
+
+.reset-modal-cancel {
+    background-color: rgba(0, 0, 0, 0.1);
+    margin-right: 8px;
+}
+
+.reset-modal-cancel:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.reset-modal-cancel:focus, .reset-modal-cancel:active {
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+.reset-modal-confirm {
+    background-color: #C31A00;
+    color: white;
+}
+
+.reset-modal-confirm:hover {
+    background-color: darken(#C31A00, 10%);
+}
+
+.reset-modal-confirm:focus, .reset-modal-confirm:active {
+    background-color: darken(#C31A00, 20%);
+}

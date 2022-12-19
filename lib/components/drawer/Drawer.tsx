@@ -5,25 +5,6 @@ import { faGripLines } from '@fortawesome/free-solid-svg-icons';
 import NoSSRComponent from "lib/components/other/noSSRComponent";
 import useSpringLocation from "lib/utils/hooks/useSpringLocation";
 
-export enum DragUpDrawerXLocation {
-    LEFT,
-    MIDDLE,
-    RIGHT
-}
-
-export enum DragUpDrawerYLocation {
-    TOP,
-    MIDDLE,
-    BOTTOM,
-}
-
-export enum DragDirection {
-    LEFT,
-    RIGHT,
-    UP,
-    DOWN
-}
-
 export enum SpringTension {
     HIGH = 1,
     MEDIUM = 0.5,
@@ -31,8 +12,6 @@ export enum SpringTension {
 }
 
 interface DragDrawerProps {
-    location: {x: DragUpDrawerXLocation, y: DragUpDrawerYLocation},
-    direction: DragDirection,
     snapToTension: number,
     overTension: number,
     children?: JSX.Element | JSX.Element[],
@@ -46,19 +25,9 @@ export default function Drawer(
     props:  DragDrawerProps,
 ): JSX.Element {
     const {
-        location: {x, y},
-        direction,
         children,
         className,
     } = props;
-
-    if (x == DragUpDrawerXLocation.MIDDLE && y == DragUpDrawerYLocation.MIDDLE) throw Error("How the heck are you going to have a pull drawer in the middle of screen?");
-
-    if (
-        direction !== DragDirection.UP ||
-        x !== DragUpDrawerXLocation.RIGHT ||
-        y !== DragUpDrawerYLocation.BOTTOM
-    ) throw Error("Unimplimented. :)");
 
     const {
         style,

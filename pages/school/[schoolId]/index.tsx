@@ -24,9 +24,8 @@ import ConnectionMonitor, { HandleConnQualContext } from "lib/components/other/c
 
 
 // Drawer Components
-import Drawer, { SpringTension } from "lib/components/drawer/Drawer";
-import { DrawerTab, EditModeProps } from 'pages/_app';
-import { Notes } from "lib/components/drawer/tabs/Notes";
+import Drawer, { DrawerTab, DrawerTabs, SpringTension } from "lib/components/drawer/Drawer";
+import { EditModeProps } from 'pages/_app';
 
 // Bus Components
 import BusList from "lib/components/buses/BusList";
@@ -63,6 +62,9 @@ import getBoardingArea from "lib/utils/general/boardingAreas";
 import { getInitialStars } from "lib/utils/setup/school.id.index";
 import ConfirmAreaChangeModal from "lib/components/modals/ConfirmAreaChangeModal";
 import { BusObj } from "lib/components/buses/Bus";
+import DragDropEventHandler from "lib/utils/dragdrop/events";
+import UnassignedBoardingAreas from "lib/components/drawer/tabs/unassignedBoardingAreas";
+import { Notes } from "lib/components/drawer/tabs/Notes";
 
 export const GET_SCHOOL_AND_PERMS = gql`
 query GetSchoolAndPerms($id: ID!) {
@@ -148,6 +150,8 @@ export default function School({
     const { buses: s_buses, id: s_id, name: s_name } = makeImmut(schoolMut);
     const s_perms = makeImmut(permParseFunc(permsMut));
 
+    const dragDropAreaNames = schoolMut.mappingData?.boardingAreas.map(area => area.name) ?? [];
+
 
     /**
      * ALL state variables *should* go here, at the top of the function.
@@ -185,7 +189,7 @@ export default function School({
      * 
      * FIXME: Come up with SOME alternative to this event target mess.
      */
-    const [eventTarget] = useState(() => new EventTarget());
+    const [dragDropEvents] = useState(() => new DragDropEventHandler());
     const [confirmBoardingAreaChange, setConfirmBoardingAreaChange] = useState<null | {bus: GetSchoolAndPerms_school_buses, boardingArea: string}>(null);
 
     const [drawerEventTarget] = useState(() => new EventTarget());
@@ -239,16 +243,40 @@ export default function School({
         return () => triggers.forEach(trigger => drawerEventTarget.removeEventListener(trigger, forwardToBlurCallback));
     }, [drawerEventTarget]);
 
-    useEffect(() => {
-        const setConfirmState = (event: Event) => {
-            if (event instanceof CustomEvent) {
-                setConfirmBoardingAreaChange(event.detail);
-            }
-        };
-        eventTarget.addEventListener("startConfirm", setConfirmState);
+    // useEffect(() => {
+    //     const setConfirmState = (event: Event) => {
+    //         if (event instanceof CustomEvent) {
+    //             setConfirmBoardingAreaChange(event.detail);
+    //         }
+    //     };
+    //     eventTarget.addEventListener("startConfirm", setConfirmState);
 
-        return () => eventTarget.removeEventListener("startConfirm", setConfirmState);
-    });
+    //     return () => eventTarget.removeEventListener("startConfirm", setConfirmState);
+    // });
+
+
+
+    const drawerTabs: DrawerTabs = {
+        [DrawerTab.UNASSIGNED]: relativePos => (
+            <div className={styles.drawer_contents}>
+                <UnassignedBoardingAreas boardingAreas={dragDropAreaNames} buses={b_active} dragDropHandler={dragDropEvents} relativePosition={relativePos} allowDragging={s_perms.bus.updateStatus} />
+            </div>
+        ),
+        [DrawerTab.NOTES]: () => (
+            <div className={builder.drawerContents.drawerContentsNotes()}>
+                <Notes schoolID={s_id} focusBlurEventTarget={drawerEventTarget} />
+                <div className={style.notesHintText}>Notes are not synced across devices.</div>
+            </div>
+        ),
+    };
+
+    // </div>
+    // {drawerTab === DrawerTab.UNASSIGNED ? <div className={styles.drawer_contents}>
+    //     <UnassignedBoardingAreas boardingAreas={dragDropAreaNames} buses={b_active} dragDropHandler={dragDropEvents} relativePosition={relativePosition} allowDragging={s_perms.bus.updateStatus} />
+    // </div> : <></>}
+    // {drawerTab === DrawerTab.NOTES ? <div className={builder.drawerContents.drawerContentsNotes()}>
+    //     <Notes schoolID={s_id} focusBlurEventTarget={drawerEventTarget} />
+    //     <div className={style.notesHintText}>Notes are not synced across devices.</div>
 
     const top = <>
         <Head>
@@ -269,7 +297,9 @@ export default function School({
             overTension={SpringTension.MEDIUM}
             snapToTension={SpringTension.MEDIUM}
             drawerEventTarget={drawerEventTarget}
-            className={style.pullUpDrawer ?? ""}>
+            className={style.pullUpDrawer ?? ""}
+            tabs={drawerTabs[drawerTab]} >
+            
             <div className={style.drawerTabBar} >
                 <button
                     className={builder.drawerTab.IF(drawerTab === DrawerTab.UNASSIGNED).drawerTabActive()}
@@ -283,13 +313,11 @@ export default function School({
                         Notes
                 </button>
             </div>
-            {/* {drawerTab === DrawerTab.UNASSIGNED && <div className={styles.drawer_contents}>
-                <UnassignedBoardingAreas boardingAreas={(school as any).mappingData.boardingAreas} buses={activeBuses} eventTarget={eventTarget} relativePosition={relativePosition} allowDragging={perms.bus.updateStatus} />
-            </div>} */}
-            {drawerTab === DrawerTab.NOTES ? <div className={builder.drawerContents.drawerContentsNotes()}>
-                <Notes schoolID={s_id} focusBlurEventTarget={drawerEventTarget} />
-                <div className={style.notesHintText}>Notes are not synced across devices.</div>
-            </div> : <></>}
+            {/* <button
+                className={builder.drawerTab.IF(drawerTab === DrawerTab.NOTES).drawerTabActive()}
+                onClick={() => setDrawerTab(DrawerTab.NOTES)}>
+                    Notes
+            </button> */}
         </Drawer>
         
         {/**
@@ -307,11 +335,11 @@ export default function School({
             showing={!!confirmBoardingAreaChange}
             cancel={() => {
                 setConfirmBoardingAreaChange(null);
-                eventTarget.dispatchEvent(new CustomEvent("cancel"));
+                dragDropEvents.sendCancelEvent();
             }}
             confirm={() => {
                 setConfirmBoardingAreaChange(null);
-                eventTarget.dispatchEvent(new CustomEvent("confirm"));
+                dragDropEvents.sendConfirmEvent();
             }}
             bus={confirmBoardingAreaChange?.bus}
             newBoardingArea={confirmBoardingAreaChange?.boardingArea}/>
@@ -332,7 +360,7 @@ export default function School({
                 
                 editing={undefined}
                 editFreeze={editFreeze}
-                eventTarget={eventTarget}
+                dragDropHandler={dragDropEvents}
 
                 isStarredList={true}
                 starredBusIDs={starred}
@@ -353,7 +381,7 @@ export default function School({
             
             editing={editMode ? s_perms : undefined}
             editFreeze={editFreeze}
-            eventTarget={eventTarget}
+            dragDropHandler={dragDropEvents}
 
             isStarredList={false}
             starredBusIDs={starred}
@@ -380,7 +408,7 @@ export default function School({
                     
                     editing={editMode && maskPerms(s_perms, { bus: { create: false } })}
                     editFreeze={editFreeze}
-                    eventTarget={eventTarget}
+                    dragDropHandler={dragDropEvents}
 
                     isStarredList={false}
                     starredBusIDs={starred}

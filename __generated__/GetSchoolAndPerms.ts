@@ -22,12 +22,23 @@ export interface GetSchoolAndPerms_school_buses {
   available: boolean;
 }
 
+export interface GetSchoolAndPerms_school_mappingData_boardingAreas {
+  __typename: "BoardingArea";
+  name: string;
+}
+
+export interface GetSchoolAndPerms_school_mappingData {
+  __typename: "MappingData";
+  boardingAreas: GetSchoolAndPerms_school_mappingData_boardingAreas[];
+}
+
 export interface GetSchoolAndPerms_school {
   __typename: "School";
   id: string;
   name: string | null;
   location: GetSchoolAndPerms_school_location | null;
   buses: GetSchoolAndPerms_school_buses[];
+  mappingData: GetSchoolAndPerms_school_mappingData | null;
 }
 
 export interface GetSchoolAndPerms {

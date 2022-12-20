@@ -8,6 +8,7 @@ import CreateBus from "./CreateBus";
 import { CamelCase } from "lib/utils/style/styleproxy";
 import useMemoMap from "lib/utils/hooks/useMemoMap";
 import useMemoizedBuilder from "lib/utils/hooks/useMemoizedBuilder";
+import DragDropEventHandler from "lib/utils/dragdrop/events";
 
 const [, styleBuilder] = CamelCase.wrapCamelCase(styles);
 
@@ -20,7 +21,7 @@ export interface BusListProps {
  
     editing?: ReturnType<typeof permParseFunc>;
     editFreeze: boolean;
-    eventTarget: EventTarget;
+    dragDropHandler: DragDropEventHandler;
 
     isStarredList: boolean;
     starredBusIDs: Set<string>;
@@ -52,7 +53,7 @@ interface BusListTypeSepProps {
     busFactoryProps: {
         editing: BusListProps["editing"],
         editFreeze: BusListProps["editFreeze"],
-        eventTarget: EventTarget,
+        dragDropHandler: DragDropEventHandler,
         starCallback: BusListProps["starCallback"],
         starredBusIDs: BusListProps["starredBusIDs"],
         saveBoardingAreaCallback: BusListProps["saveBoardingAreaCallback"],
@@ -62,7 +63,7 @@ interface BusListTypeSepProps {
 const BusComponentWrapperFactory = ({
     editing,
     editFreeze,
-    eventTarget,
+    dragDropHandler,
     starCallback,
     starredBusIDs,
     saveBoardingAreaCallback,
@@ -75,7 +76,7 @@ const BusComponentWrapperFactory = ({
             
             editing={editing}
             editFreeze={editFreeze}
-            eventTarget={eventTarget}
+            dragDropHandler={dragDropHandler}
             
             starCallback={(event) => starCallback(bus.id, event)}
             isStarred={starredBusIDs.has(bus.id)}
@@ -91,7 +92,7 @@ const propTypeSep = (props: BusListProps): BusListTypeSepProps => {
         buses,
         editing,
         editFreeze,
-        eventTarget,
+        dragDropHandler,
         isStarredList,
         starredBusIDs,
         starCallback,
@@ -111,7 +112,7 @@ const propTypeSep = (props: BusListProps): BusListTypeSepProps => {
         busFactoryProps: {
             editing,
             editFreeze,
-            eventTarget,
+            dragDropHandler,
             starCallback,
             starredBusIDs,
             saveBoardingAreaCallback,

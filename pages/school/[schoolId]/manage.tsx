@@ -1,5 +1,5 @@
 import createNewClient from "../../../lib/utils/librarystuff/apollo-client";
-import gql from "graphql-tag";
+import { GET_SCHOOL_AND_PERMS } from ".";
 import { GetSchoolAndPerms } from "../../../__generated__/GetSchoolAndPerms";
 
 import { Props } from "lib/utils/general/utils";
@@ -9,31 +9,31 @@ import { ParsedUrlQuery } from "node:querystring";
 import Head from 'next/head';
 import { NextSeo } from "next-seo";
 
-export const GET_SCHOOL_AND_PERMS = gql`
-query GetSchoolAndPerms($id: ID!) {
-    school(id: $id) {
-        id
-        name
-        location {
-            lat
-            long
-        }
-        buses {
-            id
-            name
-            boardingArea
-            invalidateTime
-            available
-        }
-        mappingData {
-            boardingAreas {
-                name
-            }
-        }
-    }
-    currentSchoolScopes(schoolID: $id) 
-}
-`;
+// export const GET_SCHOOL_AND_PERMS = gql`
+// query GetSchoolAndPerms($id: ID!) {
+//     school(id: $id) {
+//         id
+//         name
+//         location {
+//             lat
+//             long
+//         }
+//         buses {
+//             id
+//             name
+//             boardingArea
+//             invalidateTime
+//             available
+//         }
+//         mappingData {
+//             boardingAreas {
+//                 name
+//             }
+//         }
+//     }
+//     currentSchoolScopes(schoolID: $id) 
+// }
+// `;
 
 type SchoolProps = Props<typeof getServerSideProps>;
 

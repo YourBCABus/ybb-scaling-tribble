@@ -311,7 +311,7 @@ const useSpringLocation = (updatesPerSec: number, springTensionCallback: SpringT
     const needsRepeatedUpdates = state.mainState === StateComponents.Moving.MOVING;
 
     useInterval(
-        needsRepeatedUpdates ? 1000 / 60 : 0,
+        needsRepeatedUpdates ? 1000 / updatesPerSec : 0,
         changeState,
         useMemo(physics, [physics]),
     );
@@ -377,12 +377,16 @@ const useSpringLocation = (updatesPerSec: number, springTensionCallback: SpringT
 
     useEffect(() => changeState(dragEnd()), [dragEnd]);
 
+    const y = state.physics.position;
+    const x = container?.getBoundingClientRect().left ?? window.innerWidth;
+
     return useMemo(
         () => ({
             style,
             refs: refCallbacks,
+            containerPosition: { x, y },
         }),
-        [style, refCallbacks],
+        [style, refCallbacks, x, y],
     );
 };
 

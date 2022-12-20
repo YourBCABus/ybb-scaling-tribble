@@ -5,6 +5,14 @@ import { faGripLines } from '@fortawesome/free-solid-svg-icons';
 import NoSSRComponent from "lib/components/other/noSSRComponent";
 import useSpringLocation from "lib/utils/hooks/useSpringLocation";
 
+export enum DrawerTab {
+    UNASSIGNED,
+    NOTES,
+}
+
+export type TabFn = (position: { x: number, y: number }) => JSX.Element | JSX.Element[];
+export type DrawerTabs = Record<DrawerTab, TabFn>;
+
 export enum SpringTension {
     HIGH = 1,
     MEDIUM = 0.5,
@@ -14,7 +22,8 @@ export enum SpringTension {
 interface DragDrawerProps {
     snapToTension: number,
     overTension: number,
-    children?: JSX.Element | JSX.Element[],
+    tabs: TabFn,
+    children: React.ReactElement | React.ReactElement[],
     drawerEventTarget?: EventTarget,
     className: string,
 }
@@ -25,14 +34,18 @@ export default function Drawer(
     props:  DragDrawerProps,
 ): JSX.Element {
     const {
-        children,
+        tabs,
         className,
+        children,
     } = props;
 
     const {
         style,
         refs,
+        containerPosition,
     } = useSpringLocation(60, springTensionCalculator);
+
+    
 
     return <NoSSRComponent>
         <div
@@ -43,6 +56,7 @@ export default function Drawer(
         >
             <div ref={refs.grip} className={styles.drawer_handle_div}><FontAwesomeIcon icon={faGripLines} size="lg"/></div>
             {children}
+            {tabs(containerPosition)}
         </div>
     </NoSSRComponent>;
 }

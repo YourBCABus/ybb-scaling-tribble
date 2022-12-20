@@ -16,6 +16,7 @@ import BusBoardingArea from './peripherals/inputs/BusBoardingArea';
 import LinkWrapIf from '../other/LinkWrapIf';
 import NameAndStatus from './peripherals/macroParts/NameAndStatus';
 import mapObject from 'lib/utils/general/propTypeSep';
+import DragDropEventHandler from 'lib/utils/dragdrop/events';
 
 
 
@@ -48,7 +49,7 @@ export interface BusProps {
 
     editing?: BasicPerms;
     editFreeze: boolean;
-    eventTarget?: EventTarget;
+    dragDropHandler?: DragDropEventHandler;
     noLink?: boolean;
 
     saveBoardingAreaCallback?: (boardingArea: string | null) => Promise<void>;
@@ -91,6 +92,7 @@ const propTypeSep = (props: BusProps) => {
         },
         editing: {
             available: "bus.available",
+            dragDropHandler: "dragDropHandler",
             editing: "editing",
             editFreeze: "editFreeze",
             saveBoardingAreaCallback: "saveBoardingAreaCallback",
@@ -128,62 +130,22 @@ export default function Bus(
     const boardingArea = useSavableEditField(savedBoardingAreaText, editing.saveBoardingAreaCallback);
     const busName = useSavableEditField(text.name ?? "", editing.saveBusNameCallback);
 
-    // TODO: fix this.
-    const [isHovered] = useState<boolean>(false);
 
-    // useEffect(() => {
-    //     if (eventTarget) {
-    //         const hoverListener = () => {
-    //             if (available && saveBoardingAreaCallback) setHovered(true);
-    //         };
-    
-    //         eventTarget.addEventListener(`hover:${id}`, hoverListener);
-    
-    //         const leaveListener = () => {
-    //             setHovered(false);
-    //         };
-    
-    //         eventTarget.addEventListener(`leave:${id}`, leaveListener);
-    
-    //         const dropListener = (event: Event) => {
-    //             if (event instanceof CustomEvent && saveBoardingAreaCallback) {
-    //                 const doUpdate = () => {
-    //                     setCurrBoardingAreaEdit(event.detail.boardingArea);
-    //                     saveBoardingAreaCallback(event.detail.boardingArea).then(() => setCurrBoardingAreaEdit(null));
-    //                 };
-    //                 if (getBoardingArea(boardingArea, invalidateTime) == "?") {
-    //                     doUpdate();
-    //                 } else {
-    //                     (() => {
-    //                         const removeCallbacks = () => {
-    //                             eventTarget.removeEventListener("confirm", confirmCallback);
-    //                             eventTarget.removeEventListener("cancel", cancelCallback);
-    //                         };
-    //                         var confirmCallback = () => {
-    //                             doUpdate();
-    //                             removeCallbacks();
-    //                         };
-    //                         var cancelCallback = () => {
-    //                             removeCallbacks();
-    //                         };
+    /**
+     * Drag and drop stuff should be 20x as simple now lol.
+     */
+    const [isHovered, setHovered] = useState<boolean>(false);
 
-    //                         eventTarget.addEventListener("confirm", confirmCallback);
-    //                         eventTarget.addEventListener("cancel", cancelCallback);
-    //                     })();
-    //                     eventTarget.dispatchEvent(new CustomEvent("startConfirm", {detail: {bus, boardingArea: event.detail.boardingArea}}));
-    //                 }
-    //             }
-    //         };
-    
-    //         eventTarget.addEventListener(`drop:${id}`, dropListener);
-    
-    //         return () => {
-    //             eventTarget.removeEventListener(`hover:${id}`, hoverListener);
-    //             eventTarget.removeEventListener(`leave:${id}`, leaveListener);
-    //             eventTarget.removeEventListener(`drop:${id}`, dropListener);
-    //         };
-    //     }
-    // }, [eventTarget, id, saveBoardingAreaCallback]);
+    editing.dragDropHandler?.setHoverHandler(bus.id, event => setHovered(event.enabled));
+
+    editing.dragDropHandler?.setCancelHandler(bus.id, () => setHovered(false));
+
+    editing.dragDropHandler?.setConfirmHandler(bus.id, event => {
+        boardingArea.edit?.setTemp(event.areaText);
+        boardingArea.edit?.save();
+        setHovered(false);
+    });
+
 
     const busBoardingAreaFontSize = useTextSizeFit(
         boardingArea.value,

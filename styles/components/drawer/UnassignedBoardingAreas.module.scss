@@ -1,4 +1,8 @@
-@import "variables";
+@import "../../variables";
+
+.unassigned_wrapper {
+    height: 100%;
+}
 
 .boarding_area_grid {
     display: grid;

@@ -21,7 +21,7 @@ interface ResetModalProps {
     showing: boolean;
     hide: () => void;
 
-    resetCallback: () => Promise<void>;
+    resetCallback: () => Promise<unknown>;
 }
 
 

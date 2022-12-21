@@ -1,5 +1,4 @@
 import React, { MouseEvent } from "react";
-import { GetSchoolAndPerms_school_buses } from "__generated__/GetSchoolAndPerms";
 import permParseFunc from "lib/utils/general/perms";
 import Bus, { BusComponentSizes } from "./Bus";
 
@@ -8,7 +7,8 @@ import CreateBus from "./CreateBus";
 import { CamelCase } from "lib/utils/style/styleproxy";
 import useMemoMap from "lib/utils/hooks/useMemoMap";
 import useMemoizedBuilder from "lib/utils/hooks/useMemoizedBuilder";
-import DragDropEventHandler from "lib/utils/dragdrop/events";
+import DragDropEventHandler from "@utils/dragdrop";
+import { BoardingArea, BusData, BusId } from "@utils/proptypes";
 
 const [, styleBuilder] = CamelCase.wrapCamelCase(styles);
 
@@ -17,7 +17,7 @@ const busContBldr = styleBuilder.busCont;
 
 
 export interface BusListProps {
-    buses: readonly GetSchoolAndPerms_school_buses[];
+    buses: BusData[];
  
     editing?: ReturnType<typeof permParseFunc>;
     editFreeze: boolean;
@@ -25,12 +25,12 @@ export interface BusListProps {
 
     isStarredList: boolean;
     starredBusIDs: Set<string>;
-    starCallback: (id: string, event: MouseEvent<SVGSVGElement>) => void;
+    starCallback: (id: BusId, event: MouseEvent<SVGSVGElement>) => void;
 
-    saveBoardingAreaCallback?: (id: string) => (boardingArea: string | null) => Promise<void>;
+    saveBoardingAreaCallback?: (id: BusId) => (boardingArea: BoardingArea) => Promise<unknown>;
 
     showCreate: boolean;
-    createBusCallback: () => void;
+    createBusCallback: () => Promise<unknown>;
 }
 
 
@@ -67,10 +67,11 @@ const BusComponentWrapperFactory = ({
     starCallback,
     starredBusIDs,
     saveBoardingAreaCallback,
-}: BusListTypeSepProps["busFactoryProps"]) => function BusComponentWrapper(bus: Readonly<GetSchoolAndPerms_school_buses>) {
+}: BusListTypeSepProps["busFactoryProps"]) => function BusComponentWrapper(bus: BusData) {
+
     return (
         <Bus
-            key={bus.id}
+            key={bus.id.toString()}
                     
             bus={bus}
             
@@ -79,7 +80,7 @@ const BusComponentWrapperFactory = ({
             dragDropHandler={dragDropHandler}
             
             starCallback={(event) => starCallback(bus.id, event)}
-            isStarred={starredBusIDs.has(bus.id)}
+            isStarred={starredBusIDs.has(bus.id.toString())}
             
             saveBoardingAreaCallback={saveBoardingAreaCallback?.(bus.id)}
             size={editing ? BusComponentSizes.COMPACT : BusComponentSizes.NORMAL}

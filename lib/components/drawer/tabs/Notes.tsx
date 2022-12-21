@@ -1,9 +1,10 @@
 import Head from "next/head";
 import { useEffect, useRef, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
-import styles from "styles/Notes.module.scss";
+import styles from "@drawer-styles/Notes.module.scss";
+import { SchoolId } from "@utils/proptypes";
 
-export function Notes({ schoolID, focusBlurEventTarget }: { schoolID: string, focusBlurEventTarget?: EventTarget }) {
+export function Notes({ schoolID /*, focusBlurEventTarget*/ }: { schoolID: SchoolId, focusBlurEventTarget?: EventTarget }) {
     // Save notes in localStorage under each school ID.
     const storageID = `ybb-note-${schoolID}`;
     const [note, setNote] = useState(() => localStorage.getItem(`ybb-note-${schoolID}`) || '');
@@ -21,48 +22,48 @@ export function Notes({ schoolID, focusBlurEventTarget }: { schoolID: string, fo
     const [scrollY, setScrollY] = useState(0);
     const refToTextarea = useRef<HTMLTextAreaElement>(null);
 
-    // HACK: If we're running on an iOS device and we detect a scroll, blur the textarea to dismiss the keyboard.
-    // This is a hack because iOS scrolling behavior is awful when the keyboard is up.
-    const [isTextareaFocusedOnLastScrollEvent, setTextareaFocusedOnLastScrollEvent] = useState(false);
-    useEffect(() => {
-        let isOniOS = false;
-        if (window.navigator.userAgent.match(/iPhone|iPad|iPod/i)) {
-            isOniOS = true;
-        } else if (window.navigator.userAgent.match(/Mac/i)) {
-            isOniOS = "ontouchend" in document;
-        }
-        if (typeof window !== 'undefined' && isOniOS) {
-            let handler: () => void;
-            if (isTextareaFocusedOnLastScrollEvent) {
-                handler = () => {
-                    refToTextarea.current?.blur();
-                };
-            } else {
-                handler = () => {
-                    if (refToTextarea.current === document.activeElement) {
-                        setTextareaFocusedOnLastScrollEvent(true);
-                    }
-                };
-            }
-            document.addEventListener('scroll', handler);
-            return () => document.removeEventListener('scroll', handler);
-        }
-    }, [isTextareaFocusedOnLastScrollEvent]);
+    // // HACK: If we're running on an iOS device and we detect a scroll, blur the textarea to dismiss the keyboard.
+    // // This is a hack because iOS scrolling behavior is awful when the keyboard is up.
+    // const [isTextareaFocusedOnLastScrollEvent, setTextareaFocusedOnLastScrollEvent] = useState(false);
+    // useEffect(() => {
+    //     let isOniOS = false;
+    //     if (window.navigator.userAgent.match(/iPhone|iPad|iPod/i)) {
+    //         isOniOS = true;
+    //     } else if (window.navigator.userAgent.match(/Mac/i)) {
+    //         isOniOS = "ontouchend" in document;
+    //     }
+    //     if (typeof window !== 'undefined' && isOniOS) {
+    //         let handler: () => void;
+    //         if (isTextareaFocusedOnLastScrollEvent) {
+    //             handler = () => {
+    //                 refToTextarea.current?.blur();
+    //             };
+    //         } else {
+    //             handler = () => {
+    //                 if (refToTextarea.current === document.activeElement) {
+    //                     setTextareaFocusedOnLastScrollEvent(true);
+    //                 }
+    //             };
+    //         }
+    //         document.addEventListener('scroll', handler);
+    //         return () => document.removeEventListener('scroll', handler);
+    //     }
+    // }, [isTextareaFocusedOnLastScrollEvent]);
 
-    useEffect(() => {
-        const focusCallback = () => {
-            refToTextarea.current?.focus();
-        };
-        const blurCallback = () => {
-            refToTextarea.current?.blur();
-        };
-        focusBlurEventTarget?.addEventListener('focus', focusCallback);
-        focusBlurEventTarget?.addEventListener('blur', blurCallback);
-        return focusBlurEventTarget && (() => {
-            focusBlurEventTarget.removeEventListener('focus', focusCallback);
-            focusBlurEventTarget.removeEventListener('blur', blurCallback);
-        });
-    }, [focusBlurEventTarget]);
+    // useEffect(() => {
+    //     const focusCallback = () => {
+    //         refToTextarea.current?.focus();
+    //     };
+    //     const blurCallback = () => {
+    //         refToTextarea.current?.blur();
+    //     };
+    //     focusBlurEventTarget?.addEventListener('focus', focusCallback);
+    //     focusBlurEventTarget?.addEventListener('blur', blurCallback);
+    //     return focusBlurEventTarget && (() => {
+    //         focusBlurEventTarget.removeEventListener('focus', focusCallback);
+    //         focusBlurEventTarget.removeEventListener('blur', blurCallback);
+    //     });
+    // }, [focusBlurEventTarget]);
 
     // Display a textarea for this school's note. Save changes on blur and on change.
     return (<>
@@ -81,9 +82,9 @@ export function Notes({ schoolID, focusBlurEventTarget }: { schoolID: string, fo
             onScroll={e => {
                 setScrollY(e.currentTarget.scrollTop);
             }}
-            onBlur={() => {
-                setTextareaFocusedOnLastScrollEvent(false);
-            }}
+            // onBlur={() => {
+            //     setTextareaFocusedOnLastScrollEvent(false);
+            // }}
             placeholder="Enter notes here..." />
     </>
     );

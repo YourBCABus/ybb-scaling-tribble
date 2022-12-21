@@ -1,8 +1,8 @@
-import styles from "styles/Drawer.module.scss";
+import styles from "@drawer-styles/Drawer.module.scss";
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGripLines } from '@fortawesome/free-solid-svg-icons';
-import NoSSRComponent from "lib/components/other/noSSRComponent";
+import NoSSRComponent from "lib/components/meta/NoSsr";
 import useSpringLocation from "lib/utils/hooks/useSpringLocation";
 
 export enum DrawerTab {

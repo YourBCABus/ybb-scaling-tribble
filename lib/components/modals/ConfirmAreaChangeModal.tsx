@@ -8,7 +8,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 // Types
 import { FC } from "react";
-import { BusObj, BusComponentSizes as Size } from "../buses/Bus";
+import { BusComponentSizes as Size } from "../buses/Bus";
 
 
 // Styles
@@ -21,11 +21,12 @@ console.log(style.confirmModalCancel);
 
 // Utils
 import { faArrowDown } from "@fortawesome/free-solid-svg-icons";
+import { BoardingArea, BusData, MappingBoardingArea } from "@utils/proptypes";
 
 interface ConfirmAreaChangeModalProps {
 
-    bus?: BusObj;
-    newBoardingArea?: string;
+    bus?: BusData;
+    newBoardingArea?: MappingBoardingArea;
 
     showing: boolean;
     confirm: () => void;
@@ -41,7 +42,7 @@ const busBase = {
     size: Size.COMPACT,
 };
 
-const withArea = (bus: BusObj, boardingArea: string): BusObj => ({ ...bus, boardingArea, invalidateTime: Date.now() + 1e6 });
+// const withArea = (bus: BusData, boardingArea: BusData): BusObj => ({ ...bus, boardingArea, invalidateTime: Date.now() + 1e6 });
 
 const ConfirmAreaChangeModal: FC<ConfirmAreaChangeModalProps> = ({
     showing, bus, newBoardingArea, confirm, cancel,
@@ -60,7 +61,7 @@ const ConfirmAreaChangeModal: FC<ConfirmAreaChangeModalProps> = ({
         
         {bus && <Bus bus={bus} {...busBase}/>}
         <div className={style.downArrowDiv}><FontAwesomeIcon icon={faArrowDown} size="2x"></FontAwesomeIcon></div>
-        {bus && <Bus bus={withArea(bus, newBoardingArea ?? "ERR")} {...busBase}/>}
+        {bus && <Bus bus={bus.withArea(newBoardingArea?.toDummyArea() ?? BoardingArea.dummyValid("ERR"))} {...busBase}/>}
 
         <br/>
         <button className={style.confirmModalCancel} onClick={cancel}>Cancel</button>

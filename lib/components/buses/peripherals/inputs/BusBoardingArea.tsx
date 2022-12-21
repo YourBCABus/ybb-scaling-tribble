@@ -26,7 +26,7 @@ export interface BusBoardingAreaInterface {
      * The {@link EditField editable field} intended as a boarding
      * area target.
      */
-    boardingArea: EditField<string, void>;
+    boardingArea: EditField<string, unknown>;
 
     /**
      * A boolean which indicates whether or not editing is frozen due

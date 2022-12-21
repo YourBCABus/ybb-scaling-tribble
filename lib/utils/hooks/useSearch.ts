@@ -11,7 +11,7 @@ export class SearchFilter<T> {
         this.filterActive = !!filterText;
     }
 
-    public filter(list: readonly T[]): readonly T[] {
+    public filter(list: T[]): T[] {
         return list.filter(val => this.predicate(val, this.filterText));
     }
 

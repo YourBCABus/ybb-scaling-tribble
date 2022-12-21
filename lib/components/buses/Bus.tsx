@@ -1,8 +1,7 @@
 import styles from 'styles/components/buses/Bus.module.scss';
 
-import { MouseEventHandler, useState } from 'react';
+import { MouseEventHandler, useMemo, useState } from 'react';
 
-import getBoardingArea from "lib/utils/general/boardingAreas";
 
 import { SizeProp } from '@fortawesome/fontawesome-svg-core';
 
@@ -15,8 +14,8 @@ import useSavableEditField from 'lib/utils/hooks/useSavableEditField';
 import BusBoardingArea from './peripherals/inputs/BusBoardingArea';
 import LinkWrapIf from '../other/LinkWrapIf';
 import NameAndStatus from './peripherals/macroParts/NameAndStatus';
-import mapObject from 'lib/utils/general/propTypeSep';
-import DragDropEventHandler from 'lib/utils/dragdrop/events';
+import DragDropEventHandler from '@utils/dragdrop';
+import { BoardingArea, BusData } from '@utils/proptypes';
 
 
 
@@ -40,7 +39,7 @@ export enum BusComponentSizes {
 
 
 export interface BusProps {
-    bus: BusObj;
+    bus: BusData;
 
     size?: BusComponentSizes;
 
@@ -52,58 +51,62 @@ export interface BusProps {
     dragDropHandler?: DragDropEventHandler;
     noLink?: boolean;
 
-    saveBoardingAreaCallback?: (boardingArea: string | null) => Promise<void>;
-    saveBusNameCallback?: (busName: string | null) => Promise<void>;
+    saveBoardingAreaCallback?: (boardingArea: BoardingArea) => Promise<unknown>;
+    saveBusNameCallback?: (busName: string | null) => Promise<unknown>;
 }
 
 const propTypeSep = (props: BusProps) => {
-    const data = {
-        ...props,
-        size: props.size ?? BusComponentSizes.NORMAL,
-        fontAwesomeIconSizeParam: sizeMap[props.size ?? BusComponentSizes.NORMAL],
-        updateStatusPerms: props.editing ? props.editing.bus.updateStatus : false,
-        updateNamePerms: props.editing ? props.editing.bus.update : false,
-        noLink: props.noLink ?? false,
-    } as const;
+    const { bus, isStarred, starCallback } = props;
+    const { editing, editFreeze, dragDropHandler } = props;
 
-    const mapObj = {
-        bus: "bus",
+    const size = props.size ?? BusComponentSizes.NORMAL;
+    const fontAwesomeIconSizeParam = sizeMap[size];
+
+    const { saveBoardingAreaCallback, saveBusNameCallback } = props;
+    const updateStatusPerms = editing ? editing.bus.updateStatus : false;
+    const updateNamePerms = editing ? editing.bus.update : false;
+
+    const noLink = props.noLink ?? false;
+
+    const output = {
+        bus,
         text: {
-            name: "bus.name",
-            boardingArea: "bus.boardingArea",
-            invalidateTime: "bus.invalidateTime",
+            name: bus.name,
+            boardingArea: bus.boardingArea,
         },
         display: {
-            size: "size",
-            available: "bus.available",
+            size,
+            running: bus.running,
         },
         icon: {
-            size: "size",
-            noLink: "noLink",
+            size,
+            noLink,
             info: {
-                id: "bus.id",
+                id: bus.id,
             },
             star: {
-                available: "bus.available",
-                isStarred: "isStarred",
-                starCallback: "starCallback",
-                fontAwesomeIconSizeParam: "fontAwesomeIconSizeParam",
+                running: bus.running,
+                isStarred,
+                starCallback,
+                fontAwesomeIconSizeParam,
             },
         },
         editing: {
-            available: "bus.available",
-            dragDropHandler: "dragDropHandler",
-            editing: "editing",
-            editFreeze: "editFreeze",
-            saveBoardingAreaCallback: "saveBoardingAreaCallback",
-            saveBusNameCallback: "saveBusNameCallback",
-            updateStatusPerms: "updateStatusPerms",
-            updateNamePerms: "updateNamePerms",
+            running: bus.running,
+            dragDropHandler,
+            editing,
+            editFreeze,
+            saveBoardingAreaCallback,
+            saveBusNameCallback,
+            updateStatusPerms,
+            updateNamePerms,
         },
     } as const;
 
-    return mapObject(data, mapObj);
+    return output;
 };
+
+export type BusSepProps = ReturnType<typeof propTypeSep>
 
 const [, styleBuilder] = CamelCase.wrapCamelCase(styles);
 
@@ -126,9 +129,16 @@ export default function Bus(
         editing,
     } = propTypeSep(props);
     
-    const savedBoardingAreaText = getBoardingArea(text.boardingArea, text.invalidateTime);
-    const boardingArea = useSavableEditField(savedBoardingAreaText, editing.saveBoardingAreaCallback);
-    const busName = useSavableEditField(text.name ?? "", editing.saveBusNameCallback);
+    const rawCallback = editing.saveBoardingAreaCallback;
+    const saveBoardingArea = useMemo(
+        () => rawCallback && ((areaName: string) => {
+            console.log(BoardingArea.dummyValid(areaName).text);
+            return rawCallback(BoardingArea.dummyValid(areaName));
+        }),
+        [rawCallback],
+    );
+    const boardingArea = useSavableEditField(text.boardingArea, saveBoardingArea);
+    const busName = useSavableEditField(text.name, editing.saveBusNameCallback);
 
 
     /**
@@ -140,9 +150,8 @@ export default function Bus(
 
     editing.dragDropHandler?.setCancelHandler(bus.id, () => setHovered(false));
 
-    editing.dragDropHandler?.setConfirmHandler(bus.id, event => {
-        boardingArea.edit?.setTemp(event.areaText);
-        boardingArea.edit?.save();
+    editing.dragDropHandler?.setConfirmHandler(bus.id, async event => {
+        boardingArea.edit?.saveImmediate(event.area.name)?.then(boardingArea.edit.clearTemp);
         setHovered(false);
     });
 
@@ -159,7 +168,7 @@ export default function Bus(
         .IF(display.size === BusComponentSizes.LARGE).sizeLarge;
 
     const boardingAreaBackgroundStyle = busBoardingAreaBackgroundDivStyle(
-        display.available,
+        display.running,
         boardingArea.value,
         busViewBoardingAreaFont,
         busBoardingAreaFontSize

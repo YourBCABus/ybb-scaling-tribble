@@ -18,12 +18,11 @@ const [style] = CamelCase.wrapCamelCase(styles);
 
 // Utils
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
-import { Immutable } from "lib/utils/general/utils";
-import { BusObj } from "../buses/Bus";
+import { BusData } from "@utils/proptypes";
 
 
 interface SchoolPageHeaderProps {
-    search: SearchFilter<Immutable<BusObj>>;
+    search: SearchFilter<BusData>;
     schoolName: string;
     editing: boolean;
     canEdit: boolean;

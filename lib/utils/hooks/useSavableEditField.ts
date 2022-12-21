@@ -8,6 +8,7 @@ export interface SavableEditField<T, O> {
         setTemp: (newName: T) => void;
         save: () => Promise<O> | undefined;
         clearTemp: () => boolean;
+        saveImmediate: (newName: T) => Promise<O> | undefined;
     };
 }
 export interface ReadonlyEditField<T> {
@@ -28,11 +29,11 @@ const useSavableEditField = <T, O>(saved: T, saveFunction?: (input: T) => Promis
         setSavedSinceEdit(false);
     }, []);
     const save = useCallback(() => {
-        if (edited.isSome) return saveFunction?.(edited.value).then(val => {
+        if (!savedSinceEdit) return saveFunction?.(value).then(val => {
             setSavedSinceEdit(true);
             return val;
         });
-    }, [edited, saveFunction]);
+    }, [value, saveFunction, savedSinceEdit]);
     const clearTemp = useCallback(() => {
         if (savedSinceEdit) {
             setEdited({ isSome: false });
@@ -42,6 +43,14 @@ const useSavableEditField = <T, O>(saved: T, saveFunction?: (input: T) => Promis
         }
     }, [savedSinceEdit]);
 
+
+    const saveImmediate = useCallback((saveValue: T) => {
+        return saveFunction?.(saveValue).then(val => {
+            setSavedSinceEdit(true);
+            return val;
+        });
+    }, [saveFunction]);
+
     const output = useMemo(
         () => ({
             value,
@@ -49,6 +58,7 @@ const useSavableEditField = <T, O>(saved: T, saveFunction?: (input: T) => Promis
                 setTemp,
                 save,
                 clearTemp,
+                saveImmediate,
             },
         }),
         [
@@ -56,6 +66,7 @@ const useSavableEditField = <T, O>(saved: T, saveFunction?: (input: T) => Promis
             setTemp,
             save,
             clearTemp,
+            saveImmediate,
         ],
     );
 

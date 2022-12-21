@@ -1,5 +1,5 @@
 import { EditField } from "lib/utils/hooks/useSavableEditField";
-import { BusTypeSepProps } from "../../Bus";
+import { BusSepProps } from "@bus-comps/Bus";
 
 import BusName from "../inputs/BusName";
 import Status from "../other/Status";
@@ -7,11 +7,11 @@ import Status from "../other/Status";
 import { CamelCase } from "lib/utils/style/styleproxy";
 
 export interface NameAndStatusInterface {
-    name: EditField<string, void>;
+    name: EditField<string, unknown>;
     boardingAreaText: string;
     sizeClassBuilder: CamelCase.WrapperBuilder.WrapCamelCaseBuilder;
-    display: BusTypeSepProps["display"];
-    editing: BusTypeSepProps["editing"];
+    display: BusSepProps["display"];
+    editing: BusSepProps["editing"];
 }
 
 const NameAndStatus = (
@@ -30,7 +30,7 @@ const NameAndStatus = (
                 size={display.size} />
             <br/>
             <Status
-                {...{ available: display.available, boardingAreaText }} />
+                {...{ available: display.running, boardingAreaText }} />
         </div>
     );
 };

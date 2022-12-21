@@ -13,7 +13,7 @@ const emptyIf = (value: string, pred: (orig: string) => boolean) => pred(value) 
 export interface BusBoardingAreaInputInterface {
     editFreeze: boolean;
     size: BusComponentSizes;
-    boardingArea: SavableEditField<string, void>;
+    boardingArea: SavableEditField<string, unknown>;
 }
 
 export default function BusBoardingAreaInput({

@@ -8,18 +8,18 @@ import { ParsedUrlQuery } from "node:querystring";
 import { MouseEvent } from "react";
 import { DraggableProvided, DroppableProvided } from "react-beautiful-dnd";
 
-import styles from "styles/Bus.module.scss";
+import styles from "@page-styles/Bus.module.scss";
 
 import Router, { useRouter } from 'next/router';
 import { useCallback, useContext, useEffect, useState } from "react";
 
-import MutationQueueContext from 'lib/utils/general/mutationQueue';
+import MutationQueueContext from '@utils/editing/mutation-queue';
 
 import { faAngleUp, faBars, faChevronLeft, faPowerOff, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import BusComponent, { BusComponentSizes } from 'lib/components/buses/Bus';
 import NavBar, { PagesInNavbar } from 'lib/components/other/navbar';
-import NoSSRComponent from 'lib/components/other/noSSRComponent';
+import NoSSRComponent from 'lib/components/meta/NoSsr';
 import { NextSeo } from 'next-seo';
 import Head from 'next/head';
 import Link from 'next/link';

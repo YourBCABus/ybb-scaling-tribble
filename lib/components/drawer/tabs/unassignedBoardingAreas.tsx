@@ -1,73 +1,61 @@
 import { FC, useCallback, useEffect, useRef, useState } from "react";
 
-import styles from "styles/UnassignedBoardingAreas.module.scss";
+import styles from "@drawer-styles/UnassignedBoardingAreas.module.scss";
 
-import { GetSchoolAndPerms_school_buses } from "__generated__/GetSchoolAndPerms";
-import getBoardingArea from "lib/utils/general/boardingAreas";
-import DragDropEventHandler from "lib/utils/dragdrop/events";
+import DragDropEventHandler from "@utils/dragdrop";
+import { mouseTouch, stopAndPrevent } from "@utils/general/commonCallbacks";
+import { BusData, BusId, MappingBoardingArea } from "@utils/proptypes";
 
 interface BoardingAreaProps {
-    area: string;
+    area: MappingBoardingArea;
     dragDropHandler: DragDropEventHandler;
     relativePosition: {x: number, y: number};
     allowDragging: boolean;
 }
 
+type DoIfParams<I, O> = [exec: (input: I) => O, pred: () => boolean];
+type DoIfReturn<I, O> = (input: I) => O | undefined;
+
 const BoardingArea: FC<BoardingAreaProps> = ({area, dragDropHandler, relativePosition, allowDragging}) => {
     const drag = useRef<HTMLSpanElement>(null);
     const [position, setPosition] = useState<{x: number, y: number} | null>(null);
-    const [hoveredBus, setHoveredBus] = useState<string | null>(null);
+    const hasMoved = !!position;
+    const [hoveredBus, setHoveredBus] = useState<BusId | null>(null);
 
     const hover = useCallback(
-        (id: string) => dragDropHandler.sendHoverEvent({ targetId: id, areaText: area, enabled: true }),
+        (id: BusId) => dragDropHandler.sendHoverEvent({ targetId: id, area, enabled: true }),
         [area, dragDropHandler],
     );
     const leave = useCallback(
-        (id: string) => dragDropHandler.sendHoverEvent({ targetId: id, areaText: area, enabled: true }),
+        (id: BusId) => dragDropHandler.sendHoverEvent({ targetId: id, area, enabled: false }),
         [area, dragDropHandler],
     );
-    // const leave = useCallback(
-    //     (id: string) => 
-    // )
 
     useEffect(() => {
         if (allowDragging) {
             const el = drag.current;
 
-            const mouseStart = (event: MouseEvent) => {
-                setPosition({ x: event.clientX, y: event.clientY });
-                event.stopPropagation();
-                event.preventDefault();
-            };
-
-            const touchStart = (event: TouchEvent) => {
-                setPosition({ x: event.touches[0].clientX, y: event.touches[0].clientY });
-                event.stopPropagation();
-                event.preventDefault();
-            };
-
+            const mouseStart = stopAndPrevent(mouseTouch("mouse")(setPosition));
+            const touchStart = stopAndPrevent(mouseTouch("touch")(setPosition));
             el?.addEventListener("mousedown", mouseStart);
             el?.addEventListener("touchstart", touchStart);
 
 
-            const mouseMove = (event: MouseEvent) => {
-                setPosition(p => p && { x: event.clientX, y: event.clientY });
-                event.stopPropagation();
-                event.preventDefault();
+            const move = (position: { x: number, y: number }) => setPosition(p => p && position);
+
+            const doIf: <I, O>(...params: DoIfParams<I, O>) => DoIfReturn<I, O> = (exec, pred) => (input) => {
+                if (pred()) return exec(input);
+                else return undefined;
             };
 
-            const touchMove = (event: TouchEvent) => {
-                setPosition(p => p && { x: event.touches[0].clientX, y: event.touches[0].clientY });
-                event.stopPropagation();
-                event.preventDefault();
-            };
-
+            const mouseMove = doIf(stopAndPrevent(mouseTouch("mouse")(move)), () => hasMoved);
+            const touchMove = doIf(stopAndPrevent(mouseTouch("touch")(move)), () => hasMoved);
             document.addEventListener("mousemove", mouseMove);
             document.addEventListener("touchmove", touchMove);
 
 
             const end = () => {
-                if (hoveredBus) dragDropHandler.sendDropEvent({ targetId: hoveredBus, areaText: area });
+                if (hoveredBus) dragDropHandler.sendDropEvent({ targetId: hoveredBus, area });
                 setPosition(null);
             };
             document.addEventListener("mouseup", end);
@@ -82,25 +70,32 @@ const BoardingArea: FC<BoardingAreaProps> = ({area, dragDropHandler, relativePos
                 document.removeEventListener("touchend", end);
             };
         } else {
-            if (hoveredBus) {
-                dragDropHandler.sendHoverEvent({ targetId: hoveredBus, areaText: area, enabled: false });
-            }
+            if (hoveredBus) leave(hoveredBus);
             setPosition(null);
             setHoveredBus(null);
         }
-    }, [area, dragDropHandler, allowDragging, hoveredBus]);
+    }, [area, dragDropHandler, allowDragging, hoveredBus, hasMoved, leave]);
 
     useEffect(() => {
         if (position) {
             const elements = document.elementsFromPoint(position.x, position.y).filter(el => el instanceof HTMLElement) as HTMLElement[];
             
-            const busEl = elements.find(el => el.dataset.noDrop) ? undefined : elements.find(el => el.dataset.bus);
-            if (busEl) {
-                if (hoveredBus !== busEl.dataset.bus) {
-                    if (hoveredBus) leave(hoveredBus);
-                    if (busEl.dataset.bus) hover(busEl.dataset.bus);
+            const noDrop = (elements: HTMLElement[]) => !!elements.find(el => el.dataset.noDrop);
+            const idName = (elements: HTMLElement[]) => elements.find(el => el.dataset.bus)?.dataset.bus;
+
+            const busIdStr = noDrop(elements) ? undefined : idName(elements);
+            const busId = busIdStr ? new BusId(busIdStr) : undefined;
+            if (busId) {
+                if (hoveredBus) {
+                    if (!hoveredBus?.eq(busId)) {
+                        leave(hoveredBus);
+                        hover(busId);
+                        setHoveredBus(busId);
+                    }
+                } else {
+                    hover(busId);
+                    setHoveredBus(busId);
                 }
-                setHoveredBus(busEl.dataset.bus || null);
             } else {
                 if (hoveredBus) leave(hoveredBus);
                 setHoveredBus(null);
@@ -114,35 +109,34 @@ const BoardingArea: FC<BoardingAreaProps> = ({area, dragDropHandler, relativePos
     const currentDrag = drag.current;
 
     return <div>
-        <span className={allowDragging ? `${styles.boarding_area} ${styles.draggable}` : styles.boarding_area} ref={drag}>{area}</span>
+        <span className={allowDragging ? `${styles.boarding_area} ${styles.draggable}` : styles.boarding_area} ref={drag}>{area.name}</span>
         {position && currentDrag && <span className={styles.boarding_area_preview} style={{
             left: position.x - currentDrag.clientWidth / 2 - relativePosition.x,
             top: position.y - currentDrag.clientHeight / 2 - relativePosition.y,
             width: currentDrag.clientWidth,
             height: currentDrag.clientHeight,
-        }}>{area}</span>}
+        }}>{area.name}</span>}
     </div>;
 };
 
 interface UnassignedBoardingAreasProps {
-    boardingAreas: readonly string[];
-    buses: readonly GetSchoolAndPerms_school_buses[];
+    boardingAreas: MappingBoardingArea[];
+    buses: BusData[];
     dragDropHandler: DragDropEventHandler;
     relativePosition: {x: number, y: number};
     allowDragging: boolean;
 }
 
 export default function UnassignedBoardingAreas({boardingAreas, buses, allowDragging, ...rest}: UnassignedBoardingAreasProps) {
-    const assignedAreas = new Set(buses.map(b => getBoardingArea(b.boardingArea, b.invalidateTime)));
-    const unassignedAreas = boardingAreas.filter(a => !assignedAreas.has(a)).sort();
+    const unassignedAreas = MappingBoardingArea.getUnassigned(boardingAreas, buses.map(bus => bus.boardingArea));
 
     return (
-        <>
+        <div className={styles.unassigned_wrapper} >
             <h3>Unassigned Boarding Areas</h3>
             {allowDragging && <p className={styles.hint_text}>Drag to assign boarding areas to buses.</p>}
             <div className={styles.boarding_area_grid}>
-                {unassignedAreas.map(area => <BoardingArea key={area} area={area} allowDragging={allowDragging} {...rest} />)}
+                {unassignedAreas.map(area => <BoardingArea key={area.key} area={area} allowDragging={allowDragging} {...rest} />)}
             </div>
-        </>
+        </div>
     );
 }

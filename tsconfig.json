@@ -18,7 +18,44 @@
     "resolveJsonModule": true,
     "baseUrl": ".",
     "jsx": "preserve",
-    "isolatedModules": true
+    "isolatedModules": true,
+    "paths": {
+      "@pages/*": ["pages/*"],
+      "@components/*": ["lib/components/*"],
+      
+      "@bus-comps/*": ["lib/components/buses/*"],
+
+      "@meta/*": ["lib/components/meta/*"],
+      "@school-comps/*": ["lib/components/schools/*"],
+      "@other-comps/*": ["lib/components/other/*"],
+      
+      "@drawer/*": ["lib/components/drawer/*"],
+      "@modals/*": ["lib/components/modals/*"],
+
+      
+
+      "@utils/*": ["lib/utils/*"],
+      "@general-utils/*": ["lib/utils/general/*"],
+      "@hooks/*": ["lib/utils/hooks/*"],
+      "@mutation-queue/*": ["lib/utils/editing/mutation-queue/*"],
+
+      "@camel-case": ["lib/utils/style/styleproxy"],
+
+      "@editing": ["lib/utils/general/editingCallbacks"],
+
+
+      "@graph-types/*": ["__generated__/*"],
+
+      
+      "@page-styles/*": ["styles/pages/*"],
+
+      "@component-styles/*": ["styles/components/*"],
+      "@drawer-styles/*": ["styles/components/drawer/*"],
+      "@bus-styles/*": ["styles/components/buses/*"],
+      "@modal-styles/*": ["styles/components/modals/*"],
+      "@school-styles/*": ["styles/components/schools/*"],
+      "@meta-styles/*": ["styles/components/meta/*"],
+    }
   },
   "include": [
     "next-env.d.ts",

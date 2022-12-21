@@ -8,7 +8,7 @@ import styles from 'styles/components/buses/Peripherals.module.scss';
 const [classes] = CamelCase.wrapCamelCase(styles);
 
 export interface StarIndicatorInterface {
-    available: boolean;
+    running: boolean;
     isStarred: boolean;
     starCallback: MouseEventHandler<SVGSVGElement>;
     fontAwesomeIconSizeParam: SizeProp;
@@ -16,7 +16,7 @@ export interface StarIndicatorInterface {
 
 export default function StarIndicator(
     {
-        available, isStarred,
+        running, isStarred,
         fontAwesomeIconSizeParam,
         starCallback,
     }: StarIndicatorInterface
@@ -25,8 +25,8 @@ export default function StarIndicator(
         <FontAwesomeIcon
             icon={faStar}
             className={classes.busStarIndicator}
-            style={{color: isStarred && available ? "#00b0ff" : "rgba(0,0,0,.2)"}}
-            onClick={available ? starCallback : undefined}
+            style={{color: isStarred && running ? "#00b0ff" : "rgba(0,0,0,.2)"}}
+            onClick={running ? starCallback : undefined}
             size={fontAwesomeIconSizeParam} />
     );
 }

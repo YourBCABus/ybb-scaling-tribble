@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import Switch from "react-switch";
 
-import MutationQueueContext from "../../utils/general/mutationQueue";
+import MutationQueueContext from "../../utils/editing/mutation-queue";
 
 interface ConnectionMonitorProps {
     editing: boolean;
@@ -87,8 +87,8 @@ export default function ConnectionMonitor(
     );
     useEffect(
         () => {
-            const interval = setInterval(() => handleConnQual().then((value) => value || mutationQueue.resolvePromise()), 10000);
-            return () => clearInterval(interval);
+            // const interval = setInterval(() => handleConnQual().then((value) => value || mutationQueue.resolvePromise()), 10000);
+            // return () => clearInterval(interval);
         },
         [handleConnQual, mutationQueue],
     );

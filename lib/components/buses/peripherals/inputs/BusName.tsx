@@ -26,7 +26,7 @@ export interface BusNameInterface {
      * The {@link EditField editable field} intended as a bus name
      * target.
      */
-    name: EditField<string, void>;
+    name: EditField<string, unknown>;
 
     /**
      * A boolean which indicates whether or not editing is frozen due

@@ -11,7 +11,7 @@ console.log(styleBuilder);
 export interface BusNameInputInterface {
     editFreeze: boolean;
     size: BusComponentSizes;
-    name: SavableEditField<string, void>;
+    name: SavableEditField<string, unknown>;
 }
 
 export default function BusNameInput({

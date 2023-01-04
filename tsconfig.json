@@ -37,6 +37,7 @@
       "@utils/*": ["lib/utils/*"],
       "@general-utils/*": ["lib/utils/general/*"],
       "@hooks/*": ["lib/utils/hooks/*"],
+      "@hooks": ["lib/utils/hooks/index"],
       "@mutation-queue/*": ["lib/utils/editing/mutation-queue/*"],
 
       "@camel-case": ["lib/utils/style/styleproxy"],

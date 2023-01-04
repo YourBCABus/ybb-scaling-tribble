@@ -26,7 +26,7 @@ export default function StarIndicator(
             icon={faStar}
             className={classes.busStarIndicator}
             style={{color: isStarred && running ? "#00b0ff" : "rgba(0,0,0,.2)"}}
-            onClick={running ? starCallback : undefined}
+            onClickCapture={running ? starCallback : undefined}
             size={fontAwesomeIconSizeParam} />
     );
 }

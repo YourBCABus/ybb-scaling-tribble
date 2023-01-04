@@ -9,6 +9,7 @@ export interface SavableEditField<T, O> {
         save: () => Promise<O> | undefined;
         clearTemp: () => boolean;
         saveImmediate: (newName: T) => Promise<O> | undefined;
+        saving: boolean;
     };
 }
 export interface ReadonlyEditField<T> {
@@ -21,6 +22,7 @@ export type EditField<T, O> = SavableEditField<T, O> | ReadonlyEditField<T>;
 const useSavableEditField = <T, O>(saved: T, saveFunction?: (input: T) => Promise<O>): EditField<T, O> => {
     const [edited, setEdited] = useState<Optional<T>>({ isSome: false });
     const [savedSinceEdit, setSavedSinceEdit] = useState(true);
+    const [saving, setSaving] = useState(false);
 
 
     const value = useMemo(() => edited.isSome ? edited.value : saved, [edited, saved]);
@@ -29,24 +31,24 @@ const useSavableEditField = <T, O>(saved: T, saveFunction?: (input: T) => Promis
         setSavedSinceEdit(false);
     }, []);
     const save = useCallback(() => {
+        setSaving(true);
         if (!savedSinceEdit) return saveFunction?.(value).then(val => {
             setSavedSinceEdit(true);
+            setSaving(false);
             return val;
         });
     }, [value, saveFunction, savedSinceEdit]);
     const clearTemp = useCallback(() => {
-        if (savedSinceEdit) {
-            setEdited({ isSome: false });
-            return true;
-        } else {
-            return false;
-        }
+        setEdited({ isSome: false });
+        return savedSinceEdit;
     }, [savedSinceEdit]);
 
 
     const saveImmediate = useCallback((saveValue: T) => {
+        setSaving(true);
         return saveFunction?.(saveValue).then(val => {
             setSavedSinceEdit(true);
+            setSaving(false);
             return val;
         });
     }, [saveFunction]);
@@ -59,6 +61,7 @@ const useSavableEditField = <T, O>(saved: T, saveFunction?: (input: T) => Promis
                 save,
                 clearTemp,
                 saveImmediate,
+                saving,
             },
         }),
         [
@@ -67,6 +70,7 @@ const useSavableEditField = <T, O>(saved: T, saveFunction?: (input: T) => Promis
             save,
             clearTemp,
             saveImmediate,
+            saving,
         ],
     );
 

@@ -4,30 +4,32 @@ import { ExternalPromise } from "@general-utils/externalpromise";
 import { createBus, CreateBus, deleteBus, DeleteBus } from "./create-delete-bus";
 
 import updateBoardingArea, { UpdateBoardingArea } from "./update-boarding-area";
-import { updateBusName, UpdateBusName, updateBusActivation, UpdateBusActivation } from "./update-bus";
+import { updateBusName, UpdateBusName, updateBusActivation, UpdateBusActivation, updateBusPhones, UpdateBusPhones } from "./update-bus";
 import clearAll, { ClearAll } from "./clear-all";
+import Router from "next/router";
 
 export enum MutationType {
-    UP_B_BOARD, UP_B_NAME, UP_B_ACT,
-    CR_B, DL_B,
-    CL_ALL,
+    UP_B_BOARD = "bus_b_area", UP_B_NAME = "bus_name", UP_B_ACT = "bus_activation", UP_B_PHONES = "bus_phones",
+    CR_B = "bus_create", DL_B = "bus_delete",
+    CL_ALL = "clear_all",
 }
 
-export type Mutation = UpdateBoardingArea | UpdateBusName | UpdateBusActivation | CreateBus | DeleteBus | ClearAll;
+export type Mutation = UpdateBoardingArea | UpdateBusName | UpdateBusActivation | UpdateBusPhones | CreateBus | DeleteBus | ClearAll;
 
+export const updateServerSidePropsFunction = () => {
+    const currRouter = Router;
+    return currRouter.replace(currRouter.asPath, undefined, {scroll: false});
+};
 
 type MutationResult = ExternalPromise<Response, Error>;
 
 const wrapTryN = <T extends (...inputs: P) => Promise<Response>, P extends unknown[]>(fn: T, tryCount: number) => (...inputs: P) => {
     const ret: MutationResult = new ExternalPromise();
     (async () => {
-        console.log({ inputs, fn, tryCount });
-
         let currError: Error | undefined;
         for (let i = 0; i < tryCount; i++) {
             try {
                 const output = await fn(...inputs);
-                console.log(output);
                 ret.resolve(output);
                 return;
             } catch (e) {
@@ -52,6 +54,7 @@ type MutationHandlerMap = {
     [MutationType.UP_B_BOARD]: (mutation: UpdateBoardingArea) => ExternalPromise<Response, Error>;
     [MutationType.UP_B_NAME]: (mutation: UpdateBusName) => ExternalPromise<Response, Error>;
     [MutationType.UP_B_ACT]: (mutation: UpdateBusActivation) => ExternalPromise<Response, Error>;
+    [MutationType.UP_B_PHONES]: (mutation: UpdateBusPhones) => ExternalPromise<Response, Error>;
 
     [MutationType.CR_B]: (mutation: CreateBus) => ExternalPromise<Response, Error>;
     [MutationType.DL_B]: (mutation: DeleteBus) => ExternalPromise<Response, Error>;
@@ -60,12 +63,13 @@ type MutationHandlerMap = {
 };
 
 const mutationMap: MutationHandlerMap = {
-    [MutationType.UP_B_BOARD]: wrapTryN(updateBoardingArea, 3),
-    [MutationType.UP_B_NAME]: wrapTryN(updateBusName, 3),
-    [MutationType.UP_B_ACT]: wrapTryN(updateBusActivation, 3),
-    [MutationType.CR_B]: wrapTryN(createBus, 1),
-    [MutationType.DL_B]: wrapTryN(deleteBus, 3),
-    [MutationType.CL_ALL]: wrapTryN(clearAll, 3),
+    bus_b_area: wrapTryN(updateBoardingArea, 3),
+    bus_name: wrapTryN(updateBusName, 3),
+    bus_activation: wrapTryN(updateBusActivation, 3),
+    bus_phones: wrapTryN(updateBusPhones, 3),
+    bus_create: wrapTryN(createBus, 1),
+    bus_delete: wrapTryN(deleteBus, 3),
+    clear_all: wrapTryN(clearAll, 3),
 };
 
 export class MutationQueue {
@@ -130,10 +134,14 @@ export class MutationQueue {
             return mutationMap[mutation.__type](mutation);
         case MutationType.UP_B_ACT:
             return mutationMap[mutation.__type](mutation);
+        case MutationType.UP_B_PHONES:
+            return mutationMap[mutation.__type](mutation);
+
         case MutationType.CR_B:
             return mutationMap[mutation.__type](mutation);
         case MutationType.DL_B:
             return mutationMap[mutation.__type](mutation);
+        
         case MutationType.CL_ALL:
             return mutationMap[mutation.__type](mutation);
         }

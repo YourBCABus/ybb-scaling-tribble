@@ -9,28 +9,32 @@ config.autoAddCss = false;
 import { Provider } from 'next-auth/client';
 import { DefaultSeo } from 'next-seo';
 import ReactModal from 'react-modal';
-import { useEffect, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { DrawerTab } from 'lib/components/drawer/Drawer';
+import { Session } from 'next-auth';
 
 
 
-export interface EditModeProps {
-    editMode: boolean;
-    setEditMode: (editMode: boolean) => void;
-    editFreeze: boolean;
-    setEditFreeze: (editFreeze: boolean) => void;
-    drawerTab: DrawerTab;
-    setDrawerTab: (drawerTab: DrawerTab) => void;
+export interface PageGlobalProps {
+    g_eMode: boolean;
+    g_eModeSet: (editMode: boolean) => void;
+    g_eFreeze: boolean;
+    g_eFreezeSet: (editFreeze: boolean) => void;
+    g_dTab: DrawerTab;
+    g_dTabSet: (drawerTab: DrawerTab) => void;
 }
 
 // TODO: Find a better place to put this and use a better element
 ReactModal.setAppElement("#__next");
 
-function MyApp({ Component, pageProps }: AppProps) {
-    const [editMode, setEditMode] = useState<boolean>(false);
-    const [editFreeze, setEditFreeze] = useState<boolean>(false);
-    const [drawerTab, setDrawerTab] = useState<DrawerTab>(DrawerTab.NOTES);
+
+type RootProps = AppProps<Record<string, unknown> & { session: Session } >;
+
+const App: FC<RootProps> = ({ Component, pageProps: { session, ...pageProps } }) => {
+    const [g_eMode, g_eModeSet] = useState<boolean>(false);
+    const [g_eFreeze, g_eFreezeSet] = useState<boolean>(false);
+    const [g_dTab, g_dTabSet] = useState<DrawerTab>(DrawerTab.NOTES);
 
     const router = useRouter();
     useEffect(() => {
@@ -49,7 +53,13 @@ function MyApp({ Component, pageProps }: AppProps) {
         };
     }, [router]);
 
-    return <Provider session={pageProps.session}>
+    const g_eProps: PageGlobalProps = {
+        g_eMode, g_eModeSet,
+        g_eFreeze, g_eFreezeSet,
+        g_dTab, g_dTabSet,    
+    };
+
+    return <Provider session={session}>
         <DefaultSeo 
             openGraph={{
                 type: "website",
@@ -60,7 +70,8 @@ function MyApp({ Component, pageProps }: AppProps) {
             titleTemplate="%s - YourBCABus"
             defaultTitle="YourBCABus"
         />
-        <Component {...pageProps} editMode={editMode} setEditMode={setEditMode} editFreeze={editFreeze} setEditFreeze={setEditFreeze} drawerTab={drawerTab} setDrawerTab={setDrawerTab} />
+        <Component {...pageProps} {...g_eProps} />
     </Provider>;
-}
-export default MyApp;
+};
+
+export default App;

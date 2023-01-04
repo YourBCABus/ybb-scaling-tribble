@@ -58,7 +58,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 if (!bus) throw new Error("query failed successfully");
                 currentBusStops = bus.stops;
             } catch (e) {
-                console.log(e);
+                console.error(e);
                 res.status(403).send("403 FORBIDDEN");
                 return;
             }
@@ -100,7 +100,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                             .values(networkError)
                             .forEach(([key, val]) => {
                                 if (key === "result") {
-                                    console.log(val);
+                                    console.error(val);
                                 }
                             });
                     }

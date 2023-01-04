@@ -3,7 +3,7 @@ import { FC, useCallback, useEffect, useRef, useState } from "react";
 import styles from "@drawer-styles/UnassignedBoardingAreas.module.scss";
 
 import DragDropEventHandler from "@utils/dragdrop";
-import { mouseTouch, stopAndPrevent } from "@utils/general/commonCallbacks";
+import { mouseTouch, stopAndPrevent } from "@utils/general/interaction-currying";
 import { BusData, BusId, MappingBoardingArea } from "@utils/proptypes";
 
 interface BoardingAreaProps {

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useReducer } from "react";
-import { mouseTouch, stopAndPrevent } from "lib/utils/general/commonCallbacks";
+import { mouseTouch, stopAndPrevent } from "@utils/general/interaction-currying";
 import { sortDist, useRefWithRerender } from "lib/utils/general/utils";
 import useInterval from "./useInterval";
 

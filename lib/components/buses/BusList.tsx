@@ -1,4 +1,4 @@
-import React, { MouseEvent } from "react";
+import React from "react";
 import permParseFunc from "lib/utils/general/perms";
 import Bus, { BusComponentSizes } from "./Bus";
 
@@ -25,7 +25,7 @@ export interface BusListProps {
 
     isStarredList: boolean;
     starredBusIDs: Set<string>;
-    starCallback: (id: BusId, event: MouseEvent<SVGSVGElement>) => void;
+    starCallback: (id: BusId, event: Event) => void;
 
     saveBoardingAreaCallback?: (id: BusId) => (boardingArea: BoardingArea) => Promise<unknown>;
 
@@ -79,7 +79,7 @@ const BusComponentWrapperFactory = ({
             editFreeze={editFreeze}
             dragDropHandler={dragDropHandler}
             
-            starCallback={(event) => starCallback(bus.id, event)}
+            starCallback={(event) => starCallback(bus.id, event.nativeEvent)}
             isStarred={starredBusIDs.has(bus.id.toString())}
             
             saveBoardingAreaCallback={saveBoardingAreaCallback?.(bus.id)}

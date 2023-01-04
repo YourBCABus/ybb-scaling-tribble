@@ -1,0 +1,70 @@
+$add-base-color: rgb(0, 240, 100);
+
+.phone-number-container {
+    flex-grow: 1;
+    display: inline-flex;
+    padding-bottom: 0.2rem;
+}
+.phone-number-link {
+    color: #0000EE;
+    text-decoration: underline;
+    font-weight: bold;
+}
+
+.trash-icon {
+    color: #C31A00;
+    margin-left: auto;
+    transition: opacity 0.2s ease-in-out;
+    opacity: 0;
+}
+.phone-number-container:hover .trash-icon {
+    opacity: 1;
+    transition-duration: 0.1s;
+}
+
+.phone-icon {
+    color: #0000EE;
+    margin-left: auto;
+}
+
+.num-input-container {
+    display: flex;
+    margin: 0.5rem 0.5rem;
+    width: 18rem;
+    border: 1px solid black;
+    border-radius: 0.2rem;
+}
+
+.number-input {
+    outline: none;
+    width: 13rem;
+    padding: 0.2rem 0.5rem;
+    font-size: 1rem;
+    // border: 1px solid black;
+    // border-radius: 0.2rem;
+    color: black;
+}
+
+.editable-item {
+    font-weight: bold;
+}
+
+.num-input-add-button {
+    flex-grow: 1;
+    border: none;
+
+    transition: all 0.2s ease-in-out;
+    // background-color: $add-base-color;
+    background-color: saturate($add-base-color, 10%);
+    
+    &:hover {
+        background-color: darken($add-base-color, 5%);
+    }
+    &:active {
+        background-color: darken($add-base-color, 10%);
+    }
+    &:disabled {
+        background-color: rgba($add-base-color, 0.6);
+        color: rgba(0, 0, 0, 0.4);
+    }
+}

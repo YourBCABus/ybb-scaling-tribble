@@ -3,16 +3,14 @@ import gql from "graphql-tag";
 import createNewClient from "@utils/librarystuff/apollo-client";
 
 // Types
-import { GetServerSidePropsContext } from "next";
-import { ParsedUrlQuery } from "node:querystring";
+import { GetServerSideProps } from "next";
 
-import { Props } from "@general-utils/utils";
-import { GetSchoolAndPerms } from "@graph-types/GetSchoolAndPerms";
+import { GetSchoolAndPerms, GetSchoolAndPerms_school } from "@graph-types/GetSchoolAndPerms";
 
-import { MouseEvent, useMemo } from "react";
-import { EditModeProps } from '@pages/_app';
+import { FC } from "react";
+import { PageGlobalProps } from '@pages/_app';
 
-import { BoardingArea, BusData, BusId, MappingBoardingArea, SchoolId } from "@utils/proptypes";
+import { BoardingArea, BusData, BusId, MappingBoardingArea } from "@utils/proptypes";
 
 
 // Meta components
@@ -20,48 +18,32 @@ import Head from 'next/head';
 import { NextSeo } from "next-seo";
 import NoSsr from "@meta/NoSsr";
 
+import Footer from "@meta/Footer";
+import ConnectionMonitor from "@meta/ConnectionMonitor";
+
+// Non-meta Components
 import PageHeader from "@school-comps/PageHeader";
-import Footer from "@other-comps/footer";
-
-import ConnectionMonitor from "@other-comps/connectionMonitorComponent";
-
-// Drawer Components
-import Drawer, { DrawerTab, DrawerTabs, SpringTension } from "@drawer/Drawer";
-import UnassignedBoardingAreas from "lib/components/drawer/tabs/UnassignedBoardingAreas";
-import { Notes } from "lib/components/drawer/tabs/Notes";
-
-// Bus Components
 import BusList from "@bus-comps/BusList";
 
-// Control/Visibility Flow Components
-import Collapsible from "react-collapsible";
-import ResetModal from "@modals/ResetModal";
-import ConfirmAreaChangeModal from "@modals/ConfirmAreaChangeModal";
+import { Collapsible, ResetModal, ConfirmAreaChangeModal } from "@modals/index";
+import Drawer, { DrawerTab, DrawerTabs, SpringTension, tabs } from "@drawer/Drawer";
+const { Notes, UnassignedBoardingAreas } = tabs;
 
 // Icons
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleUp } from "@fortawesome/free-solid-svg-icons";
 
 // Hooks
-import useInterval from "@hooks/useInterval";
-import Router from 'next/router';
-
 import { useContext, useState, useCallback } from "react";
-import MutationQueueContext, { MutationType } from "@utils/editing/mutation-queue";
+import { useInterval, usePerms, useSchool, useSearch, useStars } from "@hooks";
+import MutationQueueContext, { MutationType, updateServerSidePropsFunction } from "@utils/editing/mutation-queue";
 
-import { useStateChangeClientSide } from "@hooks/useStateChange";
-import useSearch from "@hooks/useSearch";
-
-// Styles and style handlers
+// Styles and style utils
 import styles from "@page-styles/School.module.scss";
 import { CamelCase } from "@camel-case";
 const [style, builder] = CamelCase.wrapCamelCase(styles);
 
-// Editing utility functions
-import permParseFunc from "lib/utils/general/perms";
-
-// Misc boarding area functions
-import { getInitialStars } from "@utils/setup/school.id.index";
+// Utils
 import DragDropEventHandler from "@utils/dragdrop";
 
 export const GET_SCHOOL_AND_PERMS = gql`
@@ -90,53 +72,34 @@ query GetSchoolAndPerms($id: ID!) {
 }
 `;
 
-type SchoolProps = Props<typeof getServerSideProps> & EditModeProps;
+interface SchoolProps {
+    school: GetSchoolAndPerms_school,
+    perms: string[],
+}
 
-const preBuilder = {
-    inactive: builder.deactivatedBusesAlways,
+const styleMemo = {
+    bInactive: builder.deactivatedBusesAlways,
+    dTab: builder.drawerTab,
+    dContent: builder.drawerContents,
 };
 
-const updateServerSidePropsFunction = () => {
-    const currRouter = Router;
-    return currRouter.replace(currRouter.asPath, undefined, {scroll: false});
-};
 
 
-const makeStarCallback = (
-    setStarredSet: (newStarred: Set<string>) => void,
-    currStarred: Set<string>,
-) => (id: string, event: MouseEvent) => {
-    event.stopPropagation();
-    event.preventDefault();
+const School: FC<SchoolProps & PageGlobalProps> = (props) => {
+    const s_perms = usePerms(props.perms);
 
-    const newStarred = new Set(currStarred);
-    if (newStarred.has(id)) newStarred.delete(id);
-    else newStarred.add(id);
+    const {
+        s_name,
+        s_id,
+        s_buses,
+        s_mappingAreas,
+    } = useSchool(props.school);
 
-    setStarredSet(newStarred);
-};
-
-export default function School({
-    school: schoolMut,
-    currentSchoolScopes: permsMut,
-    editMode, setEditMode, editFreeze,
-    drawerTab, setDrawerTab,
-}: SchoolProps): JSX.Element {
-    // TODO: Make an "Unreachable" error type for self-documentation?
-    // This should never happen, as school and perms should only ever be null when notFound is true.
-    if (!schoolMut || !permsMut) throw new Error("School and/or scopes are not defined");
-
-    
-    // These are just for prevention of accidental mutation.
-    const { name: s_name } = schoolMut;
-    const s_id = useMemo(() => new SchoolId(schoolMut.id), [schoolMut.id]);
-    const s_buses = useMemo(() => schoolMut.buses.map(data => BusData.fromSchool(data)), [schoolMut.buses]);
-    const s_perms = useMemo(() => permParseFunc(permsMut), [permsMut]);
-
-    const s_mappingAreas = useMemo(
-        () => schoolMut.mappingData?.boardingAreas.map(MappingBoardingArea.fromGraphQL) ?? [],
-        [schoolMut.mappingData?.boardingAreas]
-    );
+    const {
+        g_eMode, g_eModeSet,
+        g_eFreeze,
+        g_dTab, g_dTabSet,
+    } = props;
 
 
     /**
@@ -151,23 +114,16 @@ export default function School({
      */
 
     // Load and store the IDs of the starred buses.
-    const [starred, setStarred] = useStateChangeClientSide(
-        getInitialStars,
-        (_, newStarIDs) => localStorage.setItem(
-            "starred",
-            JSON.stringify([...newStarIDs]),
-        ),
-        new Set(),
-    );
-    const starCallback = useCallback(
-        (id, event) => makeStarCallback(setStarred, starred)(id, event),
-        [setStarred, starred],
-    );
+    const [starred, starCallback] = useStars();
+    // const starCallback = useCallback(
+    //     (id, event) => makeStarCallback(setStarred, starred)(id, event),
+    //     [setStarred, starred],
+    // );
 
-    const searchTerm = useSearch(filterBuses, "");
-    const [isResetting, setResetting] = useState<boolean>(false);
+    const b_searchTerm = useSearch(filterBuses, "");
+    const [s_resetting, s_resettingSet] = useState<boolean>(false);
 
-    const editing = editMode && s_perms;
+    const s_editing = g_eMode && s_perms;
 
     /**
      * TECHNICALLY these are also states, but they're planned to be phased out.
@@ -175,23 +131,21 @@ export default function School({
      * 
      * FIXME: Come up with SOME alternative to this event target mess.
      */
-    const [dragDropEvents] = useState(() => new DragDropEventHandler());
+    const [s_dDragEvents] = useState(() => new DragDropEventHandler());
     const [confirmBoardingAreaChange, setConfirmBoardingAreaChange] = useState<null | {bus: BusData, boardingArea: MappingBoardingArea}>(null);
 
-    const [drawerEventTarget] = useState(() => new EventTarget());
     
-    dragDropEvents.setDropGeneral("School", event => {
+    s_dDragEvents.setDropGeneral("School", event => {
         const bus = s_buses.find(bus => bus.id.eq(event.targetId));
         if (!bus) return;
         if (!bus.isArrived) {
-            console.log("setting by default");
-            dragDropEvents.sendConfirmEvent();
+            s_dDragEvents.sendConfirmEvent();
         } else {
             setConfirmBoardingAreaChange({ bus, boardingArea: event.area });
         }
     });
-    dragDropEvents.setCancelGeneral("School", () => setConfirmBoardingAreaChange(null));
-    dragDropEvents.setConfirmGeneral("School", () => setConfirmBoardingAreaChange(null));
+    s_dDragEvents.setCancelGeneral("School", () => setConfirmBoardingAreaChange(null));
+    s_dDragEvents.setConfirmGeneral("School", () => setConfirmBoardingAreaChange(null));
 
     /**
      * These are contexts, (or routers, which are essentially contexts,) that handle global mutable data.
@@ -211,36 +165,40 @@ export default function School({
 
 
 
-    useInterval(editing ? 5000 : 15000, updateServerSidePropsFunction);
+    useInterval(s_editing ? 5000 : 15000, updateServerSidePropsFunction);
     
 
     
     
 
-    const b_active   = searchTerm.filter(s_buses.filter(bus =>  bus.running).sort((b1, b2) => b1.compareName(b2)));
-    const b_inactive = searchTerm.filter(s_buses.filter(bus => !bus.running).sort((b1, b2) => b1.compareName(b2)));
+    const b_active   = b_searchTerm.filter(s_buses.filter(bus =>  bus.running).sort((b1, b2) => b1.compareName(b2)));
+    const b_inactive = b_searchTerm.filter(s_buses.filter(bus => !bus.running).sort((b1, b2) => b1.compareName(b2)));
     const b_starred  = b_active.filter(bus => starred.has(bus.id.toString()));
 
+    const permSwitches = {
+        showInactive: b_inactive.length > 0 && s_editing,
+        showStarred: b_starred.length > 0 && !g_eMode,
+        showCreate: s_perms.bus.create && g_eMode,
+        updateStatus: s_perms.bus.updateStatus && g_eMode,
+    };
 
-    const showInactive = b_inactive.length > 0 && editing;
-    const showStarred = b_starred.length > 0 && !editMode;
-
-
-
-    const setEditModePlusClearSearch = (mode: boolean) => {
-        setEditMode(mode);
-        searchTerm.setTerm("");   
+    const editModeSet = (mode: boolean) => {
+        g_eModeSet(mode);
+        b_searchTerm.setTerm("");   
     };
 
     const drawerTabs: DrawerTabs = {
         [DrawerTab.UNASSIGNED]: relativePos => (
             <div className={style.drawerContents}>
-                <UnassignedBoardingAreas boardingAreas={s_mappingAreas} buses={b_active} dragDropHandler={dragDropEvents} relativePosition={relativePos} allowDragging={s_perms.bus.updateStatus} />
+                <UnassignedBoardingAreas
+                    boardingAreas={s_mappingAreas}
+                    buses={b_active}
+                    dragDropHandler={s_dDragEvents} relativePosition={relativePos} allowDragging={permSwitches.updateStatus} />
             </div>
         ),
         [DrawerTab.NOTES]: () => (
             <div className={builder.drawerContents.drawerContentsNotes()}>
-                <Notes schoolID={s_id} focusBlurEventTarget={drawerEventTarget} />
+                <Notes schoolID={s_id} />
                 <div className={style.notesHintText}>Notes are not synced across devices.</div>
             </div>
         ),
@@ -253,10 +211,10 @@ export default function School({
         <NextSeo title={s_name ?? "School"} />
         
         <PageHeader
-            search={searchTerm}
+            search={b_searchTerm}
             schoolName={s_name ?? "School"}
-            editing={!!editing}
-            setEditing={setEditModePlusClearSearch}
+            editing={!!s_editing}
+            setEditing={editModeSet}
             canEdit={s_perms.bus.updateStatus} />
     </>;
 
@@ -264,19 +222,18 @@ export default function School({
         <Drawer
             overTension={SpringTension.MEDIUM}
             snapToTension={SpringTension.MEDIUM}
-            drawerEventTarget={drawerEventTarget}
             className={style.pullUpDrawer ?? ""}
-            tabs={drawerTabs[drawerTab]}>
+            tabs={drawerTabs[g_dTab]}>
             <div className={style.drawerTabBar} >
                 <button
-                    className={builder.drawerTab.IF(drawerTab === DrawerTab.UNASSIGNED).drawerTabActive()}
-                    onClick={() => setDrawerTab(DrawerTab.UNASSIGNED)}>
+                    className={builder.drawerTab.IF(g_dTab === DrawerTab.UNASSIGNED).drawerTabActive()}
+                    onClick={() => g_dTabSet(DrawerTab.UNASSIGNED)}>
                         Boarding Areas
                 </button>
 
                 <button
-                    className={builder.drawerTab.IF(drawerTab === DrawerTab.NOTES).drawerTabActive()}
-                    onClick={() => setDrawerTab(DrawerTab.NOTES)}>
+                    className={builder.drawerTab.IF(g_dTab === DrawerTab.NOTES).drawerTabActive()}
+                    onClick={() => g_dTabSet(DrawerTab.NOTES)}>
                         Notes
                 </button>
             </div>
@@ -291,8 +248,8 @@ export default function School({
          * Modal that pops up and confirms that you really do want to clear all of the boarding areas on all of the buses.
          */}
         <ResetModal
-            showing={isResetting}
-            hide={useCallback(() => setResetting(false), [])}
+            showing={s_resetting}
+            hide={useCallback(() => s_resettingSet(false), [])}
             resetCallback={resetCallback}/>
 
         {/**
@@ -300,8 +257,8 @@ export default function School({
          */}
         <ConfirmAreaChangeModal
             showing={!!confirmBoardingAreaChange}
-            cancel={() => dragDropEvents.sendCancelEvent()}
-            confirm={() => dragDropEvents.sendConfirmEvent()}
+            cancel={() => s_dDragEvents.sendCancelEvent()}
+            confirm={() => s_dDragEvents.sendConfirmEvent()}
             bus={confirmBoardingAreaChange?.bus}
             newBoardingArea={confirmBoardingAreaChange?.boardingArea}/>
     </>;
@@ -309,7 +266,7 @@ export default function School({
     const floatingComponents = <NoSsr>
         {drawer}
         {modals}
-        <ConnectionMonitor editing={editMode}/>
+        <ConnectionMonitor editing={g_eMode}/>
     </NoSsr>;
 
     const saveBoardingAreaCallback = useCallback(
@@ -331,9 +288,9 @@ export default function School({
     );
 
     const commonBusProps = {
-        editing: editMode ? s_perms : undefined,
-        editFreeze,
-        dragDropHandler: dragDropEvents,
+        editing: g_eMode ? s_perms : undefined,
+        editFreeze: g_eFreeze,
+        dragDropHandler: s_dDragEvents,
         starredBusIDs: starred,
         starCallback,
 
@@ -344,7 +301,7 @@ export default function School({
     /**
      * Starred buses, only visible if NOT editing.
      */
-    const starredList = showStarred && (
+    const starredList = permSwitches.showStarred && (
         <BusList
             {...commonBusProps}
 
@@ -364,13 +321,13 @@ export default function School({
             buses={b_active}
             isStarredList={false}
 
-            showCreate={editMode && s_perms?.bus.create} />
+            showCreate={permSwitches.showCreate} />
     );
 
     /**
      * Inactive list, only visible if editing.
      */
-    const inactiveList = showInactive && (
+    const inactiveList = permSwitches.showInactive && (
         <BusList
             {...commonBusProps}
 
@@ -387,21 +344,21 @@ export default function School({
         {activeList}
 
         {
-            showInactive && <Collapsible
-                className={preBuilder.inactive.deactivatedBusesClosed()}
-                openedClassName={preBuilder.inactive()}
+            permSwitches.showInactive && <Collapsible
+                className={styleMemo.bInactive.deactivatedBusesClosed()}
+                openedClassName={styleMemo.bInactive()}
                 trigger={<div>View deactivated buses <FontAwesomeIcon icon={faAngleUp} size="lg"/></div>}
                 transitionTime={100}>
                 {inactiveList}
             </Collapsible>
         }
 
-        {(editMode && s_perms.bus.updateStatus) && <button className={styles.reset} onClick={() => setResetting(true)}>Reset All</button>}
+        {permSwitches.updateStatus && <button className={styles.reset} onClick={() => s_resettingSet(true)}>Reset All</button>}
 
         {floatingComponents}
         <Footer />
     </div>;
-}
+};
 
 const filterBuses = (bus: BusData, searchTerm: string): boolean => {
     const term = searchTerm.trim().toLowerCase();
@@ -419,26 +376,31 @@ const filterBuses = (bus: BusData, searchTerm: string): boolean => {
     return false;
 };
 
-
-export const getServerSideProps = async function<Q extends ParsedUrlQuery> (context: GetServerSidePropsContext<Q>) {    
+export const getServerSideProps: GetServerSideProps<SchoolProps> = async (context) => {    
     const client = createNewClient();
     try {
         const params = context.params;
         if (params === undefined) throw new Error("Null context params!");
         
-        const { data } = await client.query<GetSchoolAndPerms>({
+        const { data: { school, currentSchoolScopes: perms } } = await client.query<GetSchoolAndPerms>({
             query: GET_SCHOOL_AND_PERMS,
             variables: {id: params.schoolId},
             context: {req: context.req},
         });
         
-        return { props: data };
+        if (!school) throw new Error("i don't like you.");
+
+        return {props: {
+            school,
+            perms,
+        }};
     } catch (e) {
         console.error(e);
 
         return {
             notFound: true,
-            props: { school: null, currentSchoolScopes: null },
         };
     }
 };
+
+export default School;

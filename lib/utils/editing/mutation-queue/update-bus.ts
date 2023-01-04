@@ -16,7 +16,14 @@ export type UpdateBusActivation = {
     b_curr: BusData,
     b_activated: boolean,
 };
-type UpdateBusMutation = UpdateBusName | UpdateBusActivation;
+export type UpdateBusPhones = {
+    __type: MutationType.UP_B_PHONES,
+    s_id: SchoolId,
+    b_id: BusId,
+    b_curr: BusData,
+    b_phones: string[],
+};
+type UpdateBusMutation = UpdateBusName | UpdateBusActivation | UpdateBusPhones;
 
 const updateBus = (map: (old: BusInput) => BusInput) => async (mutation: UpdateBusMutation) => {
     const { b_id, b_curr } = mutation;
@@ -35,3 +42,8 @@ export const updateBusName = (nameMutation: UpdateBusName) => updateBus(
 export const updateBusActivation = (activationMutation: UpdateBusActivation) => updateBus(
     old => ({ ...old, available: activationMutation.b_activated })
 )(activationMutation);
+
+
+export const updateBusPhones = (phoneMutation: UpdateBusPhones) => updateBus(
+    old => ({ ...old, phone: phoneMutation.b_phones })
+)(phoneMutation);

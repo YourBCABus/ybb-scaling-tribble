@@ -31,7 +31,7 @@ const shouldFreezeEdit =
     (connQual: ConnectionStates, slowModeSwitch: boolean) => 
         connQual === ConnectionStates.NONE || (connQual === ConnectionStates.SLOW && !slowModeSwitch);
 
-export async function handleConnQualCallback(setConnQual: (state: ConnectionStates) => void, checkUrl: string, slowModeSwitch: boolean): Promise<boolean> {
+export const handleConnQualCallback = async (setConnQual: (state: ConnectionStates) => void, checkUrl: string, slowModeSwitch: boolean): Promise<boolean> => {
     function sleep<T>(ms: number, resolveVal: T) {
         return new Promise<T>(resolve => setTimeout(() => resolve(resolveVal), ms));
     }
@@ -50,13 +50,13 @@ export async function handleConnQualCallback(setConnQual: (state: ConnectionStat
     setConnQual(newQuality);
 
     return shouldFreezeEdit(newQuality, slowModeSwitch);
-}
+};
 
-export default function ConnectionMonitor(
+const ConnectionMonitor = (
     {
         editing,
     }: ConnectionMonitorProps
-): JSX.Element {
+): JSX.Element => {
 
     const [slowModeSwitch, setSlowModeSwitch] = useState<boolean>(false);
     useEffect(() => {
@@ -155,6 +155,8 @@ export default function ConnectionMonitor(
             </div>
         </React.Fragment>
     );
-}
+};
 
 export const HandleConnQualContext: React.Context<{handleConnQual?: () => Promise<boolean>}> = React.createContext({});
+
+export default ConnectionMonitor;

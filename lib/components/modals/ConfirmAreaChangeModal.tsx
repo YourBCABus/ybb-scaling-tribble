@@ -16,8 +16,6 @@ import { CamelCase } from "lib/utils/style/styleproxy";
 import styles from "styles/components/modals/ConfirmAreaChangeModal.module.scss";
 const [style] = CamelCase.wrapCamelCase(styles);
 
-console.log(style);
-console.log(style.confirmModalCancel);
 
 // Utils
 import { faArrowDown } from "@fortawesome/free-solid-svg-icons";

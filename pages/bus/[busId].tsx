@@ -1,40 +1,34 @@
 import gql from "graphql-tag";
 import createNewClient from "lib/utils/librarystuff/apollo-client";
-import { GetBus, GetBus_bus_stops } from "__generated__/GetBus";
+import { GetBus, GetBus_bus } from "__generated__/GetBus";
 import { GetPerms } from "__generated__/GetPerms";
 
-import { GetServerSidePropsContext } from "next";
-import { ParsedUrlQuery } from "node:querystring";
-import { MouseEvent } from "react";
-import { DraggableProvided, DroppableProvided } from "react-beautiful-dnd";
+import { GetServerSideProps } from "next";
+import { FC, useMemo } from "react";
 
 import styles from "@page-styles/Bus.module.scss";
 
-import Router, { useRouter } from 'next/router';
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 
-import MutationQueueContext from '@utils/editing/mutation-queue';
+import MutationQueueContext, { MutationType, updateServerSidePropsFunction } from '@utils/editing/mutation-queue';
 
-import { faAngleUp, faBars, faChevronLeft, faPowerOff, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
 import BusComponent, { BusComponentSizes } from 'lib/components/buses/Bus';
 import NavBar, { PagesInNavbar } from 'lib/components/other/navbar';
-import NoSSRComponent from 'lib/components/meta/NoSsr';
 import { NextSeo } from 'next-seo';
 import Head from 'next/head';
 import Link from 'next/link';
-import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
-import ReactModal from 'react-modal';
 
-import ConnectionMonitor, { HandleConnQualContext } from 'lib/components/other/connectionMonitorComponent';
-import formatPhoneNumberString, { directlyMatchesPhoneNumber, formatSinglePhoneNumber } from 'lib/components/other/phoneNumberParser';
-import { deleteBusCallback, saveBoardingAreaCallback, saveBusCallback, saveStopOrderCallback } from 'lib/utils/general/editingCallbacks';
-import permParseFunc from 'lib/utils/general/perms';
-import { Props, ifOrUndef } from 'lib/utils/general/utils';
-import { EditModeProps } from 'pages/_app';
-import Collapsible from 'react-collapsible';
-import { useStateChangeClientSide } from "lib/utils/hooks/useStateChange";
-import { getInitialStars } from "lib/utils/setup/school.id.index";
+import { PermStructure } from 'lib/utils/general/perms';
+
+import { PageGlobalProps } from 'pages/_app';
+
+import { useInterval, usePerms, useStars } from "@utils/hooks";
+import { BoardingArea, BusData, SchoolId } from "@utils/proptypes";
+import useStops, { BusStop } from "@utils/hooks/meta/useStops";
+import PhoneNum from "@components/phone";
 
 export const GET_BUS = gql`
 query GetBus($id: ID!) {
@@ -77,113 +71,97 @@ function reorder<T>(list: readonly T[], startIndex: number, endIndex: number): T
     return result;
 }
 
-type BusProps = Props<typeof getServerSideProps> & EditModeProps;
+interface BusProps {
+    bus: GetBus_bus,
+    perms: string[];
+}
 
-export default function Bus({ bus: busMut, currentSchoolScopes: permsMut, editMode, setEditMode, editFreeze }: BusProps): JSX.Element {
-    if (!busMut || !permsMut) throw new Error("School and/or scopes are not defined");
+const canEdit = ({ bus, stop }: PermStructure<boolean>) => bus.update || bus.updateStatus || bus.delete || stop.create || stop.update || stop.delete || undefined;
+
+const Bus: FC<BusProps & PageGlobalProps> = (props) => {
+    const s_perms = usePerms(props.perms);
+
+    const b_data = useMemo(() => BusData.fromBus(props.bus), [props.bus]);
+
+    const b_stops = useStops(props.bus.stops);
+
+    const {
+        g_eMode, g_eModeSet,
+        g_eFreeze,
+    } = props;
+
+    const b_editing = g_eMode && canEdit(s_perms);
+
+    const s_id = useMemo(() => new SchoolId(props.bus.schoolID), [props.bus.schoolID]);
+    const s_name = props.bus.school.name ?? "School";
+
+    useInterval(b_editing ? 5000 : 15000, updateServerSidePropsFunction);
 
 
-    const bus = Object.freeze(busMut);
-
-    const perms = Object.freeze(permParseFunc(Object.freeze(permsMut)));
-    const stops = Object.freeze(returnSortedStops(bus.stops));
-
-    const [currStopsEdit, setCurrStopsEdit] = useState<null | GetBus_bus_stops[]>(null);
-
-    const [addPhoneNumberEdit, setAddPhoneNumberEdit] = useState<null | string>(null);
-    const [phoneNumberError, setPhoneNumberError] = useState(false);
-
-    const [starredBusIDs, setStarredBusIDs] = useStateChangeClientSide(
-        getInitialStars,
-        (_, newStarIDs) => localStorage.setItem(
-            "starred",
-            JSON.stringify([...newStarIDs]),
-        ),
-        new Set(),
-    );
-    const starCallback = (id: string, event: MouseEvent<SVGSVGElement>): void => {
-        event.stopPropagation();
-        event.preventDefault();
-
-        const starred = new Set(starredBusIDs);
-        starred.has(id)
-            ? starred.delete(id)
-            : starred.add(id);
-        
-        setStarredBusIDs(starred);
-    };
-
-    const router = useRouter();
-    const updateServerSidePropsFunction = useCallback(() => {
-        const currRouter = Router;
-        return currRouter.replace(currRouter.asPath, undefined, {scroll: false});
-    }, []);
-    useEffect(() => {
-        const interval = setInterval(updateServerSidePropsFunction, editMode ? 5000 : 15000);
-        return () => clearInterval(interval);
-    }, [editMode, updateServerSidePropsFunction]);
-
-  
-    const [deletingPhoneNumber, setDeletingPhoneNumber] = useState<{
-        deletingSingleNum: true, index: number, subIndex: number
-    } | {
-        deletingSingleNum: false, index: number
-    } | null>(null);
+    const [starred, starCallback] = useStars();
     
-    const [isDeletingBus, setDeletingBus] = useState<boolean>(false);
+    const mutQueue = useContext(MutationQueueContext);
 
-    const currentMutationQueue = useContext(MutationQueueContext);
-    const { handleConnQual } = useContext(HandleConnQualContext);
+    const [currStopsEdit, setCurrStopsEdit] = useState<null | BusStop[]>(null);
+
+    const [saveBoardingArea, saveBusName, updatePhoneNumbers] = useMemo(
+        () => [
+            (boardingArea: BoardingArea) => mutQueue.enqueue({
+                __type: MutationType.UP_B_BOARD,
+                b_id: b_data.id,
+                s_id,
+                b_area: boardingArea,
+            }).then(updateServerSidePropsFunction),
+            (name: string) => mutQueue.enqueue({
+                __type: MutationType.UP_B_NAME,
+                b_id: b_data.id,
+                s_id,
+                b_curr: b_data,
+                b_name: name,
+            }).then(updateServerSidePropsFunction),
+            (numbers: string[]) => mutQueue.enqueue({
+                __type: MutationType.UP_B_PHONES,
+                b_id: b_data.id,
+                s_id,
+                b_curr: b_data,
+                b_phones: numbers,
+            }).then(updateServerSidePropsFunction),
+        ] as const,
+        [mutQueue, s_id, b_data],
+    );
 
     return <div>
         <Head>
             <link rel="stylesheet" href="https://use.typekit.net/qjo5whp.css"/>
         </Head>
-        <NextSeo title={bus.name ?? "Bus"} />
+        <NextSeo title={b_data.name || "Bus"} />
         <header className={styles.header}>
             <NavBar
                 selectedPage={PagesInNavbar.NONE}
-                editSwitchOptions={
-                    perms.bus.update
-                    || perms.bus.updateStatus 
-                    || perms.bus.delete
-                    || perms.stop.create
-                    || perms.stop.update
-                    || perms.stop.delete
-                        ? {state: editMode, onChange: setEditMode}
-                        : undefined
-                }
+                editSwitchOptions={canEdit(s_perms) && {state: g_eMode, onChange: g_eModeSet}}
             />
-            <Link href={`/school/${bus.schoolID}`}>
+            <Link href={`/school/${s_id.toString()}`}>
                 <a className={styles.back_button}>
                     <FontAwesomeIcon icon={faChevronLeft} className={styles.back_button_icon} />
-                    <span className={styles.back_button_text}>{bus.school.name}</span>
+                    <span className={styles.back_button_text}>{s_name}</span>
                 </a>
             </Link>
         </header>
+
         <BusComponent
-            bus={bus}
-            starCallback={(event) => starCallback(bus.id, event)}
-            isStarred={starredBusIDs.has(bus.id)}
-            editing={ifOrUndef(editMode, perms)}
-            editFreeze={editFreeze}
+            bus={b_data}
+            starCallback={(event) => starCallback(b_data.id, event.nativeEvent)}
+            isStarred={starred.has(b_data.id.toString())}
+            editing={g_eMode ? s_perms : undefined}
+            editFreeze={g_eFreeze}
             size={BusComponentSizes.LARGE}
             noLink={true}
-            saveBoardingAreaCallback={saveBoardingAreaCallback(updateServerSidePropsFunction, currentMutationQueue, handleConnQual)(bus.id)}
-            saveBusNameCallback={
-                (name) => saveBusCallback(updateServerSidePropsFunction, currentMutationQueue, handleConnQual)(bus.id)(
-                    {
-                        name,
-                        company: bus.company,
-                        phone: bus.phone,
-                        available: bus.available,
-                        otherNames: bus.otherNames,
-                    }
-                )
-            }
+            saveBoardingAreaCallback={saveBoardingArea}
+            saveBusNameCallback={saveBusName}
         />
         <div className={styles.side_by_side}>
-            <NoSSRComponent>
+            <PhoneNum phones={b_data.phones} editing={b_editing || false} updatePhoneNumbers={newVals => updatePhoneNumbers(newVals).then(() => console.log("hi"))}/>
+            {/* <NoSSRComponent>
                 <DragDropContext onDragEnd={(result) => {
                     if (!result.destination) return;
                     if (result.destination.index === result.source.index) return;
@@ -220,35 +198,8 @@ export default function Bus({ bus: busMut, currentSchoolScopes: permsMut, editMo
                         )}
                     </Droppable>
                 </DragDropContext>
-            </NoSSRComponent>
-            <div>
-                <h3 className={styles.phone_num_header}>Phone Numbers</h3>
-                <ul className={`${styles.phone_num_list}`}>
-                    {
-                        bus.phone
-                            .flatMap<[string, number,  number]>(
-                                (rawPhoneNumString, index) => formatPhoneNumberString(
-                                    rawPhoneNumString
-                                ).map<[string, number, number]>(
-                                    (numberAndSubInd) => [...numberAndSubInd, index]
-                                )
-                            )
-                            .map(
-                                ([formattedPhoneNum, subInd, index]) => <li key={`${index}, ${subInd}`}><div className={editMode ? styles.with_trash_can : ""}>
-                                    <p>
-                                        Call {editMode ? formattedPhoneNum.replace(";", " #") : <a href={`tel:${formattedPhoneNum}`}>{formattedPhoneNum.replace(";", " #")}</a>}.
-                                    </p>
-                                    {editMode && <FontAwesomeIcon icon={faTrash} onClick={
-                                        () => setDeletingPhoneNumber({
-                                            deletingSingleNum: true,
-                                            index,
-                                            subIndex: subInd,
-                                        })
-                                    }/>}
-                                </div></li>
-                            )
-                    }
-                </ul>
+            </NoSSRComponent> */}
+            {/* <div>
                 {
                     editMode && <input
                         placeholder="New Phone Number..."
@@ -295,10 +246,10 @@ export default function Bus({ bus: busMut, currentSchoolScopes: permsMut, editMo
                         }
                     </Collapsible>
                 }
-            </div>
+            </div> */}
         </div>
 
-        <div className={styles.actions}>    
+        {/* <div className={styles.actions}>    
             {
                 (editMode && perms.bus.delete) && <button
                     className={`${styles.available_bus} ${bus.available ? styles.destructive_action : styles.green_action}`}
@@ -320,44 +271,6 @@ export default function Bus({ bus: busMut, currentSchoolScopes: permsMut, editMo
             <br/><br/>
             {(editMode && perms.bus.delete) && <button className={`${styles.delete_bus} ${styles.destructive_action}`} onClick={() => setDeletingBus(true)}><FontAwesomeIcon icon={faTrash} /> Delete Bus</button>}
         </div>
-        <ReactModal isOpen={!!deletingPhoneNumber} style={{content: {
-            maxWidth: "400px",
-            height: "140px",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-        }}}>
-            <h3 className={styles.modal_title}>
-                Are you sure you want to delete this {deletingPhoneNumber?.deletingSingleNum
-                    ? <span>number?<br/><code>{formatPhoneNumberString(bus.phone[deletingPhoneNumber.index ?? 0]).slice(deletingPhoneNumber.subIndex)[0]}</code></span>
-                    : <span>entry?: <br/><code>{bus.phone[deletingPhoneNumber?.index ?? 0]}</code></span>}</h3>
-            <button className={styles.modal_cancel} onClick={() => setDeletingPhoneNumber(null)}>Cancel</button>
-            <button className={styles.modal_confirm} onClick={
-                deletingPhoneNumber?.deletingSingleNum ? () => {
-                    saveBusCallback(updateServerSidePropsFunction, currentMutationQueue, handleConnQual)(bus.id)(
-                        {
-                            name: bus.name,
-                            company: bus.company,
-                            phone: removeIndPlusSubInd(bus.phone, deletingPhoneNumber.index, deletingPhoneNumber.subIndex),
-                            available: bus.available,
-                            otherNames: bus.otherNames,
-                        }
-                    );
-                    setDeletingPhoneNumber(null);
-                } : () => {
-                    saveBusCallback(updateServerSidePropsFunction, currentMutationQueue, handleConnQual)(bus.id)(
-                        {
-                            name: bus.name,
-                            company: bus.company,
-                            phone: deletingPhoneNumber ? removeInd(bus.phone, deletingPhoneNumber.index) : bus.phone,
-                            available: bus.available,
-                            otherNames: bus.otherNames,
-                        }
-                    );
-                    setDeletingPhoneNumber(null);
-                }
-            }>Delete</button>
-        </ReactModal>
         <ReactModal isOpen={isDeletingBus} style={{content: {
             width: "80%",
             maxWidth: "400px",
@@ -372,51 +285,37 @@ export default function Bus({ bus: busMut, currentSchoolScopes: permsMut, editMo
                 deleteBusCallback(router, bus.id, bus.schoolID);
             }}>Delete</button>
         </ReactModal>
-        <ConnectionMonitor editing={editMode}/>
+        <ConnectionMonitor editing={editMode}/> */}
     </div>;
-}
+};
 
-function removeInd(phones: string[], ind: number) {
-    const outPhones = [...phones];
-
-    outPhones.splice(
-        ind,
-        1,
-    );
-
-    return outPhones;
-}
-function removeIndPlusSubInd(phones: string[], ind: number, subInd: number) {
-    const outPhones = [...phones];
-
-    if (directlyMatchesPhoneNumber(outPhones[ind])) return removeInd(phones, ind);
-
-    outPhones.splice(ind, 1, phones[ind].substring(0, subInd) + "❌" + phones[ind].substring(subInd));
-
-    return outPhones;
-}
-
-function returnSortedStops(stops: GetBus_bus_stops[]): GetBus_bus_stops[] {
-    return [...stops].sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity));
-}
-
-export const getServerSideProps = async function<Q extends ParsedUrlQuery> (context: GetServerSidePropsContext<Q>) {
+export const getServerSideProps: GetServerSideProps<BusProps> = async(context) => {
     const client = createNewClient();
 
-    let data: GetBus | null = null;
-    let currentSchoolScopes: string[] | null = null;
     try {
         const params = context.params;
         if (params === undefined) throw new Error("Null context params!");
 
-        const { data: scopedData } = await client.query<GetBus>({query: GET_BUS, variables: {id: params.busId}, context: {req: context.req}});
-        data = scopedData;
+        const { data: { bus } } = await client.query<GetBus>({
+            query: GET_BUS,
+            variables: {id: params.busId},
+            context: {req: context.req},
+        });
 
-        const {data: { currentSchoolScopes: scopedCurrentSchoolScopes }} = await client.query<GetPerms>({query: GET_PERMS, variables: {schoolID: data.bus?.schoolID}, context: {req: context.req}});
-        currentSchoolScopes = scopedCurrentSchoolScopes;
+        if (!bus) return {notFound: true, props: {}};
+
+        const { data: { currentSchoolScopes } } = await client.query<GetPerms>({
+            query: GET_PERMS,
+            variables: {schoolID: bus?.schoolID},
+            context: {req: context.req},
+        });
+
+        return { props: { bus, perms: currentSchoolScopes } };
     } catch (e) {
-        console.log(e);
+        console.error(e);
+        return {notFound: true, props: {}};
     }
 
-    return !data?.bus || !currentSchoolScopes ? {notFound: true, props: {}} : {props: {bus: data.bus, currentSchoolScopes}};
 };
+
+export default Bus;

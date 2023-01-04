@@ -1,0 +1,18 @@
+.outer-container {
+    padding: 1rem;
+    width: min-content;
+}
+
+.phone-num-header {
+    text-align: center;
+}
+
+.phone-num-list {
+    width: 20rem;
+    list-style: disc;
+    padding: 1em 2em 1em 2em;
+}
+
+.phone-num-list-item {
+    display: flex;
+}

@@ -5,6 +5,9 @@ import { faGripLines } from '@fortawesome/free-solid-svg-icons';
 import NoSSRComponent from "lib/components/meta/NoSsr";
 import useSpringLocation from "lib/utils/hooks/useSpringLocation";
 
+import Notes from "./tabs/Notes";
+import UnassignedBoardingAreas from "./tabs/UnassignedBoardingAreas";
+
 export enum DrawerTab {
     UNASSIGNED,
     NOTES,
@@ -24,7 +27,6 @@ interface DragDrawerProps {
     overTension: number,
     tabs: TabFn,
     children: React.ReactElement | React.ReactElement[],
-    drawerEventTarget?: EventTarget,
     className: string,
 }
 
@@ -71,3 +73,8 @@ const springTensionCalculator = (close: number, far: number) => {
 };
 
 const asymptoteFn = (num: number, tension: number) => num / Math.pow(Math.pow(num, tension) + 1, 1 / tension);
+
+export const tabs = {
+    UnassignedBoardingAreas,
+    Notes,
+};

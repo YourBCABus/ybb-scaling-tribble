@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 await client.mutate<DeleteBus>({ mutation: DELETE_BUS, variables: { busID: req.query.busId }, context: { req } });
                 res.send({ok: true});
             } catch (e) {
-                console.log(e);
+                console.error(e);
                 res.status(403).send("403 FORBIDDEN");
             }
         } else res.status(400).send("400 BAD REQUEST");

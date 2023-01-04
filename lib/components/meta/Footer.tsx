@@ -1,6 +1,6 @@
 import classes from 'styles/Footer.module.scss';
 
-export default function Footer() {
+const Footer = () => {
     return <footer className={classes.footer}>
         <br/>
         <a href="https://about.yourbcabus.com" target="_blank" rel="noreferrer">
@@ -8,4 +8,6 @@ export default function Footer() {
             <p>Anthony Li, Edward Feng, Skyler Calaman</p>
         </a>
     </footer>;
-}
+};
+
+export default Footer;

@@ -58,7 +58,7 @@ export const getServerSideProps = async function<Q extends ParsedUrlQuery> (cont
         const { data: scopedData } = await client.query<GetSchoolAndPerms>({query: GET_SCHOOL_AND_PERMS, variables: {id: params.schoolId}, context: {req: context.req}});
         data = scopedData;
     } catch (e) {
-        console.log(e);
+        console.error(e);
     }
 
     return data?.school == null ? { notFound: true, props: { school: null, currentSchoolScopes: null } } : { props: data };

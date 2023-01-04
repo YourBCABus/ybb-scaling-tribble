@@ -115,6 +115,10 @@ export class BusData {
         };
         else return null;
     }
+
+    public get phones() {
+        return this._extra?.phones.slice() ?? [];
+    }
 }
 
 export class BoardingArea {

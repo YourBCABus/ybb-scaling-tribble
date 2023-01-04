@@ -52,7 +52,7 @@ export interface BusProps {
     noLink?: boolean;
 
     saveBoardingAreaCallback?: (boardingArea: BoardingArea) => Promise<unknown>;
-    saveBusNameCallback?: (busName: string | null) => Promise<unknown>;
+    saveBusNameCallback?: (busName: string) => Promise<unknown>;
 }
 
 const propTypeSep = (props: BusProps) => {
@@ -131,10 +131,7 @@ export default function Bus(
     
     const rawCallback = editing.saveBoardingAreaCallback;
     const saveBoardingArea = useMemo(
-        () => rawCallback && ((areaName: string) => {
-            console.log(BoardingArea.dummyValid(areaName).text);
-            return rawCallback(BoardingArea.dummyValid(areaName));
-        }),
+        () => rawCallback && ((areaName: string) => rawCallback(BoardingArea.dummyValid(areaName))),
         [rawCallback],
     );
     const boardingArea = useSavableEditField(text.boardingArea, saveBoardingArea);

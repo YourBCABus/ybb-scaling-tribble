@@ -19,7 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 const { data } = await client.mutate<CreateBus>({ mutation: CLEAR_ALL, variables: { schoolID: req.query.schoolId }, context: { req } });
                 res.send(data);
             } catch (e) {
-                console.log(e);
+                console.error(e);
                 res.status(403).send("403 FORBIDDEN");
             }
         } else res.status(400).send("400 BAD REQUEST");

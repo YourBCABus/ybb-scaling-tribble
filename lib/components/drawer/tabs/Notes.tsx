@@ -4,7 +4,7 @@ import { useDebouncedCallback } from "use-debounce";
 import styles from "@drawer-styles/Notes.module.scss";
 import { SchoolId } from "@utils/proptypes";
 
-export function Notes({ schoolID /*, focusBlurEventTarget*/ }: { schoolID: SchoolId, focusBlurEventTarget?: EventTarget }) {
+const Notes = ({ schoolID /*, focusBlurEventTarget*/ }: { schoolID: SchoolId, focusBlurEventTarget?: EventTarget }) => {
     // Save notes in localStorage under each school ID.
     const storageID = `ybb-note-${schoolID}`;
     const [note, setNote] = useState(() => localStorage.getItem(`ybb-note-${schoolID}`) || '');
@@ -88,5 +88,6 @@ export function Notes({ schoolID /*, focusBlurEventTarget*/ }: { schoolID: Schoo
             placeholder="Enter notes here..." />
     </>
     );
-}
+};
 
+export default Notes;

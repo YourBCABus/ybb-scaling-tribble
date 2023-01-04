@@ -67,7 +67,6 @@ export default class DragDropEventHandler {
         this.dropGeneral.set(handlerName, handler);
     }
     public sendDropEvent(event: DropEvent) {
-        console.log(event);
         this.dropped = event;
         getTarget(this.dropMap, event)?.(event);
         [...this.dropGeneral.values()].forEach(handler => handler(event));

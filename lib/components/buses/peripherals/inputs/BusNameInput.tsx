@@ -1,12 +1,11 @@
 import { BusComponentSizes } from "../../Bus";
 
-import { blurOn, focusOnClick } from "lib/utils/general/commonCallbacks";
+import { blurOn, focusOnClick } from "@utils/general/interaction-currying";
 
 import { CamelCase } from "lib/utils/style/styleproxy";
 import styles from 'styles/components/buses/Peripherals.module.scss';
 import { SavableEditField } from "lib/utils/hooks/useSavableEditField";
 const [, styleBuilder] = CamelCase.wrapCamelCase(styles);
-console.log(styleBuilder);
 
 export interface BusNameInputInterface {
     editFreeze: boolean;

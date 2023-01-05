@@ -13,7 +13,7 @@ import { FC, useCallback, useState } from "react";
 // Styles
 import { CamelCase } from "lib/utils/style/styleproxy";
 import styles from "styles/components/modals/common.module.scss";
-import { Change } from "@utils/hooks/usePhoneNumbers";
+import { Change } from "@utils/hooks/meta/usePhoneNumbers";
 const [style, builder] = CamelCase.wrapCamelCase(styles);
 
 

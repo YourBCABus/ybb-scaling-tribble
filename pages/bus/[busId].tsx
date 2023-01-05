@@ -160,7 +160,7 @@ const Bus: FC<BusProps & PageGlobalProps> = (props) => {
             saveBusNameCallback={saveBusName}
         />
         <div className={styles.side_by_side}>
-            <PhoneNum phones={b_data.phones} editing={b_editing || false} updatePhoneNumbers={newVals => updatePhoneNumbers(newVals).then(() => console.log("hi"))}/>
+            <PhoneNum phoneStrs={b_data.phones} editing={b_editing || false} updatePhoneNumbers={newVals => updatePhoneNumbers(newVals).then(() => console.log("hi"))}/>
             {/* <NoSSRComponent>
                 <DragDropContext onDragEnd={(result) => {
                     if (!result.destination) return;

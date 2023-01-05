@@ -64,7 +64,7 @@ $add-base-color: rgb(0, 240, 100);
         background-color: darken($add-base-color, 10%);
     }
     &:disabled {
-        background-color: rgba($add-base-color, 0.6);
+        background-color: rgba(desaturate($add-base-color, 20%), 0.6);
         color: rgba(0, 0, 0, 0.4);
     }
 }

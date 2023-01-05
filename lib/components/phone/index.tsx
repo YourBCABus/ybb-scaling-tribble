@@ -1,14 +1,15 @@
 // Components
-
+import NumberInput from "./NumberInput";
+import DeletePhoneNumberSimpleModal from "../modals/DeletePhoneNumberSimpleModal";
+import NumberDisplay from "./NumberDisplay";
 
 // Hooks
-
 import useConfirm from "@hooks/useConfirm";
-import usePhoneNumbers from "@hooks/usePhoneNumbers";
+import usePhoneNumbers, { RemoveEntryCallback, RemoveNumCallback } from "@utils/hooks/meta/usePhoneNumbers";
 
 // Types
 import { FC, useCallback } from "react";
-import { SaveNumbersCallback } from "@hooks/usePhoneNumbers";
+import { PhoneNumber } from "@utils/general/phonenumbers";
 
 // Styles
 import styles from "@component-styles/phone/Phone.module.scss";
@@ -16,14 +17,11 @@ import { CamelCase } from "@camel-case";
 const [style] = CamelCase.wrapCamelCase(styles);
 
 // Utils
-import NumberDisplay from "./NumberDisplay";
-import DeletePhoneNumberSimpleModal from "../modals/DeletePhoneNumberSimpleModal";
-import NumberInput from "./NumberInput";
-import { PhoneNumber } from "@utils/general/phonenumbers";
+import RawPhoneNumbers from "./rawnumbers";
 
 
 interface PhoneNumProps {
-    phones: string[];
+    phoneStrs: string[];
     editing: boolean;
 
     updatePhoneNumbers: (newData: string[]) => Promise<void>;
@@ -31,20 +29,25 @@ interface PhoneNumProps {
 
 
 
-const PhoneNum: FC<PhoneNumProps> = ({ phones, editing, updatePhoneNumbers }) => {
-    const deleteCallback = useCallback<SaveNumbersCallback>(
-        ({ graphData }) => updatePhoneNumbers(graphData),
+const PhoneNum: FC<PhoneNumProps> = ({ phoneStrs, editing, updatePhoneNumbers }) => {
+    const delNumCall = useCallback<RemoveNumCallback>(
+        ({ graphData }) => updatePhoneNumbers(graphData.filter(Boolean)),
+        [updatePhoneNumbers],
+    );
+    const delEntryCall = useCallback<RemoveEntryCallback>(
+        ({ graphData }) => updatePhoneNumbers(graphData.filter(Boolean)),
         [updatePhoneNumbers],
     );
     const addPhoneNumberCallback = useCallback(
         (newNumber: string | undefined) => {
             if (!newNumber) return Promise.resolve();
-            return updatePhoneNumbers([...phones, newNumber]);
+            return updatePhoneNumbers([...phoneStrs, newNumber]);
         },
-        [updatePhoneNumbers, phones],
+        [updatePhoneNumbers, phoneStrs],
     );
-    const deleteConfirm = useConfirm(deleteCallback, true);
-    const phoneNumbers = usePhoneNumbers(phones, deleteConfirm.request);
+    const delNumConfirm = useConfirm(delNumCall, true);
+    const delEntryConfirm = useConfirm(delEntryCall, true);
+    const { phones, raw } = usePhoneNumbers(phoneStrs, delNumConfirm.request, delEntryConfirm.request);
 
 
     return (
@@ -53,7 +56,7 @@ const PhoneNum: FC<PhoneNumProps> = ({ phones, editing, updatePhoneNumbers }) =>
 
             <ul className={style.phoneNumList}>
                 {
-                    phoneNumbers.map(({number, callback}, index) => (
+                    phones.map(({number, callback}, index) => (
                         <li key={index}><p className={style.phoneNumListItem}>
                                 Call {<NumberDisplay editing={editing} number={number} deleteCallback={callback}/>}
                         </p></li>
@@ -61,26 +64,12 @@ const PhoneNum: FC<PhoneNumProps> = ({ phones, editing, updatePhoneNumbers }) =>
                 }
             </ul>
             <NumberInput visible={editing} addNumber={num => addPhoneNumberCallback(PhoneNumber.tryFormat(num))}/>
-            {/*
-            {
-                (editMode && bus.phone.length !== 0) && <Collapsible className={`${styles.extra_phone_numbers_closed} ${styles.extra_phone_numbers_always}`} openedClassName={styles.extra_phone_numbers_always} trigger={<div>Click for raw phone numbers... <FontAwesomeIcon icon={faAngleUp}/></div>} transitionTime={100}>
-                    {
-                        bus.phone.map(
-                            (phone_string, index) => <div className={styles.with_trash_can} key={index}>
-                                <p>{phone_string}</p>{editMode && <FontAwesomeIcon icon={faTrash} onClick={() => setDeletingPhoneNumber({
-                                    deletingSingleNum: false,
-                                    index,
-                                })}/>}
-                            </div>
-                        )
-                    }
-                </Collapsible>
-            } */}
+            <RawPhoneNumbers entries={raw} editing={editing}/>
             <DeletePhoneNumberSimpleModal
-                data={deleteConfirm.confirming ? {
-                    ...deleteConfirm.data[0],
-                    confirm: deleteConfirm.confirm,
-                    cancel: deleteConfirm.cancel,
+                data={delNumConfirm.confirming ? {
+                    ...delNumConfirm.data[0],
+                    confirm: delNumConfirm.confirm,
+                    cancel: delNumConfirm.cancel,
                 } : undefined}/>
         </div>
     );

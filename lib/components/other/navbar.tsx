@@ -1,4 +1,4 @@
-import { signIn, signOut, useSession } from 'next-auth/client';
+import { signIn, signOut, useSession } from 'next-auth/react';
 
 import Image from 'next/image';
 import Link from 'next/link';
@@ -19,8 +19,18 @@ interface EditSwitchOptions {
     onChange: (newState: boolean) => void,
 }
 
+const recalcSideBySide = (spacerRef: RefObject<HTMLElement>, refs: RefObject<HTMLElement>[], currentSideBySide: boolean) => {
+    const rightPartWidth = refs.map(ref => ref.current?.offsetWidth ?? 0).reduce((prev, curr) => prev + curr);
+
+    const sideBySideWidth = (spacerRef.current?.clientWidth ?? 10) - (currentSideBySide ? 0 : rightPartWidth);
+
+    return sideBySideWidth > 10;
+};
+
 export default function NavBar( { editSwitchOptions }: { selectedPage: PagesInNavbar, editSwitchOptions?: EditSwitchOptions } ) {
-    const [session, loading] = useSession();
+    const {
+        data: session,
+    } = useSession();
 
     const spacerRef = useRef<HTMLDivElement>(null);
     const [sideBySide, setSideBySide] = useState(true);
@@ -41,12 +51,12 @@ export default function NavBar( { editSwitchOptions }: { selectedPage: PagesInNa
     }, [spacerRef, refs, sideBySide]);
 
     const leftPart = <>
-        <Link href={"/"} passHref={true}><a>
+        <Link href={"/"} passHref={true}>
             <div className={styles.logo}>
                 <Image src="/logo.png" alt="YourBCABus Logo" height={32} width={32} />
                 <span>YourBCABus</span>
             </div>
-        </a></Link>
+        </Link>
         <a href="https://about.yourbcabus.com" className={styles.about}>About</a>
         <a href="https://about.yourbcabus.com/support" className={styles.support}>Support</a>
     </>;
@@ -58,8 +68,8 @@ export default function NavBar( { editSwitchOptions }: { selectedPage: PagesInNa
                 <span className={styles.edit_text}>Editing mode</span>
             </span>
         }
-        {!loading && <div className={styles.auth} ref={refs[1]}>
-            {session?.user ?
+        { <div className={styles.auth} ref={refs[1]}>
+            {session ?
                 <button onClick={() => signOut()} className={styles.sign_out_button}>Sign out</button> :
                 <button onClick={() => signIn("yourbcabus")} className={styles.sign_in_button}>Sign in</button>}
         </div>}
@@ -85,10 +95,3 @@ export default function NavBar( { editSwitchOptions }: { selectedPage: PagesInNa
         </>;
 }
 
-function recalcSideBySide(spacerRef: RefObject<HTMLElement>, refs: RefObject<HTMLElement>[], currentSideBySide: boolean, ) {
-    const rightPartWidth = refs.map(ref => ref.current?.offsetWidth ?? 0).reduce((prev, curr) => prev + curr);
-
-    const sideBySideWidth = (spacerRef.current?.clientWidth ?? 10) - (currentSideBySide ? 0 : rightPartWidth);
-
-    return sideBySideWidth > 10;
-}

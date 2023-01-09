@@ -15,10 +15,8 @@ export default function IconInfoLink(
     { id }: IconInfoLinkInterface
 ): JSX.Element {
     return (
-        <Link href="/bus/[busId]" as={`/bus/${id}`}>
-            <a className={classes.busInfoButton}>
-                <FontAwesomeIcon icon={faInfoCircle} />
-            </a>
+        <Link href="/bus/[busId]" as={`/bus/${id}`} className={classes.busInfoButton}>
+            <FontAwesomeIcon icon={faInfoCircle} />
         </Link>
     );
 }

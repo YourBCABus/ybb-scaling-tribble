@@ -7,6 +7,8 @@
 
         "react/no-unknown-property": ["error", { "ignore": ["key"] }],
 
+        "no-use-before-define": "error",
+        "no-template-curly-in-string": "warn",
         "indent": ["error", 4],
         "comma-dangle": ["error", "always-multiline"],
         "semi": ["error", "always"],

@@ -18,6 +18,7 @@ const [style] = CamelCase.wrapCamelCase(styles);
 
 // Utils
 import RawPhoneNumbers from "./rawnumbers";
+import DeletePhoneEntryModal from "@components/modals/DeletePhoneEntryModal";
 
 
 interface PhoneNumProps {
@@ -65,11 +66,18 @@ const PhoneNum: FC<PhoneNumProps> = ({ phoneStrs, editing, updatePhoneNumbers })
             </ul>
             <NumberInput visible={editing} addNumber={num => addPhoneNumberCallback(PhoneNumber.tryFormat(num))}/>
             <RawPhoneNumbers entries={raw} editing={editing}/>
+
             <DeletePhoneNumberSimpleModal
                 data={delNumConfirm.confirming ? {
                     ...delNumConfirm.data[0],
                     confirm: delNumConfirm.confirm,
                     cancel: delNumConfirm.cancel,
+                } : undefined}/>
+            <DeletePhoneEntryModal
+                data={delEntryConfirm.confirming ? {
+                    ...delEntryConfirm.data[0],
+                    confirm: delEntryConfirm.confirm,
+                    cancel: delEntryConfirm.cancel,
                 } : undefined}/>
         </div>
     );

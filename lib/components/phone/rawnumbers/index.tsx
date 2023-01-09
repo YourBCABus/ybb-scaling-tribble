@@ -33,7 +33,7 @@ const RawPhoneNumbers: FC<RawPhoneNumbersProps> = ({ entries, editing }) => edit
         trigger={<div className={style.collapseTrigger}>View raw phone entries <FontAwesomeIcon icon={faAngleDown} size="lg"/></div>}
         transitionTime={100}>
         <div className={style.dropdownContentContainer}>
-            {entries.flatMap((entry, index) => <RawNumberEntry key={index} entry={entry} />)}
+            {entries.flatMap((entry, index) => <RawNumberEntry key={index} {...entry} />)}
         </div>
     </Collapsible>
 ) : <></>;

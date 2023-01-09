@@ -5,7 +5,7 @@ import { blurOn, focusOnClick } from "@utils/general/interaction-currying";
 import { CamelCase } from "lib/utils/style/styleproxy";
 import styles from 'styles/components/buses/Peripherals.module.scss';
 import { SavableEditField } from "lib/utils/hooks/useSavableEditField";
-import { useCallback } from "react";
+import { ChangeEvent, useCallback } from "react";
 const [, styleBuilder] = CamelCase.wrapCamelCase(styles);
 
 const emptyIf = (value: string, pred: (orig: string) => boolean) => pred(value) ? "" : value;
@@ -28,7 +28,7 @@ export default function BusBoardingAreaInput({
         .IF(size === BusComponentSizes.LARGE).busBoardingAreaInputLarge
         .build();
 
-    const setTemp = useCallback((event) => boardingArea.edit.setTemp(event.currentTarget.value), [boardingArea]);
+    const setTemp = useCallback((event: ChangeEvent<HTMLInputElement>) => boardingArea.edit.setTemp(event.currentTarget.value), [boardingArea]);
 
     return <input
         className={className}

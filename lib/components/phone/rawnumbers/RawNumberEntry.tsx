@@ -6,29 +6,30 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 
 // Types
-import { Entry } from "@utils/hooks/meta/usePhoneNumbers";
 import { FC } from "react";
 
 
 // Styles
 import styles from "@component-styles/phone/Raw.module.scss";
 import { CamelCase } from "@camel-case";
-const [style, builder] = CamelCase.wrapCamelCase(styles);
+const [style] = CamelCase.wrapCamelCase(styles);
 
 
 // Utils
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
+import { NumberEntry } from "@utils/general/phonenumbers";
 
 
 interface RawNumberEntryProps {
-    entry: Entry;
+    entry: NumberEntry;
+    callback?: () => void;
 }
 
 
-const RawNumberEntry: FC<RawNumberEntryProps> = ({ entry: { entry, callback } }) => (
+const RawNumberEntry: FC<RawNumberEntryProps> = ({ entry, callback }) => (
     <span className={style.rawEntryContainer}>
         <code className={style.rawEntryData}>{entry.data}</code>
-        <FontAwesomeIcon icon={faTrash} onClick={callback} className={style.trashIcon}/>
+        {callback && <FontAwesomeIcon icon={faTrash} onClick={callback} className={style.trashIcon}/>}
     </span>
 );
 

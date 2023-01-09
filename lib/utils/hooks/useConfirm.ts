@@ -2,7 +2,7 @@ import { ExternalPromise } from "@utils/general/externalpromise";
 import { useCallback, useState } from "react";
 
 
-type ConfirmationResult<V> = { confirmed: true, val: V } | { confirmed: false };
+type ConfirmationResult<V> = { confirmed: true, val: Awaited<V> } | { confirmed: false };
 interface ConfirmInterface<T extends unknown[], V> {
     confirming: true;
     confirm: () => Promise<void>;

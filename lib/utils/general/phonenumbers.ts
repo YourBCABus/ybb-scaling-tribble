@@ -68,7 +68,13 @@ export class PhoneNumber {
     }
 
     public get format() {
-        const main = `+${this.country} ${this.area}-${this.three}-${this.four}`;
+        const [ country, area, three, four ] = [
+            this.country.toString(),
+            this.area.toString().padStart(3, "0"),
+            this.three.toString().padStart(3, "0"),
+            this.four.toString().padStart(4, "0"),
+        ];
+        const main = `+${country} ${area}-${three}-${four}`;
         if (this.extension) return `${main}#${this.extension}`;
         else return main;
     }

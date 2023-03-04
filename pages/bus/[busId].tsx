@@ -140,11 +140,9 @@ const Bus: FC<BusProps & PageGlobalProps> = (props) => {
                 selectedPage={PagesInNavbar.NONE}
                 editSwitchOptions={canEdit(s_perms) && {state: g_eMode, onChange: g_eModeSet}}
             />
-            <Link href={`/school/${s_id.toString()}`}>
-                <a className={styles.back_button}>
-                    <FontAwesomeIcon icon={faChevronLeft} className={styles.back_button_icon} />
-                    <span className={styles.back_button_text}>{s_name}</span>
-                </a>
+            <Link href={`/school/${s_id.toString()}`} className={styles.back_button}>
+                <FontAwesomeIcon icon={faChevronLeft} className={styles.back_button_icon} />
+                <span className={styles.back_button_text}>{s_name}</span>
             </Link>
         </header>
 

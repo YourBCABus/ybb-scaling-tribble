@@ -1,23 +1,39 @@
-import NextAuth, { Session } from "next-auth";
+import NextAuth, { NextAuthOptions } from "next-auth";
+import { Provider as OAuthProvider } from "next-auth/providers";
+import { JWT } from "next-auth/JWT/types";
 
-const url = "https://api.yourbcabus.com";
+const getEnv = (varName: string) => <T extends [string] | []>(...defaultVal: T): string | T[0] => process.env[varName] ?? defaultVal[0];
+
+const ybbApiUrl = getEnv("YBB_API_URL")("https://api.yourbcabus.com");
+const getYbbClientId = getEnv("YBB_CLIENT_ID");
+const getYbbClientSecret = getEnv("YBB_CLIENT_SECRET");
+
+
+const canRefresh = (token: JWT): token is JWT & { refreshToken: string } => {
+    if (typeof token.refreshToken !== 'string') return false;
+    if (!token.accessToken) return true;
+    if (typeof token.accessTokenExpires === "number") {
+        if (Date.now() >= token.accessTokenExpires) return true;
+    }
+    return false;
+};
 
 async function refreshAccessToken(token: string) {
-    const response = await fetch(`${url}/token`, {
+    const response = await fetch(`${ybbApiUrl}/token`, {
         method: "POST",
         headers: {
             "Content-Type": "application/x-www-form-urlencoded",
         },
         body: new URLSearchParams({
-            client_id: process.env.YBB_CLIENT_ID || "changeme",
-            client_secret: process.env.YBB_CLIENT_SECRET || "",
+            client_id: getYbbClientId(""),
+            client_secret: getYbbClientSecret(""),
             grant_type: "refresh_token",
             refresh_token: token,
         }).toString(),
     });
     const result = await response.json();
-    if (!result) {
-        throw result;
+    if (!result || result.error) {
+        throw result.error;
     }
     return {
         accessToken: result.access_token,
@@ -26,39 +42,64 @@ async function refreshAccessToken(token: string) {
     };
 }
 
-export default NextAuth({
-    providers: [
-        {
-            id: "yourbcabus",
-            name: "YourBCABus",
-            type: "oauth",
-            version: "2.0",
+
+
+
+
+
+
+const ybbProvider: OAuthProvider = {
+    // Common provider config:
+    id: "yourbcabus",
+    name: "YourBCABus",
+    type: "oauth",
+    version: "2.0",
+    wellKnown: `${ybbApiUrl}/.well-known/openid-configuration`,
+
+
+
+    // Client credentials:
+    clientId: getYbbClientId(),
+    clientSecret: getYbbClientSecret(),
+    authorization: {
+        params: {
             scope: "openid email offline_access read bus.create bus.update bus.updateStatus bus.delete stop.create stop.update stop.delete",
-            params: { grant_type: "authorization_code" },
-            accessTokenUrl: `${url}/token`,
-            requestTokenUrl: `${url}/token`,
-            authorizationUrl: `${url}/authorize?response_type=code&prompt=consent`,
-            profileUrl: `${url}/me`,
-            profile(profile) {
-                return {
-                    id: profile.sub ?? "invalid",
-                };
-            },
-            clientId: process.env.YBB_CLIENT_ID || "changeme",
-            clientSecret: process.env.YBB_CLIENT_SECRET || "",
-            protection: "both",
+            grant_type: "authorization_code",
+            prompt: "consent",
         },
-    ],
+    },
+
+    profile(profile) {
+        return {
+            id: profile.sub ?? "invalid",
+            name: profile.name,
+            email: profile.email,
+            image: profile.image,
+        };
+    },
+
+    // Token validity checks
+    checks: ["pkce", "state"],
+};
+
+
+const options: NextAuthOptions = {
+    secret: getYbbClientSecret(),
+    providers: [ybbProvider],
+
     callbacks: {
-        async jwt(token, user, account) {
+        
+        async jwt({ token, user, account }) {
+
             if (account && user) {
-                token.accessToken = account.accessToken;
-                token.accessTokenExpires = Date.now() + (account.expires_in ?? -1) * 1000;
-                token.refreshToken = account.refreshToken;
-            } else if (typeof token.refreshToken === "string" && (!token.accessToken || (typeof token.accessTokenExpires === "number" && Date.now() >= token.accessTokenExpires))) {
+                token.accessToken = account.access_token;
+                token.accessTokenExpires = account.expires_at ?? 0;
+                token.refreshToken = account.refresh_token;
+            } else if (canRefresh(token)) {
                 // Refresh the access token.
                 try {
                     const { accessToken, accessTokenExpires, refreshToken } = await refreshAccessToken(token.refreshToken);
+
                     token.accessToken = accessToken;
                     token.accessTokenExpires = accessTokenExpires;
                     token.refreshToken = refreshToken;
@@ -68,10 +109,16 @@ export default NextAuth({
             }
             return token;
         },
-        async session(session: Session, token) {
-            session.accessToken = token.accessToken as string;
-            session.sub = token.sub;
+        async session({ session, token }) {
+            const expiry = typeof token.accessTokenExpires === "string" ? new Date(token.accessTokenExpires).toISOString() : "0";
+            session.expires ??= expiry;
+
+            session.accessToken = token.accessToken ? token.accessToken.toString() : "";
+
             return session;
         },
     },
-});
+    debug: process.env.NODE_ENV !== 'production' && process.env.DEBUG_NEXTAUTH === "true",
+};
+
+export default NextAuth(options);

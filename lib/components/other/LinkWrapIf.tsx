@@ -12,10 +12,8 @@ const LinkWrapIf: React.FC<LinkWrapIfInterface> = (
 ): JSX.Element  => {
     if (show) {
         return (
-            <Link href={href} passHref>
-                <a>
-                    {children}
-                </a>
+            <Link href={href}>
+                {children}
             </Link>
         );
     } else return children;

@@ -6,8 +6,8 @@ import '@fortawesome/fontawesome-svg-core/styles.css';
 import { config } from '@fortawesome/fontawesome-svg-core';
 config.autoAddCss = false;
 
-import { Provider } from 'next-auth/client';
-import { DefaultSeo } from 'next-seo';
+import { SessionProvider } from 'next-auth/react';
+import { NextSeo } from 'next-seo';
 import ReactModal from 'react-modal';
 import { FC, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
@@ -59,8 +59,8 @@ const App: FC<RootProps> = ({ Component, pageProps: { session, ...pageProps } })
         g_dTab, g_dTabSet,    
     };
 
-    return <Provider session={session}>
-        <DefaultSeo 
+    return <SessionProvider session={session}>
+        <NextSeo
             openGraph={{
                 type: "website",
                 locale: "en_US",
@@ -68,10 +68,9 @@ const App: FC<RootProps> = ({ Component, pageProps: { session, ...pageProps } })
                 site_name: "YourBCABus",
             }}
             titleTemplate="%s - YourBCABus"
-            defaultTitle="YourBCABus"
-        />
+            defaultTitle="YourBCABus" />
         <Component {...pageProps} {...g_eProps} />
-    </Provider>;
+    </SessionProvider>;
 };
 
 export default App;

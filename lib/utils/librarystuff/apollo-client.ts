@@ -1,6 +1,6 @@
 import { ApolloClient, InMemoryCache, createHttpLink } from "@apollo/client";
 import { setContext } from '@apollo/client/link/context';
-import { getSession } from "next-auth/client";
+import { getSession } from "next-auth/react";
 
 const httpLink = createHttpLink({
     uri: 'https://api.yourbcabus.com/graphql',
